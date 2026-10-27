@@ -3,7 +3,7 @@
    - As listas de cada aula (enem/of/aN.json) são guardadas conforme o aluno abre a aula.
    - Sempre que você publicar uma atualização, MUDE A VERSÃO abaixo (ex.: v2, v3...).
      Assim os celulares dos alunos baixam a versão nova. */
-const VERSAO = "revisao-v1";
+const VERSAO = "revisao-v2";
 
 const CASCA = [
   "./",

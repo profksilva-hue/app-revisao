@@ -1,6 +1,6 @@
 # App de Revisão de Matemática: ENEM e PAS
 
-Este é o app de revisão do ENEM transformado em **PWA**: um site que o aluno instala na tela inicial do celular e que funciona sem internet depois da primeira visita.
+Este é o app de revisão do ENEM e do PAS/UnB em formato **PWA**: um site que o aluno instala na tela inicial do celular e que funciona sem internet depois da primeira visita.
 
 ## O que tem na pasta
 
@@ -14,7 +14,7 @@ app-revisao/
 │   ├── index.html        → o app de revisão do ENEM (12 aulas)
 │   └── of/a1.json … a12.json → imagens das questões oficiais de cada aula
 ├── pas/
-│   └── index.html        → área do PAS (por enquanto, "em breve")
+│   └── index.html        → o app de revisão do PAS (PAS 1, 2 e 3, 12 aulas por etapa)
 └── .nojekyll             → arquivo vazio exigido pelo GitHub Pages; não apague
 ```
 
@@ -54,6 +54,7 @@ Sem isso, os celulares que já instalaram o app podem continuar mostrando a vers
 
 ## O que muda em relação à versão do Claude
 
+- **Progresso separado:** o ENEM guarda com o prefixo `enem26-rev-v1` e o PAS com `pas26-rev-v1`, então um não apaga o outro.
 - **Funciona igual:** aulas, resumos, listas, sorteio de questões, correção, relatório em PDF, calendário e progresso por e-mail.
 - **O progresso fica salvo no aparelho do aluno**, não num servidor. O recurso "código de progresso" continua servindo para levar o progresso de um aparelho para outro.
 - **O painel do professor (ver o progresso da turma) não funciona fora do Claude.** Ele usava o banco de dados do artifact. Para ter isso no app publicado, o próximo passo é ligar um banco de dados gratuito, como o Supabase ou o Firebase.
@@ -67,3 +68,7 @@ python -m http.server 8000
 ```
 
 e abra `http://localhost:8000` no navegador.
+
+## Cuidado ao trocar o arquivo de um app
+
+Todo `index.html` dos apps precisa terminar com `</body>` e `</html>`. O Live Server do VS Code injeta um script de recarga logo antes de `</body>`; quando essa tag não existe, ele injeta no primeiro `</svg>` que encontrar, que pode estar dentro do código do app, e o código aparece escrito na tela.
