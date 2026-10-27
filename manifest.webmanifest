@@ -1,0 +1,23 @@
+{
+  "name": "Revisão de Matemática · ENEM e PAS",
+  "short_name": "Revisão",
+  "description": "Aulas de revisão de Matemática para o ENEM e o PAS/UnB: resumos, listas modelo ENEM e acompanhamento do progresso.",
+  "lang": "pt-BR",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F3F6F9",
+  "theme_color": "#005084",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Revisão ENEM", "url": "./enem/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Revisão PAS", "url": "./pas/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
