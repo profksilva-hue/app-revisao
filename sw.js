@@ -1,14 +1,18 @@
-/* Service worker do app de Revisão.
+/* Service worker do Santa Revisão.
    - Guarda a "casca" do app no celular na primeira visita (funciona offline).
    - As listas de cada aula (enem/of/aN.json) são guardadas conforme o aluno abre a aula.
    - Sempre que você publicar uma atualização, MUDE A VERSÃO abaixo (ex.: v2, v3...).
      Assim os celulares dos alunos baixam a versão nova. */
-const VERSAO = "revisao-v2";
+const VERSAO = "revisao-v5";
 
 const CASCA = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./timer.js",
+  "./privacidade.html",
+  "./fonts/fonts.css",
+  "./libs/jspdf.umd.min.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/favicon-32.png",
@@ -44,10 +48,8 @@ self.addEventListener("fetch", ev => {
     return;
   }
 
-  // Listas das aulas, ícones, fontes e bibliotecas: usa o cache e atualiza em segundo plano.
-  const mesmoSite = url.origin === self.location.origin;
-  const cdn = /fonts\.(googleapis|gstatic)\.com$|cdnjs\.cloudflare\.com$/.test(url.hostname);
-  if (mesmoSite || cdn) {
+  // Listas das aulas, ícones, fontes e bibliotecas (todas no próprio site): usa o cache e atualiza em segundo plano.
+  if (url.origin === self.location.origin) {
     ev.respondWith(
       caches.open(VERSAO).then(cache =>
         cache.match(req).then(hit => {

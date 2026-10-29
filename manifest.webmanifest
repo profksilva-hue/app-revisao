@@ -1,7 +1,7 @@
 {
-  "name": "Revisão de Matemática · ENEM e PAS",
-  "short_name": "Revisão",
-  "description": "Aulas de revisão de Matemática para o ENEM e o PAS/UnB: resumos, listas modelo ENEM e acompanhamento do progresso.",
+  "name": "Santa Revisão · Matemática para ENEM e PAS",
+  "short_name": "Santa Revisão",
+  "description": "Santa Revisão: aulas de revisão de Matemática para o ENEM e o PAS/UnB: resumos, listas modelo ENEM e acompanhamento do progresso.",
   "lang": "pt-BR",
   "id": "./",
   "start_url": "./",
@@ -17,7 +17,7 @@
     { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Revisão ENEM", "url": "./enem/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Revisão PAS", "url": "./pas/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Santa Revisão · ENEM", "url": "./enem/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Santa Revisão · PAS", "url": "./pas/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

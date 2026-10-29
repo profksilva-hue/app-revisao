@@ -1,0 +1,21 @@
+# Proteção de dados: relatórios, planilhas e exportações de alunos NUNCA vão para o repositório público.
+# (O GitHub Desktop não mostra esses arquivos para commit.)
+*.pdf
+*.csv
+*.xls
+*.xlsx
+*.ods
+*.doc
+*.docx
+*.txt
+!fonts/OFL-*.txt
+*.zip
+Relatorio*
+relatorio*
+alunos*
+backup*
+
+# arquivos do sistema
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Privacidade · Santa Revisão</title>
+<meta name="theme-color" content="#005084">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root { --paper:#F3F6F9; --sheet:#FFFFFF; --ink:#0E2A3B; --ink-2:#4A5F70; --rule:#D3DDE5; --pen:#005084; --pen-soft:#E1EDF5; --mark-soft:#F8F1E0; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --paper:#0A1822; --sheet:#10222F; --ink:#E4EDF3; --ink-2:#A2B5C3; --rule:#23394A; --pen:#6FB3E0; --pen-soft:#13324A; --mark-soft:#3A2E12; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 "Archivo", system-ui, sans-serif; }
+.wrap { max-width: 720px; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 28px) 16px 56px; }
+a { color: var(--pen); font-weight: 600; }
+.back { text-decoration: none; font-size: 14px; }
+h1 { font-stretch: 75%; font-weight: 800; font-size: clamp(32px, 7vw, 44px); line-height: 1.02; margin: 14px 0 8px; }
+.lede { color: var(--ink-2); margin: 0 0 24px; }
+h2 { font-size: 18px; margin: 28px 0 8px; }
+p, li { margin: 0 0 8px; }
+ul { padding-left: 20px; margin: 0 0 8px; }
+.box { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; }
+.key { background: var(--pen-soft); border-radius: 10px; padding: 14px 16px; margin: 18px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+th { color: var(--ink-2); font-weight: 600; }
+.small { font-size: 13.5px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="back" href="./">← Voltar ao Santa Revisão</a>
+  <h1>Como o app trata seus dados</h1>
+  <p class="lede">Aviso de privacidade do Santa Revisão, app de revisão de Matemática para o ENEM e o PAS, em linguagem direta.</p>
+
+  <div class="key"><b>O principal:</b> tudo o que você faz no app fica guardado <b>só neste aparelho</b>. O app não envia seu e-mail, suas respostas nem suas notas para nenhum servidor, e ninguém da escola vê seu progresso, a não ser que você mande o relatório ao professor.</div>
+
+  <div class="box">
+    <h2 style="margin-top:0">Que dados o app usa</h2>
+    <table>
+      <tr><th>Dado</th><th>Para quê</th></tr>
+      <tr><td>E-mail</td><td>Separar o seu progresso do de outros alunos no mesmo aparelho.</td></tr>
+      <tr><td>Nome e turma (opcionais)</td><td>Aparecer no relatório que você envia ao professor.</td></tr>
+      <tr><td>Respostas, notas e tempos das listas</td><td>Corrigir as listas, mostrar sua evolução e o tempo que você leva.</td></tr>
+    </table>
+    <p class="small" style="margin-top:10px">O app não tem anúncios, não rastreia o que você faz e não usa seus dados para nenhuma outra finalidade.</p>
+  </div>
+
+  <h2>Quem pode ver</h2>
+  <ul>
+    <li><b>Você</b>, neste aparelho.</li>
+    <li><b>Quem usar este aparelho e digitar o seu e-mail</b>, porque o app não tem senha. Por isso, em computador da escola ou aparelho emprestado, use <b>Sair e apagar meus dados</b> (aba Identificação) ao terminar, ou entre sem e-mail.</li>
+    <li><b>Seu professor</b>, só quando você envia o relatório. Envie pelo e-mail ou pela plataforma da escola, não por grupos.</li>
+  </ul>
+
+  <h2>Código de progresso</h2>
+  <p>Serve para levar seu progresso para outro aparelho. Ele contém seu e-mail, suas respostas e notas, e qualquer pessoa que tenha o código consegue lê-lo. Use só nos seus próprios aparelhos e não publique em grupos.</p>
+
+  <h2>O que o site registra</h2>
+  <p>O app fica hospedado no GitHub Pages. Como qualquer site, o GitHub registra o endereço IP de quem acessa, por segurança (<a href="https://docs.github.com/pt/pages/getting-started-with-github-pages/what-is-github-pages">saiba mais</a>). Fontes e bibliotecas do app são servidas pelo próprio site, sem passar por outras empresas.</p>
+
+  <h2>Como apagar seus dados</h2>
+  <ul>
+    <li><b>Tudo deste aparelho:</b> aba Identificação → <b>Sair e apagar meus dados</b>.</li>
+    <li><b>Só as respostas:</b> <b>Apagar todo o meu progresso</b>, abaixo do cronograma.</li>
+    <li>Limpar os dados de navegação do site também apaga tudo.</li>
+  </ul>
+
+  <h2>Dúvidas e pedidos</h2>
+  <p>A escola é responsável pelo app. Para tirar dúvidas ou exercer seus direitos previstos na LGPD (Lei 13.709/2018), fale com o professor de Matemática ou com o encarregado de proteção de dados da escola.</p>
+  <p class="small">Contato do encarregado: <i>[preencher com o canal da escola]</i></p>
+  <p class="small">Última atualização: 29/10/2026.</p>
+</main>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# App de Revisão de Matemática: ENEM e PAS
+# Santa Revisão: app de Matemática para ENEM e PAS
 
 Este é o app de revisão do ENEM e do PAS/UnB em formato **PWA**: um site que o aluno instala na tela inicial do celular e que funciona sem internet depois da primeira visita.
 
@@ -9,6 +9,11 @@ app-revisao/
 ├── index.html            → tela inicial (escolha entre ENEM e PAS)
 ├── manifest.webmanifest  → "carteira de identidade" do app (nome, cor, ícones)
 ├── sw.js                 → service worker: guarda o app no celular para uso offline
+├── timer.js              → cronômetro das listas (usado pelo ENEM e pelo PAS)
+├── privacidade.html      → aviso de privacidade (LGPD) para alunos e responsáveis
+├── fonts/                → fontes do app, servidas pelo próprio site
+├── libs/                 → bibliotecas de PDF (jsPDF e html2canvas), servidas pelo próprio site
+├── .gitignore            → impede enviar PDFs, planilhas e relatórios de alunos ao GitHub
 ├── icons/                → ícones do app (tela inicial, aba do navegador, iPhone)
 ├── enem/
 │   ├── index.html        → o app de revisão do ENEM (12 aulas)
@@ -72,3 +77,17 @@ e abra `http://localhost:8000` no navegador.
 ## Cuidado ao trocar o arquivo de um app
 
 Todo `index.html` dos apps precisa terminar com `</body>` e `</html>`. O Live Server do VS Code injeta um script de recarga logo antes de `</body>`; quando essa tag não existe, ele injeta no primeiro `</svg>` que encontrar, que pode estar dentro do código do app, e o código aparece escrito na tela.
+
+## Cronômetro das listas
+
+O `timer.js` acrescenta, no cartão-resposta, a opção **Treinar com tempo**. Os dois apps o carregam com `<script src="../timer.js"></script>`, logo antes de `</body>`, e cada um define uma pequena ponte (`window.__revApp`) no fim do próprio código.
+
+- Metas padrão: ENEM, 3 min por questão (8 questões = 24 min); PAS, proporcional aos pesos oficiais dos itens (A 1,5 min · B e C 3 min · D 4,5 min). O aluno ajusta a meta com − e +.
+- Para mudar o ritmo padrão, edite `metaItens` na ponte de cada app (procure `__revApp` no `index.html`).
+- Os tempos ficam no aparelho do aluno, junto do progresso.
+
+## Proteção de dados (LGPD)
+
+- Nada sai do aparelho do aluno: o app não tem servidor, e fontes e bibliotecas vêm do próprio site.
+- **Nunca salve relatórios, PDFs ou planilhas de alunos dentro desta pasta.** O `.gitignore` bloqueia esses arquivos, mas a regra é não colocá-los aqui.
+- Em `privacidade.html`, preencha o contato do encarregado de dados da escola (procure "[preencher").
