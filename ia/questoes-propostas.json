@@ -1,0 +1,189 @@
+{
+  "lote": 1,
+  "data": "2026-11-07",
+  "status": "proposta – aguardando aprovação do professor",
+  "observacao": "Questões geradas com Claude (princípio 9). Entram como não calibradas (gerada: true, peso 0 no domínio) e só depois da aprovação.",
+  "questoes": [
+    {
+      "id": "G1-H5-01",
+      "h": "H5",
+      "nv": 1,
+      "gerada": true,
+      "hab": "Comparar propostas de compra com operações básicas",
+      "t": [
+        "Uma escola vai distribuir água em um passeio com 120 alunos, e cada aluno receberá 2 garrafas. Há duas propostas de compra:",
+        "• Fornecedor A: pacote com 12 garrafas por R$ 18,00;",
+        "• Fornecedor B: garrafa avulsa por R$ 1,40."
+      ],
+      "c": "Qual proposta é a mais barata e quanto a escola vai gastar com ela?",
+      "o": [
+        "Fornecedor A, gastando R$ 360,00.",
+        "Fornecedor B, gastando R$ 336,00.",
+        "Fornecedor A, gastando R$ 180,00.",
+        "Fornecedor B, gastando R$ 168,00.",
+        "Tanto faz: as duas custam R$ 360,00."
+      ],
+      "a": 1,
+      "f": null,
+      "tb": null,
+      "sol": "São 120 · 2 = 240 garrafas. A: 240 ÷ 12 = 20 pacotes · R$ 18,00 = R$ 360,00. B: 240 · R$ 1,40 = R$ 336,00. B é mais barato.",
+      "e": [
+        "Esse é o custo de A, que é o mais caro.",
+        "",
+        "Calculou só 1 garrafa por aluno (120 garrafas).",
+        "Calculou só 1 garrafa por aluno (120 garrafas).",
+        "Só A custa R$ 360,00; B custa R$ 336,00."
+      ]
+    },
+    {
+      "id": "G1-H5-02",
+      "h": "H5",
+      "nv": 2,
+      "gerada": true,
+      "hab": "Avaliar propostas de economia com porcentagem e medidas",
+      "t": [
+        "Uma família consome 15 m³ de água por mês e recebeu três propostas para economizar:",
+        "I. diminuir o tempo de banho, reduzindo o consumo mensal em 20%;",
+        "II. consertar um vazamento que desperdiça 0,08 m³ por dia (considere um mês de 30 dias);",
+        "III. reaproveitar a água da máquina de lavar, economizando 2,5 m³ por mês."
+      ],
+      "c": "Qual proposta gera a maior economia mensal de água?",
+      "o": [
+        "A proposta I.",
+        "A proposta II.",
+        "A proposta III.",
+        "As propostas I e II empatam.",
+        "As propostas II e III empatam."
+      ],
+      "a": 0,
+      "f": null,
+      "tb": null,
+      "sol": "I: 20% de 15 = 3 m³. II: 0,08 · 30 = 2,4 m³. III: 2,5 m³. A maior economia é a da proposta I.",
+      "e": [
+        "",
+        "II economiza 2,4 m³, menos que I (3 m³).",
+        "III economiza 2,5 m³, menos que I (3 m³).",
+        "Verifique II: 0,08 · 30 = 2,4 m³, não 3 m³.",
+        "II (2,4 m³) e III (2,5 m³) são próximas, mas não iguais, e nenhuma é a maior."
+      ]
+    },
+    {
+      "id": "G1-H5-03",
+      "h": "H5",
+      "nv": 2,
+      "gerada": true,
+      "hab": "Comparar promoções (leve 3 pague 2 × desconto percentual)",
+      "t": [
+        "A cantina da escola vende cada suco por R$ 4,00 e quer fazer uma promoção. Há duas propostas:",
+        "• P1: leve 3, pague 2;",
+        "• P2: desconto de 25% em cada suco."
+      ],
+      "c": "Para quem compra 6 sucos, qual proposta é mais vantajosa e quanto se economiza em relação à outra?",
+      "o": [
+        "P1, com economia de R$ 2,00.",
+        "P2, com economia de R$ 2,00.",
+        "P1, com economia de R$ 8,00.",
+        "P2, com economia de R$ 6,00.",
+        "As duas propostas custam o mesmo."
+      ],
+      "a": 0,
+      "f": null,
+      "tb": null,
+      "sol": "P1: paga 4 dos 6 sucos = R$ 16,00. P2: cada suco sai por R$ 3,00, então 6 · 3 = R$ 18,00. P1 é mais barata em R$ 2,00.",
+      "e": [
+        "",
+        "P2 custa R$ 18,00, mais caro que P1 (R$ 16,00).",
+        "R$ 8,00 é o desconto de P1 em relação ao preço cheio (R$ 24,00), não em relação a P2.",
+        "R$ 6,00 é o desconto de P2 em relação ao preço cheio, e P2 não é a mais vantajosa.",
+        "P1 custa R$ 16,00 e P2 custa R$ 18,00."
+      ]
+    },
+    {
+      "id": "G1-H11-01",
+      "h": "H11",
+      "nv": 1,
+      "gerada": true,
+      "hab": "Escala numérica em mapa (cm para km)",
+      "t": [
+        "Em um mapa feito na escala 1 : 50 000, a distância entre a escola e o parque da cidade é de 4 cm."
+      ],
+      "c": "Qual é a distância real entre a escola e o parque?",
+      "o": [
+        "0,2 km",
+        "2 km",
+        "20 km",
+        "200 km",
+        "0,02 km"
+      ],
+      "a": 1,
+      "f": null,
+      "tb": null,
+      "sol": "4 cm · 50 000 = 200 000 cm. Como 1 km = 100 000 cm, a distância é 2 km.",
+      "e": [
+        "Dividiu por 1 000 000 em vez de 100 000 na conversão de cm para km.",
+        "",
+        "Converteu de cm para km dividindo por 10 000.",
+        "Dividiu por 1 000 em vez de 100 000 na conversão de cm para km.",
+        "Errou a conversão por um fator de 100."
+      ]
+    },
+    {
+      "id": "G1-H11-02",
+      "h": "H11",
+      "nv": 2,
+      "gerada": true,
+      "hab": "Escala em planta baixa e cálculo de área",
+      "t": [
+        "Na planta de uma casa, feita na escala 1 : 100, a sala é um retângulo de 4,5 cm por 3 cm."
+      ],
+      "c": "Qual é a área real da sala?",
+      "o": [
+        "1,35 m²",
+        "7,5 m²",
+        "13,5 m²",
+        "15 m²",
+        "135 m²"
+      ],
+      "a": 2,
+      "f": null,
+      "tb": null,
+      "sol": "Na escala 1 : 100, 1 cm na planta vale 1 m. A sala mede 4,5 m por 3 m, e a área é 4,5 · 3 = 13,5 m².",
+      "e": [
+        "Errou a vírgula ao converter as medidas.",
+        "Somou as medidas (4,5 + 3) em vez de multiplicar.",
+        "",
+        "Calculou o perímetro (2 · 4,5 + 2 · 3), não a área.",
+        "Multiplicou o resultado por 10 sem motivo."
+      ]
+    },
+    {
+      "id": "G1-H11-03",
+      "h": "H11",
+      "nv": 1,
+      "gerada": true,
+      "hab": "Escala de miniatura",
+      "t": [
+        "Uma miniatura de carro foi feita na escala 1 : 43 e tem 10 cm de comprimento."
+      ],
+      "c": "Qual é o comprimento do carro real?",
+      "o": [
+        "0,43 m",
+        "0,53 m",
+        "4,3 m",
+        "43 m",
+        "430 m"
+      ],
+      "a": 2,
+      "f": null,
+      "tb": null,
+      "sol": "10 cm · 43 = 430 cm = 4,3 m.",
+      "e": [
+        "Converteu 430 cm dividindo por 1 000 em vez de 100.",
+        "Somou 10 + 43 em vez de multiplicar.",
+        "",
+        "Converteu 430 cm dividindo por 10 em vez de 100.",
+        "Esqueceu de converter: 430 é o valor em centímetros."
+      ]
+    }
+  ]
+}
