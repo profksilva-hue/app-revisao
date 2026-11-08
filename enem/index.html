@@ -524,7 +524,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
   <section id="gate" class="gate" hidden></section>
   <div id="repView" class="repview" hidden role="dialog" aria-modal="true" aria-label="Relatório"></div>
   <nav class="tabs" id="tabsNav" role="tablist" aria-label="Seções">
-    <button class="tab" role="tab" id="tab-ia" data-tab="ia" type="button">Minha trilha</button>
+    <button class="tab" role="tab" id="tab-ia" data-tab="ia" type="button">Hoje</button>
     <button class="tab" role="tab" id="tab-aulas" data-tab="aulas" type="button">Aulas e listas</button>
     <button class="tab" role="tab" id="tab-cal" data-tab="cal" type="button">Calendário</button>
     <button class="tab" role="tab" id="tab-id" data-tab="id" type="button">Identificação</button>
@@ -1456,7 +1456,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
     st.perfilLocal = Object.assign({ nome: "", turma: "" }, st.perfilLocal || {}, { email });
     curEmail = email; lsSet(KCUR, email); S = st;
     perfil = Object.assign({}, S.perfilLocal);
-    fixS(); S.tab = "aulas"; saveLocal(); renderAll(); persist(); window.scrollTo({ top: 0 });
+    fixS(); S.tab = window.IA ? "ia" : "aulas"; saveLocal(); renderAll(); persist(); window.scrollTo({ top: 0 });
     return true;
   }
   function trocarAluno() {

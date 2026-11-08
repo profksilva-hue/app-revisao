@@ -59,6 +59,8 @@
       });
       MD = Motor.criar({ itens: diag, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
       pronto = true;
+      // a tela Hoje é a porta de entrada do app: ao abrir, o aluno cai nela (etapa 5)
+      if (SR.logado() && SR.S.tab !== "prof") SR.S.tab = "ia";
     } catch (e) { erro = "Não foi possível carregar a IA agora. Verifique a conexão e recarregue a página."; }
     SR.renderAll();
   }
@@ -379,7 +381,7 @@
   const marcaTempo = id => { if (qAtualId !== id) { qAtualId = id; inicioQ = Date.now(); if (!st().sessao || !st().sessao.respondida) marcada = null; } };
 
   function telaSerie() {
-    return `<div class="ia-card"><h2>Minha trilha</h2>
+    return `<div class="ia-card"><h2>Hoje</h2>
       <p>A IA do Santa Revisão monta um caminho de estudo só seu, habilidade por habilidade, e se ajusta a cada questão que você resolve.</p>
       <p><b>Para começar, em que série você está?</b></p>
       <div class="ia-row">${["1", "2", "3"].map(n => `<button class="btn" type="button" data-ia-serie="${n}">${n}ª série</button>`).join("")}</div></div>`;
