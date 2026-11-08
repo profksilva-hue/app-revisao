@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Laboratório da IA · Santa Revisão</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+:root { --paper:#F3F6F9; --sheet:#FFFFFF; --ink:#0E2A3B; --ink-2:#4A5F70; --rule:#D3DDE5; --pen:#005084; --pen-soft:#E1EDF5; --ok:#1E7B4A; --bad:#B3261E; --warn:#8A5F08; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --paper:#0A1822; --sheet:#10222F; --ink:#E4EDF3; --ink-2:#A2B5C3; --rule:#23394A; --pen:#6FB3E0; --pen-soft:#13324A; --ok:#5CC48A; --bad:#F2867E; --warn:#E5B84B; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 "Archivo", system-ui, sans-serif; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+.faixa { background: var(--warn); color: #fff; font-weight: 700; padding: 8px 16px; text-align: center; }
+h1 { font-size: 30px; margin: 8px 0 4px; } h2 { font-size: 20px; margin: 0 0 10px; }
+.lede { color: var(--ink-2); margin: 0 0 20px; max-width: 70ch; }
+.card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; margin-bottom: 18px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink-2); }
+select, input[type=range] { font: inherit; min-width: 200px; }
+select { padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); color: var(--ink); }
+button { font: 700 14px/1 "Archivo", system-ui, sans-serif; border: 0; border-radius: 99px; background: var(--pen); color: #fff; padding: 10px 16px; cursor: pointer; }
+button.ghost { background: transparent; color: var(--pen); border: 1px solid var(--pen); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; margin-top: 12px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { color: var(--ink-2); font-weight: 600; }
+.ok { color: var(--ok); font-weight: 700; } .bad { color: var(--bad); font-weight: 700; }
+.est { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; background: var(--pen-soft); color: var(--pen); }
+.resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.resumo div { background: var(--pen-soft); border-radius: 10px; padding: 10px; }
+.resumo b { display: block; font-size: 20px; }
+.q p { margin: 0 0 8px; } .q .cmd { font-weight: 600; }
+.opts { display: grid; gap: 8px; margin-top: 10px; }
+.opts button { text-align: left; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; font-weight: 400; line-height: 1.4; }
+.motivo { font-size: 13px; color: var(--ink-2); margin: 0 0 8px; }
+.nota { font-size: 13px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div class="faixa">Ambiente de teste · nada aqui é visto pelos alunos</div>
+<main class="wrap">
+  <h1>Laboratório da IA</h1>
+  <p class="lede">Veja o motor da IA adaptativa funcionando com o banco real de questões do ENEM: simule um aluno fictício ou responda você mesmo e acompanhe a estimativa, a chance de acerto e a trilha de cada habilidade.</p>
+  <p class="lede" id="status">Carregando o banco de questões…</p>
+
+  <section class="card">
+    <h2>1. Aluno fictício</h2>
+    <div class="row">
+      <label>Habilidade <select id="s-hab"></select></label>
+      <label>Nível verdadeiro do aluno: <span id="s-pts-v">600</span> pontos <input id="s-pts" type="range" min="400" max="800" step="10" value="600"></label>
+      <label>Trilha <select id="s-trilha"><option value="auto">Pela IA (estado atual)</option><option value="recuperacao">Recuperação</option><option value="fixacao">Fixação</option><option value="aprimoramento">Aprimoramento</option></select></label>
+      <button id="s-run" type="button">Rodar sessão de 8 questões</button>
+      <button id="s-zero" class="ghost" type="button">Começar de novo</button>
+    </div>
+    <div class="resumo" id="s-resumo"></div>
+    <table><thead><tr><th>#</th><th>Questão</th><th>Chance prevista</th><th>Resposta</th><th>Estimativa depois</th><th>Trilha</th></tr></thead><tbody id="s-log"></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2>2. Responda você</h2>
+    <div class="row">
+      <label>Habilidade <select id="m-hab"></select></label>
+      <button id="m-next" type="button">Próxima questão</button>
+      <button id="m-zero" class="ghost" type="button">Começar de novo</button>
+    </div>
+    <div class="resumo" id="m-resumo"></div>
+    <div id="m-q" class="q" style="margin-top:14px"></div>
+  </section>
+
+  <p class="nota">Pontos na escala do ENEM são aproximados (500 + 100 × proficiência). Trilhas: Recuperação abaixo de 50% de chance na questão de referência (~600 pontos), Fixação de 50% a 75%, Aprimoramento acima de 75% (~675 pontos).</p>
+</main>
+<script src="banco.js"></script>
+<script src="motor.js"></script>
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const NOME = { recuperacao: "Recuperação", fixacao: "Fixação", aprimoramento: "Aprimoramento", a_diagnosticar: "A diagnosticar", introducao: "Introdução" };
+  const ALVO = { recuperacao: [0.7, 0.8], fixacao: [0.55, 0.7], aprimoramento: [0.4, 0.55], a_diagnosticar: [0.4, 0.6] };
+  let D, H, M;
+  try {
+    [D, H] = await Promise.all([Banco.carregarDoSite("../enem/index.html"), fetch("habilidades.json").then(r => r.json())]);
+    M = Motor.criar({ itens: Banco.extrair(D), habilidades: H.habilidades, nivelParaB: H.nivelParaB });
+  } catch (e) { $("status").textContent = "Não foi possível carregar o banco de questões."; return; }
+  const itens = Object.values(M.itens);
+  $("status").textContent = `Banco carregado: ${itens.length} questões, ${itens.filter(i => i.ip).length} com parâmetros TRI do INEP, ${H.habilidades.length} habilidades.`;
+  const opts = H.habilidades.map(h => `<option value="${esc(h.id)}">${esc(h.id)} · ${esc(h.nome)} (${(M.porHab[h.id] || []).length})</option>`).join("");
+  $("s-hab").innerHTML = opts; $("m-hab").innerHTML = opts;
+  const pct = p => Math.round(p * 100) + "%";
+  const caixa = r => `<div><span class="nota">Trilha</span><b>${esc(NOME[r.estado] || r.estado)}</b><span class="nota">${r.validado ? "validada" : r.observacao ? "em observação" : r.n ? "provisória" : ""}</span></div>
+    <div><span class="nota">Estimativa</span><b>${r.n ? r.pontos + " pts" : "—"}</b><span class="nota">± ${r.n ? Math.round(r.ep * 100) : "—"}</span></div>
+    <div><span class="nota">Chance na questão de referência</span><b>${r.n ? pct(r.chance) : "—"}</b><span class="nota">${r.n ? "80%: " + pct(r.ic80[0]) + " a " + pct(r.ic80[1]) : ""}</span></div>
+    <div><span class="nota">Respostas</span><b>${r.n}</b></div>`;
+
+  // 1. Aluno fictício
+  let simAluno = {}, simUsadas = new Set(), simN = 0;
+  const thVerdadeiro = () => (+$("s-pts").value - 500) / 100;
+  const responde = (th, it) => { const a = it.ip ? it.ip[0] : 1.5, b = it.ip ? it.ip[1] : (H.nivelParaB[it.nv] || 1.96); return Math.random() < 1 / (1 + Math.exp(-a * (th - b))) || Math.random() < 0.2 ? 1 : 0; };
+  const simDesenha = () => { $("s-resumo").innerHTML = caixa(M.resumo(simAluno, $("s-hab").value)); };
+  const simZera = () => { simAluno = {}; simUsadas = new Set(); simN = 0; $("s-log").innerHTML = ""; simDesenha(); };
+  $("s-pts").addEventListener("input", () => { $("s-pts-v").textContent = $("s-pts").value; });
+  $("s-hab").addEventListener("change", simZera); $("s-zero").addEventListener("click", simZera);
+  $("s-run").addEventListener("click", () => {
+    const h = $("s-hab").value; const est = M.resumo(simAluno, h).estado;
+    const trilha = $("s-trilha").value === "auto" ? est : $("s-trilha").value;
+    const lista = M.escolher(simAluno, h, ALVO[trilha] || ALVO.a_diagnosticar, 8, Date.now(), simUsadas);
+    if (!lista.length) { $("s-log").insertAdjacentHTML("beforeend", `<tr><td colspan="6">Não há mais questões desta habilidade para este aluno.</td></tr>`); return; }
+    lista.forEach(e => {
+      simUsadas.add(e.id); const r = responde(thVerdadeiro(), M.itens[e.id]);
+      const out = M.registrar(simAluno, { id: e.id, r, ms: 90000 }); simN++;
+      $("s-log").insertAdjacentHTML("beforeend", `<tr><td>${simN}</td><td>${esc(e.id)}${e.calibrada ? "" : " <span class='nota'>(não calibrada)</span>"}</td><td>${pct(e.chance)}</td><td class="${r ? "ok" : "bad"}">${r ? "acertou" : "errou"}</td><td>${out.resumo.pontos} pts · chance ${pct(out.resumo.chance)}</td><td><span class="est">${esc(NOME[out.resumo.estado])}</span>${out.mudou && out.de ? " ← " + esc(NOME[out.de]) : ""}</td></tr>`);
+    });
+    simDesenha();
+  });
+  simZera();
+
+  // 2. Responda você
+  let euAluno = {}, euUsadas = new Set(), atual = null, inicio = 0;
+  const euDesenha = () => { $("m-resumo").innerHTML = caixa(M.resumo(euAluno, $("m-hab").value)); };
+  const euZera = () => { euAluno = {}; euUsadas = new Set(); atual = null; $("m-q").innerHTML = ""; euDesenha(); };
+  $("m-hab").addEventListener("change", euZera); $("m-zero").addEventListener("click", euZera);
+  $("m-next").addEventListener("click", () => {
+    const h = $("m-hab").value; const est = M.resumo(euAluno, h).estado;
+    const e = M.escolher(euAluno, h, ALVO[est] || ALVO.a_diagnosticar, 1, Date.now(), euUsadas)[0];
+    if (!e) { $("m-q").innerHTML = "<p>Não há mais questões desta habilidade.</p>"; return; }
+    euUsadas.add(e.id); atual = e; inicio = Date.now();
+    const q = M.itens[e.id].q;
+    // Enunciados e alternativas são conteúdo do próprio banco do professor, como no app.
+    const fig = q.f && D.figs && D.figs[q.f] ? `<div>${D.figs[q.f]}</div>` : (q.f || M.itens[e.id].oficial ? "<p class='nota'>[a figura desta questão aparece no app]</p>" : "");
+    $("m-q").innerHTML = `<p class="motivo">${esc(e.motivo)} · ${esc(M.itens[e.id].fonte || "banco do app")}</p>${(q.t || []).map(t => `<p>${t}</p>`).join("")}${fig}${q.c ? `<p class="cmd">${q.c}</p>` : ""}
+      <div class="opts">${q.o.map((o, j) => `<button type="button" data-o="${j}"><b>${"ABCDE"[j]}</b> ${o}</button>`).join("")}<button type="button" data-o="ns" class="ghost">Não sei</button></div><div id="m-fb"></div>`;
+  });
+  $("m-q").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-o]"); if (!b || !atual) return;
+    const q = M.itens[atual.id].q; const o = b.dataset.o;
+    const r = o === "ns" ? "ns" : (+o === q.a ? 1 : 0);
+    const out = M.registrar(euAluno, { id: atual.id, r, ms: Date.now() - inicio, longa: M.itens[atual.id].longa });
+    $("m-q").querySelectorAll("button[data-o]").forEach(x => { x.disabled = true; });
+    $("m-fb").innerHTML = `<p class="${r === 1 ? "ok" : "bad"}">${r === 1 ? "Certo." : r === "ns" ? "Marcado como não sei." : "Errado."} Resposta: ${"ABCDE"[q.a]}.</p>${q.sol ? `<p>${q.sol}</p>` : ""}${out.mudou && out.de ? `<p><b>A habilidade mudou de trilha:</b> ${esc(NOME[out.de])} → ${esc(NOME[out.para])}</p>` : ""}`;
+    atual = null; euDesenha();
+  });
+  euZera();
+})();
+</script>
+</body>
+</html>
