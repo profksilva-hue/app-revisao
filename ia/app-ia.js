@@ -340,6 +340,70 @@
       ${pts.map((x, i) => `<circle cx="${X(i)}" cy="${Y(x.p)}" r="3"/>`).join("")}</svg>`;
   }
   const dataBR = ts => new Date(ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  // ---------- árvore de habilidades (consequências) ----------
+  let arvoreSel = null, ARV = null;
+  function layoutArvore() {
+    if (ARV) return ARV;
+    const lv = {}, nivel = id => lv[id] != null ? lv[id] : (lv[id] = (HAB[id].depende || []).length ? 1 + Math.max(...HAB[id].depende.map(nivel)) : 0);
+    H.habilidades.forEach(h => nivel(h.id));
+    const linhas = []; H.habilidades.forEach(h => { (linhas[lv[h.id]] = linhas[lv[h.id]] || []).push(h.id); });
+    const W = 360, DY = 74, x = {};
+    const posiciona = () => linhas.forEach(l => l.forEach((id, i) => { x[id] = W * (i + 1) / (l.length + 1); }));
+    posiciona();
+    for (let pass = 0; pass < 4; pass++) { // ordena cada linha pela posição média das habilidades de base (menos cruzamentos)
+      linhas.forEach((l, k) => { if (!k) return; l.sort((a, b) => { const m = id => { const d = HAB[id].depende; return d.reduce((s_, p) => s_ + x[p], 0) / d.length; }; return m(a) - m(b); }); });
+      posiciona();
+    }
+    const pos = {}; linhas.forEach((l, k) => l.forEach(id => { pos[id] = { x: x[id], y: 34 + k * DY }; }));
+    return (ARV = { pos, W, H: 34 + (linhas.length - 1) * DY + 34 });
+  }
+  function descendentes(id) { const out = new Map(), fila = [[id, 0]]; while (fila.length) { const [h, d] = fila.shift(); (HAB[h].base || []).forEach(b => { if (!out.has(b)) { out.set(b, d + 1); fila.push([b, d + 1]); } }); } return out; }
+  function ascendentes(id) { const out = new Set(), fila = [id]; while (fila.length) { const h = fila.shift(); (HAB[h].depende || []).forEach(d => { if (!out.has(d)) { out.add(d); fila.push(d); } }); } return out; }
+  function arvoreSVG() {
+    const { pos, W, H: Ht } = layoutArvore(), sel = arvoreSel, desc = sel ? descendentes(sel) : null, asc = sel ? ascendentes(sel) : null;
+    const ativo = id => !sel || id === sel || desc.has(id) || asc.has(id);
+    const arestas = H.habilidades.flatMap(h => (h.depende || []).map(d => { const a = pos[d], b = pos[h.id];
+      const on = sel && ((d === sel || desc.has(d)) && desc.has(h.id) || (asc.has(d) && (asc.has(h.id) || h.id === sel)));
+      return `<path class="ia-ar${on ? " ia-ar-on" : ""}${sel && !on ? " ia-ar-off" : ""}" d="M${a.x},${a.y + 15} C${a.x},${(a.y + b.y) / 2} ${b.x},${(a.y + b.y) / 2} ${b.x},${b.y - 15}"/>`; })).join("");
+    const nos = H.habilidades.map(h => { const p = pos[h.id], e = estadoDe(h.id);
+      return `<g class="ia-no ia-no-${e}${h.id === sel ? " ia-no-sel" : ""}${ativo(h.id) ? "" : " ia-no-off"}" data-ia-no="${h.id}" role="button" tabindex="0" aria-label="${esc(h.id)}, ${esc(h.curto)}, ${NOME[e]}">
+        <rect x="${p.x - 27}" y="${p.y - 15}" width="54" height="30" rx="8"/><text x="${p.x}" y="${p.y + 5}" text-anchor="middle">${esc(h.id)}</text></g>`; }).join("");
+    return `<svg class="ia-arv" viewBox="0 0 ${W} ${Ht}" role="group" aria-label="Árvore de habilidades: as de cima sustentam as de baixo">${arestas}${nos}</svg>`;
+  }
+  function arvoreDetalhe() {
+    const id = arvoreSel; if (!id) return `<p class="note">Toque numa habilidade para ver os seus erros mais frequentes nela e o que uma defasagem pode complicar.</p>`;
+    const h = HAB[id], s = st(), e = estadoDe(id), r = M.resumo(s.aluno, id);
+    const minhas = todasRespostas().filter(x => x.h === id && x.r === 0 && M.itens[x.id]);
+    const tipos = {}; minhas.forEach(x => { const k = ERROS && Number.isInteger(x.v) ? (ERROS.porQuestao[x.id] || [])[x.v] : null; if (k && k !== "outros") tipos[k] = (tipos[k] || 0) + 1; });
+    const ordT = Object.keys(tipos).sort((a, b) => tipos[b] - tipos[a]);
+    const coment = minhas.filter(x => Number.isInteger(x.v)).slice(-3).reverse().map(x => { const q = M.itens[x.id].q; return q.e && q.e[x.v] ? `<li>${q.e[x.v]}</li>` : ""; }).join("");
+    // erros mais comuns de quem estuda esta habilidade (todo o banco)
+    const banco = {}; let tot = 0; (M.porHab[id] || []).forEach(it => ((ERROS && ERROS.porQuestao[it.id]) || []).forEach(k => { if (k && k !== "outros") { banco[k] = (banco[k] || 0) + 1; tot++; } }));
+    const ordB = Object.keys(banco).sort((a, b) => banco[b] - banco[a]).slice(0, 3);
+    const desc = descendentes(id), diretas = [...desc].filter(([, d]) => d === 1).map(([b]) => b), indiretas = [...desc].filter(([, d]) => d > 1).map(([b]) => b);
+    const pesoAfetado = [id, ...desc.keys()].reduce((x, b) => x + HAB[b].peso, 0);
+    const lista = ids => ids.map(b => `<span class="ia-chip ia-${estadoDe(b)}">${esc(b)} · ${esc(HAB[b].curto)}</span>`).join("");
+    const bases = (h.depende || []), basesRec = bases.filter(b => estadoDe(b) === "recuperacao");
+    return `<div class="ia-det"><p class="ia-det-h"><b>${esc(id)} · ${esc(h.curto)}</b> ${pill(e)}</p>
+      <p class="note">${esc(h.nome)} · ${r.n} ${r.n === 1 ? "resposta" : "respostas"}${!r.n && (s.aluno.est || {})[id] && s.aluno.est[id].area ? " (estado estimado pela área)" : ""} · cerca de ${fmt(h.peso)} ${h.peso >= 1.5 ? "questões" : "questão"} por prova</p>
+      <h4>Seus erros mais frequentes aqui</h4>
+      ${minhas.length ? `<p>Você errou <b>${minhas.length}</b> ${minhas.length === 1 ? "questão" : "questões"} desta habilidade${ordT.length ? `, principalmente por <b>${ordT.slice(0, 2).map(k => ERROS.tipos[k].toLowerCase() + " (" + tipos[k] + ")").join("</b> e <b>")}</b>` : ""}.</p>${coment ? `<ul>${coment}</ul>` : ""}` : `<p>Você ainda não errou questões desta habilidade.</p>`}
+      ${ordB.length ? `<p class="note">No banco, os erros mais comuns de quem estuda ${esc(id)} são ${ordB.map(k => `${ERROS.tipos[k].toLowerCase()} (${Math.round(100 * banco[k] / tot)}%)`).join(", ").replace(/, ([^,]*)$/, " e $1")}.</p>` : ""}
+      <h4>O que uma defasagem aqui pode complicar</h4>
+      ${desc.size ? `<p>Cerca de <b>${fmt(pesoAfetado)} questões por prova</b> dependem de ${esc(id)}, direta ou indiretamente.</p>
+        <p><b>Logo em seguida:</b></p><div class="ia-chips">${lista(diretas)}</div>
+        ${indiretas.length ? `<p><b>Mais adiante:</b></p><div class="ia-chips">${lista(indiretas.slice(0, 6))}</div>${indiretas.length > 6 ? `<details class="ia-mais"><summary>Ver as outras ${indiretas.length - 6}</summary><div class="ia-chips">${lista(indiretas.slice(6))}</div></details>` : ""}` : ""}`
+        : `<p>${esc(id)} fecha uma sequência: nenhuma outra habilidade depende dela, mas ela vale cerca de ${fmt(h.peso)} ${h.peso >= 1.5 ? "questões" : "questão"} por prova.</p>`}
+      ${bases.length ? `<h4>Ela se apoia em</h4><div class="ia-chips">${lista(bases)}</div>${basesRec.length && e !== "aprimoramento" ? `<p>Comece por ${basesRec.map(b => `<b>${esc(b)}</b>`).join(" e ")}: ${basesRec.length === 1 ? "ela está" : "elas estão"} em Recuperação e sustenta${basesRec.length === 1 ? "" : "m"} ${esc(id)}.</p>` : ""}` : ""}
+      <div class="ia-row"><button class="btn" type="button" data-ia-praticar="${esc(id)}">Praticar ${esc(id)}</button>${BIB[id] ? `<button class="btn ghost" type="button" data-ia-ler="${esc(id)}">Ler o resumo</button>` : ""}</div></div>`;
+  }
+  function arvoreHTML() {
+    return `<div id="ia-arvore"><p class="note">As habilidades de cima sustentam as de baixo. As cores mostram o seu estado em cada uma.</p>
+      <div class="ia-leg">${["recuperacao", "fixacao", "aprimoramento", "introducao"].map(e => `<span class="ia-chip ia-${e}">${NOME[e]}</span>`).join("")}</div>
+      <div class="ia-arv-wrap">${arvoreSVG()}</div><div id="ia-arv-det">${arvoreDetalhe()}</div></div>`;
+  }
+  function selecionarNo(id) { arvoreSel = arvoreSel === id ? null : id; const w = document.querySelector("#ia-arvore .ia-arv-wrap"), d = document.getElementById("ia-arv-det"); if (w) w.innerHTML = arvoreSVG(); if (d) { d.innerHTML = arvoreDetalhe(); if (arvoreSel) d.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }
+
   function relatorioHTML() {
     if (!pronto) return "";
     const s = SR.S.ia; if (!s || !s.diag || !s.diag.fim) return `<div class="ia-relat ia-card"><h2>Meu relatório</h2><p>O relatório detalhado aparece depois da diagnose. Ela está na aba <b>Hoje</b>.</p></div>`;
@@ -412,7 +476,8 @@
       ${sec(5, "Impacto futuro das defasagens", impacto)}
       ${sec(6, "Seus hábitos de estudo", habitos)}
       ${sec(7, "Evolução", evol)}
-      ${sec(8, "Mapa das 30 habilidades", mapa)}
+      ${sec(8, "Árvore de habilidades", arvoreHTML())}
+      ${sec(9, "Mapa das 30 habilidades", mapa)}
       ${prof}
       <div class="ia-row ia-noprint"><button class="btn ghost" type="button" data-iar="imprimir">Baixar em PDF / imprimir</button><button class="btn ghost" type="button" data-tab="ia">Ir para Hoje</button></div></div>`;
   }
@@ -680,6 +745,11 @@
   const convite = () => pronto && SR.logado() && !(SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim);
 
   document.addEventListener("click", ev => {
+    const no = ev.target.closest("[data-ia-no]"); if (no) { selecionarNo(no.dataset.iaNo); return; }
+    const bp = ev.target.closest("button[data-ia-praticar], button[data-ia-ler]");
+    if (bp) { const h = bp.dataset.iaPraticar || bp.dataset.iaLer; SR.S.tab = "ia"; telaConteudos = false; telaBiblio = false; verMapa = false;
+      if (bp.dataset.iaPraticar) { resumoAberto = null; comecarSessao("livre", false, [h], h + " · " + HAB[h].curto); } else resumoAberto = { h, completo: false, foco: "" };
+      SR.renderAll(); window.scrollTo({ top: 0 }); return; }
     const br = ev.target.closest("#view-id button[data-iar]");
     if (br) { const s = st();
       if (br.dataset.iar === "meta") { const v = +((document.getElementById("ia-meta") || {}).value || 0); s.meta = v >= 400 && v <= 950 ? Math.round(v) : null; salvar(); SR.renderAll(); }
@@ -720,6 +790,7 @@
     else if (a === "imprimir") { document.body.classList.add("ia-imprimir"); window.print(); setTimeout(() => document.body.classList.remove("ia-imprimir"), 500); }
     else if (a === "conteudos") { telaConteudos = true; verMapa = false; render(); topo(); }
   });
+  document.addEventListener("keydown", ev => { const no = ev.target.closest && ev.target.closest("[data-ia-no]"); if (no && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); selecionarNo(no.dataset.iaNo); } });
   document.addEventListener("input", ev => {
     if (ev.target.id !== "ia-busca") return;
     const t = ev.target.value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -794,6 +865,15 @@
   .ia-tab{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}.ia-tab th,.ia-tab td{border-bottom:1px solid var(--rule);padding:4px 6px;text-align:left}
   @media print{body.ia-imprimir-rel *{visibility:hidden}body.ia-imprimir-rel .ia-relat,body.ia-imprimir-rel .ia-relat *{visibility:visible}
     body.ia-imprimir-rel .ia-relat{position:absolute;left:0;top:0;width:100%;border:0}body.ia-imprimir-rel .ia-noprint{display:none}body.ia-imprimir-rel .ia-prof{display:none}}
+  .ia-arv-wrap{overflow-x:auto}.ia-arv{width:100%;max-width:520px;display:block;margin:6px auto}
+  .ia-ar{fill:none;stroke:var(--rule);stroke-width:1.5}.ia-ar-on{stroke:var(--pen);stroke-width:2.5}.ia-ar-off{opacity:.25}
+  .ia-no{cursor:pointer}.ia-no rect{fill:var(--sheet);stroke:var(--pen);stroke-width:1.5}.ia-no text{font:700 13px var(--f-ui);fill:var(--ink)}
+  .ia-no-recuperacao rect{fill:var(--bad-soft);stroke:var(--bad)}.ia-no-fixacao rect{fill:var(--mark-soft);stroke:var(--mark)}
+  .ia-no-aprimoramento rect{fill:var(--ok-soft);stroke:var(--ok)}.ia-no-introducao rect{fill:var(--pen-soft);stroke:var(--pen)}
+  .ia-no-sel rect{stroke-width:3.5}.ia-no-off{opacity:.3}.ia-no:focus{outline:none}.ia-no:focus rect{stroke-width:3.5}
+  .ia-leg,.ia-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+  .ia-chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:600}
+  .ia-det{border:1px solid var(--rule);border-radius:var(--radius);padding:12px 16px;margin-top:8px}.ia-det h4{margin:12px 0 4px}.ia-det p{margin:4px 0}
   .ia-motivo{color:var(--ink-2);font-weight:400}
   .ia-antes,.ia-dica{background:var(--pen-soft);border-radius:8px;padding:10px 14px;margin:0 0 12px}
   .ia-antes summary{cursor:pointer;font-weight:700;color:var(--pen)}
