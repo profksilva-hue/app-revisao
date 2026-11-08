@@ -378,6 +378,11 @@ a.btn.ghost { color: var(--ink); }
 
 /* tabs */
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 18px; border-bottom: 1px solid var(--rule); }
+/* barra de abas deslizante: uma linha só, rolagem lateral no celular */
+.tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs .tab { flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 720px) { .tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; } .tabs.fim { -webkit-mask-image: none; mask-image: none; } }
 .tab { background: none; border: 0; border-bottom: 2.5px solid transparent; padding: 9px 14px 10px; font-weight: 700; font-size: 14px; color: var(--ink-2); margin-bottom: -1px; display: inline-flex; gap: 8px; align-items: center; }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--pen); }
 .tab .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mark); }
@@ -815,6 +820,11 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
       b.setAttribute("aria-selected", S.tab === t);
       document.getElementById("view-" + t).hidden = S.tab !== t;
     });
+    { // mantém a aba ativa visível na barra deslizante
+      const nav = document.getElementById("tabsNav"), at = document.getElementById("tab-" + S.tab);
+      if (nav && at && !at.hidden) { const l = at.offsetLeft - nav.offsetLeft, r = l + at.offsetWidth; if (l < nav.scrollLeft) nav.scrollLeft = l - 8; else if (r > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = r - nav.clientWidth + 32; }
+      if (nav && !nav.dataset.rola) { nav.dataset.rola = 1; const f = () => nav.classList.toggle("fim", nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 4); nav.addEventListener("scroll", f, { passive: true }); addEventListener("resize", f); setTimeout(f, 0); }
+    }
     const tid = document.getElementById("tab-id");
     tid.innerHTML = perfil ? `Identificação <span class="who">${esc((perfil.nome || "").split(" ")[0] || perfil.email.split("@")[0])}${perfil.turma ? " · " + esc(perfil.turma) : ""}</span>`
                            : `Identificação ${cloud === "on" && !teacherUI() ? '<span class="dot" aria-label="pendente"></span>' : ""}`;
