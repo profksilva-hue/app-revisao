@@ -525,6 +525,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
   <div id="repView" class="repview" hidden role="dialog" aria-modal="true" aria-label="Relatório"></div>
   <nav class="tabs" id="tabsNav" role="tablist" aria-label="Seções">
     <button class="tab" role="tab" id="tab-ia" data-tab="ia" type="button">Hoje</button>
+    <button class="tab" role="tab" id="tab-arv" data-tab="arv" type="button">Árvore</button>
     <button class="tab" role="tab" id="tab-aulas" data-tab="aulas" type="button">Aulas e listas</button>
     <button class="tab" role="tab" id="tab-cal" data-tab="cal" type="button">Calendário</button>
     <button class="tab" role="tab" id="tab-id" data-tab="id" type="button">Identificação</button>
@@ -544,6 +545,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
   </section>
 
   <section id="view-ia" hidden></section>
+  <section id="view-arv" hidden></section>
   <section id="view-cal" hidden></section>
   <section id="view-id" hidden></section>
   <section id="view-prof" hidden></section>
@@ -808,7 +810,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
     if (showGate()) return;
     document.getElementById("tab-prof").hidden = !teacherUI();
     if (S.tab === "prof" && !teacherUI()) S.tab = "aulas";
-    ["ia", "aulas", "cal", "id", "prof"].forEach(t => {
+    ["ia", "arv", "aulas", "cal", "id", "prof"].forEach(t => {
       const b = document.getElementById("tab-" + t);
       b.setAttribute("aria-selected", S.tab === t);
       document.getElementById("view-" + t).hidden = S.tab !== t;
@@ -1489,7 +1491,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
     const g = document.getElementById("gate");
     const on = showGate();
     g.hidden = !on;
-    ["view-ia", "view-aulas", "view-cal", "view-id", "view-prof"].forEach(id => { if (on) document.getElementById(id).hidden = true; });
+    ["view-ia", "view-arv", "view-aulas", "view-cal", "view-id", "view-prof"].forEach(id => { if (on) document.getElementById(id).hidden = true; });
     document.getElementById("tabsNav").hidden = on;
     document.getElementById("bannerBox").hidden = on;
     if (!on) return;
@@ -2221,6 +2223,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
     renderGate();
     renderStats(); renderWeeks(); renderMain(); renderReset(); renderId(); renderCal();
     if (S.tab === "ia" && window.IA) window.IA.render();
+    if (S.tab === "arv" && window.IA) window.IA.renderArvore();
     if (S.tab === "prof") renderProf();
     renderBanner(); saveLocal();
   }

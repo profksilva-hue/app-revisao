@@ -365,14 +365,15 @@
     const arestas = H.habilidades.flatMap(h => (h.depende || []).map(d => { const a = pos[d], b = pos[h.id];
       const on = sel && ((d === sel || desc.has(d)) && desc.has(h.id) || (asc.has(d) && (asc.has(h.id) || h.id === sel)));
       return `<path class="ia-ar${on ? " ia-ar-on" : ""}${sel && !on ? " ia-ar-off" : ""}" d="M${a.x},${a.y + 15} C${a.x},${(a.y + b.y) / 2} ${b.x},${(a.y + b.y) / 2} ${b.x},${b.y - 15}"/>`; })).join("");
-    const nos = H.habilidades.map(h => { const p = pos[h.id], e = estadoDe(h.id);
+    const feita = SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim;
+    const nos = H.habilidades.map(h => { const p = pos[h.id], e = feita ? estadoDe(h.id) : "a_diagnosticar";
       return `<g class="ia-no ia-no-${e}${h.id === sel ? " ia-no-sel" : ""}${ativo(h.id) ? "" : " ia-no-off"}" data-ia-no="${h.id}" role="button" tabindex="0" aria-label="${esc(h.id)}, ${esc(h.curto)}, ${NOME[e]}">
         <rect x="${p.x - 27}" y="${p.y - 15}" width="54" height="30" rx="8"/><text x="${p.x}" y="${p.y + 5}" text-anchor="middle">${esc(h.id)}</text></g>`; }).join("");
     return `<svg class="ia-arv" viewBox="0 0 ${W} ${Ht}" role="group" aria-label="Árvore de habilidades: as de cima sustentam as de baixo">${arestas}${nos}</svg>`;
   }
   function arvoreDetalhe() {
     const id = arvoreSel; if (!id) return `<p class="note">Toque numa habilidade para ver os seus erros mais frequentes nela e o que uma defasagem pode complicar.</p>`;
-    const h = HAB[id], s = st(), e = estadoDe(id), r = M.resumo(s.aluno, id);
+    const h = HAB[id], s = st(), feita = s.diag && s.diag.fim, e = feita ? estadoDe(id) : "a_diagnosticar", r = M.resumo(s.aluno, id);
     const minhas = todasRespostas().filter(x => x.h === id && x.r === 0 && M.itens[x.id]);
     const tipos = {}; minhas.forEach(x => { const k = ERROS && Number.isInteger(x.v) ? (ERROS.porQuestao[x.id] || [])[x.v] : null; if (k && k !== "outros") tipos[k] = (tipos[k] || 0) + 1; });
     const ordT = Object.keys(tipos).sort((a, b) => tipos[b] - tipos[a]);
@@ -382,7 +383,7 @@
     const ordB = Object.keys(banco).sort((a, b) => banco[b] - banco[a]).slice(0, 3);
     const desc = descendentes(id), diretas = [...desc].filter(([, d]) => d === 1).map(([b]) => b), indiretas = [...desc].filter(([, d]) => d > 1).map(([b]) => b);
     const pesoAfetado = [id, ...desc.keys()].reduce((x, b) => x + HAB[b].peso, 0);
-    const lista = ids => ids.map(b => `<span class="ia-chip ia-${estadoDe(b)}">${esc(b)} · ${esc(HAB[b].curto)}</span>`).join("");
+    const lista = ids => ids.map(b => `<span class="ia-chip ia-${feita ? estadoDe(b) : "a_diagnosticar"}">${esc(b)} · ${esc(HAB[b].curto)}</span>`).join("");
     const bases = (h.depende || []), basesRec = bases.filter(b => estadoDe(b) === "recuperacao");
     return `<div class="ia-det"><p class="ia-det-h"><b>${esc(id)} · ${esc(h.curto)}</b> ${pill(e)}</p>
       <p class="note">${esc(h.nome)} · ${r.n} ${r.n === 1 ? "resposta" : "respostas"}${!r.n && (s.aluno.est || {})[id] && s.aluno.est[id].area ? " (estado estimado pela área)" : ""} · cerca de ${fmt(h.peso)} ${h.peso >= 1.5 ? "questões" : "questão"} por prova</p>
@@ -394,13 +395,23 @@
         <p><b>Logo em seguida:</b></p><div class="ia-chips">${lista(diretas)}</div>
         ${indiretas.length ? `<p><b>Mais adiante:</b></p><div class="ia-chips">${lista(indiretas.slice(0, 6))}</div>${indiretas.length > 6 ? `<details class="ia-mais"><summary>Ver as outras ${indiretas.length - 6}</summary><div class="ia-chips">${lista(indiretas.slice(6))}</div></details>` : ""}` : ""}`
         : `<p>${esc(id)} fecha uma sequência: nenhuma outra habilidade depende dela, mas ela vale cerca de ${fmt(h.peso)} ${h.peso >= 1.5 ? "questões" : "questão"} por prova.</p>`}
-      ${bases.length ? `<h4>Ela se apoia em</h4><div class="ia-chips">${lista(bases)}</div>${basesRec.length && e !== "aprimoramento" ? `<p>Comece por ${basesRec.map(b => `<b>${esc(b)}</b>`).join(" e ")}: ${basesRec.length === 1 ? "ela está" : "elas estão"} em Recuperação e sustenta${basesRec.length === 1 ? "" : "m"} ${esc(id)}.</p>` : ""}` : ""}
-      <div class="ia-row"><button class="btn" type="button" data-ia-praticar="${esc(id)}">Praticar ${esc(id)}</button>${BIB[id] ? `<button class="btn ghost" type="button" data-ia-ler="${esc(id)}">Ler o resumo</button>` : ""}</div></div>`;
+      ${bases.length ? `<h4>Ela se apoia em</h4><div class="ia-chips">${lista(bases)}</div>${feita && basesRec.length && e !== "aprimoramento" ? `<p>Comece por ${basesRec.map(b => `<b>${esc(b)}</b>`).join(" e ")}: ${basesRec.length === 1 ? "ela está" : "elas estão"} em Recuperação e sustenta${basesRec.length === 1 ? "" : "m"} ${esc(id)}.</p>` : ""}` : ""}
+      <div class="ia-row">${feita ? `<button class="btn" type="button" data-ia-praticar="${esc(id)}">Praticar ${esc(id)}</button>` : ""}${BIB[id] ? `<button class="btn ghost" type="button" data-ia-ler="${esc(id)}">Ler o resumo</button>` : ""}</div></div>`;
   }
   function arvoreHTML() {
     return `<div id="ia-arvore"><p class="note">As habilidades de cima sustentam as de baixo. As cores mostram o seu estado em cada uma.</p>
       <div class="ia-leg">${["recuperacao", "fixacao", "aprimoramento", "introducao"].map(e => `<span class="ia-chip ia-${e}">${NOME[e]}</span>`).join("")}</div>
       <div class="ia-arv-wrap">${arvoreSVG()}</div><div id="ia-arv-det">${arvoreDetalhe()}</div></div>`;
+  }
+  function renderArvore() {
+    const v = document.getElementById("view-arv"); if (!v) return;
+    if (erro) { v.innerHTML = `<div class="ia-wrap"><div class="ia-card"><p>${esc(erro)}</p></div></div>`; return; }
+    if (!pronto) { v.innerHTML = `<div class="ia-wrap"><div class="ia-card"><p>Carregando…</p></div></div>`; return; }
+    const feita = SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim;
+    v.innerHTML = `<div class="ia-wrap"><div class="ia-card"><h2>Árvore de habilidades</h2>
+      <p>As 30 habilidades de Matemática do ENEM, ligadas pelas suas consequências: cada uma sustenta as que estão abaixo dela. Toque numa habilidade para ver os seus erros mais frequentes nela e o que uma defasagem pode complicar.</p>
+      ${feita ? "" : `<p class="note">As cores aparecem depois da diagnose, na aba <b>Hoje</b>. Até lá, a árvore mostra só as ligações.</p>`}</div>
+      <div class="ia-card">${arvoreHTML()}</div></div>`;
   }
   function selecionarNo(id) { arvoreSel = arvoreSel === id ? null : id; const w = document.querySelector("#ia-arvore .ia-arv-wrap"), d = document.getElementById("ia-arv-det"); if (w) w.innerHTML = arvoreSVG(); if (d) { d.innerHTML = arvoreDetalhe(); if (arvoreSel) d.scrollIntoView({ block: "nearest", behavior: "smooth" }); } }
 
@@ -476,7 +487,7 @@
       ${sec(5, "Impacto futuro das defasagens", impacto)}
       ${sec(6, "Seus hábitos de estudo", habitos)}
       ${sec(7, "Evolução", evol)}
-      ${sec(8, "Árvore de habilidades", arvoreHTML())}
+      ${sec(8, "Árvore de habilidades", `<p>Veja como as habilidades se sustentam e o que cada defasagem pode complicar.</p><div class="ia-row"><button class="btn ghost" type="button" data-tab="arv">Abrir a árvore de habilidades</button></div>`)}
       ${sec(9, "Mapa das 30 habilidades", mapa)}
       ${prof}
       <div class="ia-row ia-noprint"><button class="btn ghost" type="button" data-iar="imprimir">Baixar em PDF / imprimir</button><button class="btn ghost" type="button" data-tab="ia">Ir para Hoje</button></div></div>`;
@@ -869,7 +880,7 @@
   .ia-ar{fill:none;stroke:var(--rule);stroke-width:1.5}.ia-ar-on{stroke:var(--pen);stroke-width:2.5}.ia-ar-off{opacity:.25}
   .ia-no{cursor:pointer}.ia-no rect{fill:var(--sheet);stroke:var(--pen);stroke-width:1.5}.ia-no text{font:700 13px var(--f-ui);fill:var(--ink)}
   .ia-no-recuperacao rect{fill:var(--bad-soft);stroke:var(--bad)}.ia-no-fixacao rect{fill:var(--mark-soft);stroke:var(--mark)}
-  .ia-no-aprimoramento rect{fill:var(--ok-soft);stroke:var(--ok)}.ia-no-introducao rect{fill:var(--pen-soft);stroke:var(--pen)}
+  .ia-no-aprimoramento rect{fill:var(--ok-soft);stroke:var(--ok)}.ia-no-introducao rect{fill:var(--pen-soft);stroke:var(--pen)}.ia-no-a_diagnosticar rect{fill:var(--sheet);stroke:var(--ink-2)}
   .ia-no-sel rect{stroke-width:3.5}.ia-no-off{opacity:.3}.ia-no:focus{outline:none}.ia-no:focus rect{stroke-width:3.5}
   .ia-leg,.ia-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
   .ia-chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:600}
@@ -887,6 +898,6 @@
   @media (prefers-reduced-motion:reduce){.ia-sobe{animation:none}}`;
   document.head.appendChild(css);
 
-  window.IA = { render, convite, nivelar, rotuloLista, registrarLista, relatorioHTML };
+  window.IA = { render, renderArvore, convite, nivelar, rotuloLista, registrarLista, relatorioHTML };
   carregar();
 })();
