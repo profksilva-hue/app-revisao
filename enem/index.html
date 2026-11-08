@@ -524,6 +524,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
   <section id="gate" class="gate" hidden></section>
   <div id="repView" class="repview" hidden role="dialog" aria-modal="true" aria-label="Relatório"></div>
   <nav class="tabs" id="tabsNav" role="tablist" aria-label="Seções">
+    <button class="tab" role="tab" id="tab-ia" data-tab="ia" type="button">Minha trilha</button>
     <button class="tab" role="tab" id="tab-aulas" data-tab="aulas" type="button">Aulas e listas</button>
     <button class="tab" role="tab" id="tab-cal" data-tab="cal" type="button">Calendário</button>
     <button class="tab" role="tab" id="tab-id" data-tab="id" type="button">Identificação</button>
@@ -542,6 +543,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
     </div>
   </section>
 
+  <section id="view-ia" hidden></section>
   <section id="view-cal" hidden></section>
   <section id="view-id" hidden></section>
   <section id="view-prof" hidden></section>
@@ -806,7 +808,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
     if (showGate()) return;
     document.getElementById("tab-prof").hidden = !teacherUI();
     if (S.tab === "prof" && !teacherUI()) S.tab = "aulas";
-    ["aulas", "cal", "id", "prof"].forEach(t => {
+    ["ia", "aulas", "cal", "id", "prof"].forEach(t => {
       const b = document.getElementById("tab-" + t);
       b.setAttribute("aria-selected", S.tab === t);
       document.getElementById("view-" + t).hidden = S.tab !== t;
@@ -821,6 +823,9 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
     if (guest && (S.tab === "aulas" || S.tab === "cal")) {
       box.innerHTML = `<div class="banner"><span>Você está usando o app sem e-mail. Suas respostas não ficam salvas e se perdem ao fechar a página. Ao entrar com e-mail, o que você já fez aqui é mantido.</span>
         <button class="btn" type="button" id="leaveGuest">Entrar com e-mail</button></div>`;
+    } else if (S.tab === "aulas" && window.IA && window.IA.convite()) {
+      box.innerHTML = `<div class="banner"><span>A plataforma se adapta melhor quando conhece você. Faça a diagnose com calma, sozinho e sem consulta: ela não vale nota, serve só para montar o seu caminho.</span>
+        <button class="btn" type="button" data-tab="ia">Fazer a diagnose</button></div>`;
     } else if (S.tab === "aulas" && cloud === "on" && precisaEmail()) {
       box.innerHTML = `<div class="banner"><span>A escola passou a aceitar só e-mails ${esc(listaDom())}. Entre de novo com o seu e-mail institucional para continuar salvando.</span>
         <button class="btn" type="button" id="switchUser">Entrar com outro e-mail</button></div>`;
@@ -1443,6 +1448,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
       Object.keys(imported.tent || {}).forEach(k => { st.tent[k] = Math.max(st.tent[k] || 1, imported.tent[k]); });
       st.perfilLocal = Object.assign({}, st.perfilLocal || {}, imported.perfil || {});
       st.hist = mergeHist(st.hist, imported.hist); Object.keys(imported.trih || {}).forEach(k => { if (!(st.trih[k] || []).length) st.trih[k] = imported.trih[k]; });
+      if (imported.ia && !(st.ia && st.ia.diag && st.ia.diag.fim)) st.ia = imported.ia;
     }
     st.perfilLocal = Object.assign({ nome: "", turma: "" }, st.perfilLocal || {}, { email });
     curEmail = email; lsSet(KCUR, email); S = st;
@@ -1456,7 +1462,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
   }
   const b64e = s => btoa(unescape(encodeURIComponent(s)));
   const b64d = s => decodeURIComponent(escape(atob(s)));
-  function codigo() { return "ENEM-" + b64e(JSON.stringify({ v: 2, app: LKEY, ans: S.ans, done: S.done, sets: S.sets, tent: S.tent, trih: S.trih || {}, hist: S.hist || [] })); }
+  function codigo() { return "ENEM-" + b64e(JSON.stringify({ v: 2, app: LKEY, ans: S.ans, done: S.done, sets: S.sets, tent: S.tent, trih: S.trih || {}, hist: S.hist || [], ia: S.ia || null })); }
   // Aceita só dados com o formato do próprio app: números, true/false e textos curtos sem caracteres de HTML.
   function dadosSeguros(o, prof) {
     if ((prof || 0) > 8) return false;
@@ -1480,7 +1486,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
     const g = document.getElementById("gate");
     const on = showGate();
     g.hidden = !on;
-    ["view-aulas", "view-cal", "view-id", "view-prof"].forEach(id => { if (on) document.getElementById(id).hidden = true; });
+    ["view-ia", "view-aulas", "view-cal", "view-id", "view-prof"].forEach(id => { if (on) document.getElementById(id).hidden = true; });
     document.getElementById("tabsNav").hidden = on;
     document.getElementById("bannerBox").hidden = on;
     if (!on) return;
@@ -2211,6 +2217,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
     if (showGate()) { renderStats(); renderGate(); return; }
     renderGate();
     renderStats(); renderWeeks(); renderMain(); renderReset(); renderId(); renderCal();
+    if (S.tab === "ia" && window.IA) window.IA.render();
     if (S.tab === "prof") renderProf();
     renderBanner(); saveLocal();
   }
@@ -2363,6 +2370,8 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
   renderAll();
   if (window.claude && typeof window.claude.use === "function") initCloud();
   else { cloud = "off"; renderAll(); }
+  // ponte para a IA adaptativa (ia/app-ia.js): só leitura do estado e funções de exibição/salvamento
+  window.SR = { get S() { return S; }, D, esc, optT, persist, renderAll, logado: () => !!(perfil && perfil.email) };
 })();
 </script>
 
@@ -2371,4 +2380,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
 if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("../sw.js", { scope: "../" }).catch(() => {}));
 </script>
 <script src="../timer.js"></script>
+<script src="../ia/motor.js"></script>
+<script src="../ia/banco.js"></script>
+<script src="../ia/app-ia.js"></script>
 </body></html>

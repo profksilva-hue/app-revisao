@@ -53,7 +53,8 @@
     "H24",
     "H27",
     "H28"
-   ]
+   ],
+   "curto": "Representações de números"
   },
   {
    "id": "H2",
@@ -64,7 +65,8 @@
    "base": [
     "H19",
     "H28"
-   ]
+   ],
+   "curto": "Padrões numéricos e contagem"
   },
   {
    "id": "H3",
@@ -81,7 +83,8 @@
     "H21",
     "H25",
     "H27"
-   ]
+   ],
+   "curto": "Problemas com conhecimentos numéricos"
   },
   {
    "id": "H4",
@@ -95,7 +98,8 @@
    "base": [
     "H5",
     "H13"
-   ]
+   ],
+   "curto": "Razoabilidade de resultados"
   },
   {
    "id": "H5",
@@ -106,7 +110,8 @@
     "H3",
     "H4"
    ],
-   "base": []
+   "base": [],
+   "curto": "Intervenção com conhecimentos numéricos"
   },
   {
    "id": "H6",
@@ -116,7 +121,8 @@
    "depende": [],
    "base": [
     "H20"
-   ]
+   ],
+   "curto": "Localização e movimentação"
   },
   {
    "id": "H7",
@@ -128,7 +134,8 @@
     "H8",
     "H9",
     "H12"
-   ]
+   ],
+   "curto": "Características de figuras"
   },
   {
    "id": "H8",
@@ -141,7 +148,8 @@
    ],
    "base": [
     "H9"
-   ]
+   ],
+   "curto": "Problemas de geometria"
   },
   {
    "id": "H9",
@@ -152,7 +160,8 @@
     "H7",
     "H8"
    ],
-   "base": []
+   "base": [],
+   "curto": "Argumentos geométricos"
   },
   {
    "id": "H10",
@@ -167,7 +176,8 @@
     "H11",
     "H12",
     "H15"
-   ]
+   ],
+   "curto": "Grandezas e unidades de medida"
   },
   {
    "id": "H11",
@@ -178,7 +188,8 @@
     "H10",
     "H16"
    ],
-   "base": []
+   "base": [],
+   "curto": "Escala"
   },
   {
    "id": "H12",
@@ -193,7 +204,8 @@
    "base": [
     "H13",
     "H14"
-   ]
+   ],
+   "curto": "Problemas com medidas"
   },
   {
    "id": "H13",
@@ -206,7 +218,8 @@
    ],
    "base": [
     "H14"
-   ]
+   ],
+   "curto": "Avaliar medições"
   },
   {
    "id": "H14",
@@ -217,7 +230,8 @@
     "H12",
     "H13"
    ],
-   "base": []
+   "base": [],
+   "curto": "Intervenção com grandezas e medidas"
   },
   {
    "id": "H15",
@@ -231,7 +245,8 @@
     "H16",
     "H17",
     "H19"
-   ]
+   ],
+   "curto": "Dependência entre grandezas"
   },
   {
    "id": "H16",
@@ -245,7 +260,8 @@
    "base": [
     "H11",
     "H17"
-   ]
+   ],
+   "curto": "Proporcionalidade direta e inversa"
   },
   {
    "id": "H17",
@@ -259,7 +275,8 @@
    ],
    "base": [
     "H18"
-   ]
+   ],
+   "curto": "Variação de grandezas em argumentos"
   },
   {
    "id": "H18",
@@ -269,7 +286,8 @@
    "depende": [
     "H17"
    ],
-   "base": []
+   "base": [],
+   "curto": "Intervenção com variação de grandezas"
   },
   {
    "id": "H19",
@@ -283,7 +301,8 @@
    "base": [
     "H20",
     "H21"
-   ]
+   ],
+   "curto": "Representação algébrica"
   },
   {
    "id": "H20",
@@ -297,7 +316,8 @@
    "base": [
     "H17",
     "H24"
-   ]
+   ],
+   "curto": "Gráfico cartesiano"
   },
   {
    "id": "H21",
@@ -311,7 +331,8 @@
    "base": [
     "H22",
     "H23"
-   ]
+   ],
+   "curto": "Problemas algébricos"
   },
   {
    "id": "H22",
@@ -323,7 +344,8 @@
    ],
    "base": [
     "H23"
-   ]
+   ],
+   "curto": "Argumentos algébricos"
   },
   {
    "id": "H23",
@@ -334,7 +356,8 @@
     "H21",
     "H22"
    ],
-   "base": []
+   "base": [],
+   "curto": "Intervenção com conhecimentos algébricos"
   },
   {
    "id": "H24",
@@ -349,7 +372,8 @@
     "H25",
     "H26",
     "H27"
-   ]
+   ],
+   "curto": "Inferências com gráficos e tabelas"
   },
   {
    "id": "H25",
@@ -362,7 +386,8 @@
    ],
    "base": [
     "H26"
-   ]
+   ],
+   "curto": "Problemas com tabelas e gráficos"
   },
   {
    "id": "H26",
@@ -373,7 +398,8 @@
     "H24",
     "H25"
    ],
-   "base": []
+   "base": [],
+   "curto": "Argumentos com gráficos e tabelas"
   },
   {
    "id": "H27",
@@ -387,7 +413,8 @@
    ],
    "base": [
     "H29"
-   ]
+   ],
+   "curto": "Tendência central e dispersão"
   },
   {
    "id": "H28",
@@ -401,7 +428,8 @@
    "base": [
     "H29",
     "H30"
-   ]
+   ],
+   "curto": "Problemas de estatística e probabilidade"
   },
   {
    "id": "H29",
@@ -414,7 +442,8 @@
    ],
    "base": [
     "H30"
-   ]
+   ],
+   "curto": "Argumentos com estatística e probabilidade"
   },
   {
    "id": "H30",
@@ -425,7 +454,8 @@
     "H28",
     "H29"
    ],
-   "base": []
+   "base": [],
+   "curto": "Intervenção com estatística e probabilidade"
   }
  ]
 }
