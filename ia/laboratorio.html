@@ -36,6 +36,7 @@ th { color: var(--ink-2); font-weight: 600; }
 .opts button { text-align: left; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; font-weight: 400; line-height: 1.4; }
 .motivo { font-size: 13px; color: var(--ink-2); margin: 0 0 8px; }
 .nota { font-size: 13px; color: var(--ink-2); }
+#m-q img { max-width: 100%; }
 </style>
 </head>
 <body>
@@ -129,9 +130,11 @@ th { color: var(--ink-2); font-weight: 600; }
     euUsadas.add(e.id); atual = e; inicio = Date.now();
     const q = M.itens[e.id].q;
     // Enunciados e alternativas são conteúdo do próprio banco do professor, como no app.
-    const fig = q.f && D.figs && D.figs[q.f] ? `<div>${D.figs[q.f]}</div>` : (q.f || M.itens[e.id].oficial ? "<p class='nota'>[a figura desta questão aparece no app]</p>" : "");
+    const fig = q.f && D.figs && D.figs[q.f] ? `<div><img src="${D.figs[q.f]}" alt="Figura da questão" style="max-width:100%"></div>` : "";
     $("m-q").innerHTML = `<p class="motivo">${esc(e.motivo)} · ${esc(M.itens[e.id].fonte || "banco do app")}</p>${(q.t || []).map(t => `<p>${t}</p>`).join("")}${fig}${q.c ? `<p class="cmd">${q.c}</p>` : ""}
       <div class="opts">${q.o.map((o, j) => `<button type="button" data-o="${j}"><b>${"ABCDE"[j]}</b> ${o}</button>`).join("")}<button type="button" data-o="ns" class="ghost">Não sei</button></div><div id="m-fb"></div>`;
+    const aulaN = M.itens[e.id].aula, imgs = [...document.querySelectorAll('#m-q img.ofi[data-k]')];
+    if (imgs.length && aulaN != null) fetch('../enem/of/a' + aulaN + '.json').then(r => r.json()).then(m => imgs.forEach(el => { if (m[el.dataset.k]) el.src = m[el.dataset.k]; })).catch(() => {});
   });
   $("m-q").addEventListener("click", ev => {
     const b = ev.target.closest("button[data-o]"); if (!b || !atual) return;
