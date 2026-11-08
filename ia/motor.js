@@ -21,7 +21,8 @@
     esquecimento: { dias: 30, achatamento: 0.7 },
     repeticao: { dias: 30, diasSeErrou: 3 },
     naoCalibrada: { a: 1.5, c: 0.2, peso: 0.5 }, // questões do ENEM só com nível de 1 a 5
-    pontos: { base: 500, escala: 100 }          // conversão aproximada para a escala do ENEM
+    pontos: { base: 500, escala: 100 },         // conversão aproximada para a escala do ENEM
+    recencia: { fator: 0.9, minimo: 0.5 }      // respostas antigas pesam menos: o aluno aprende
   };
 
   const DIA = 864e5;
@@ -40,6 +41,7 @@
       itens[it.id] = it; (porHab[it.h] = porHab[it.h] || []).push(it);
     });
     const G = []; for (let t = cfg.grade.min; t <= cfg.grade.max + 1e-9; t += cfg.grade.passo) G.push(+t.toFixed(4));
+    const rec = depois => Math.max(cfg.recencia.minimo, Math.pow(cfg.recencia.fator, depois));
     const fRef = th => p3(th, cfg.ref.a, cfg.ref.b, cfg.ref.c);
 
     // Parâmetros de uma questão e o peso dela no cálculo do domínio (princípio 9).
@@ -61,13 +63,13 @@
     }
 
     // Distribuição a posteriori do domínio numa habilidade.
-    function posterior(aluno, h, agora) {
+    function posterior(aluno, h, agora, semRecencia) {
       const rs = (aluno.resp && aluno.resp[h]) || [];
       const m0 = mediaDaArea(aluno, h, agora);
       let lp = G.map(g => -((g - m0) ** 2) / (2 * cfg.priori.dp ** 2));
-      rs.forEach(([id, r, , , w]) => {
+      rs.forEach(([id, r, , , w], k) => {
         const pr = params(itens[id]); if (!pr || !pr.peso || !w) return;
-        const peso = pr.peso * w;
+        const peso = pr.peso * w * (semRecencia ? 1 : rec(rs.length - 1 - k));
         lp = lp.map((v, i) => v + peso * Math.log(verossimilhanca(G[i], pr, r)));
       });
       const ultimo = rs.length ? rs[rs.length - 1][3] : null;
@@ -90,7 +92,7 @@
     function posteriorSemArea(aluno, h) {
       const rs = (aluno.resp && aluno.resp[h]) || [];
       let lp = G.map(g => -((g - cfg.priori.media) ** 2) / (2 * cfg.priori.dp ** 2));
-      rs.forEach(([id, r, , , w]) => { const pr = params(itens[id]); if (!pr || !pr.peso || !w) return; lp = lp.map((v, i) => v + pr.peso * w * Math.log(verossimilhanca(G[i], pr, r))); });
+      rs.forEach(([id, r, , , w], k) => { const pr = params(itens[id]); if (!pr || !pr.peso || !w) return; lp = lp.map((v, i) => v + pr.peso * w * rec(rs.length - 1 - k) * Math.log(verossimilhanca(G[i], pr, r))); });
       const mx = Math.max(...lp); const ps = lp.map(v => Math.exp(v - mx)); const z = ps.reduce((s, v) => s + v, 0);
       return { ps: ps.map(v => v / z) };
     }
@@ -102,14 +104,17 @@
       agora = agora || Date.now();
       if (vista === false) return { h, estado: "introducao", n: 0 };
       const post = posterior(aluno, h, agora);
+      const toda = posterior(aluno, h, agora, true);
       const th = media(post);
       const sd = Math.sqrt(post.ps.reduce((s, p, i) => s + p * (G[i] - th) ** 2, 0));
       const r = {
         h, n: post.n, theta: th, ep: sd,
         pontos: Math.round(cfg.pontos.base + cfg.pontos.escala * th),
         chance: fRef(th),
-        ic80: [fRef(quantil(post, 0.10)), fRef(quantil(post, 0.90))],
-        ic90: [fRef(quantil(post, 0.05)), fRef(quantil(post, 0.95))],
+        // A estimativa acompanha o aluno de agora (respostas recentes pesam mais);
+        // a validação usa toda a evidência: sobe rápido, valida com calma.
+        ic80: [fRef(quantil(toda, 0.10)), fRef(quantil(toda, 0.90))],
+        ic90: [fRef(quantil(toda, 0.05)), fRef(quantil(toda, 0.95))],
         revisao: post.esquecida
       };
       const est = (aluno.est && aluno.est[h]) || null;

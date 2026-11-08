@@ -80,7 +80,7 @@ const habs = Object.keys(M.porHab).filter(h => M.porHab[h].length >= 15);
   confere("Acerto isolado não muda o estado", violacoes === 0, violacoes + " violações em 200 casos");
 })();
 
-// 4. Aluno em Recuperação que passa a acertar questões típicas sobe para Fixação em até 6 respostas.
+// 4. Aluno em Recuperação que passa a acertar questões típicas sobe para Fixação em até 8 respostas (decisão do professor, 07/11).
 (function () {
   let subiu = 0, total = 0, respostas = [];
   for (let k = 0; k < 200; k++) {
@@ -88,14 +88,17 @@ const habs = Object.keys(M.porHab).filter(h => M.porHab[h].length >= 15);
     M.escolher(aluno, h, [0.0, 1.0], 4, t, usadas).forEach(e => { usadas.add(e.id); M.registrar(aluno, { id: e.id, r: 0, ms: 60000, ts: t += 1000 }); });
     if (M.resumo(aluno, h, t).estado !== "recuperacao") continue;
     total++;
-    for (let i = 1; i <= 8; i++) {
-      const e = M.escolher(aluno, h, [0.45, 0.6], 1, t, usadas)[0]; if (!e) break; usadas.add(e.id);
+    for (let i = 1; i <= 10; i++) {
+      // "questões típicas": as mais próximas do nível da questão de referência (~630 pontos)
+      const e = M.porHab[h].filter(it => !usadas.has(it.id) && M.params(it).peso > 0)
+        .sort((x, y) => Math.abs(M.params(x).b - M.config.ref.b) - Math.abs(M.params(y).b - M.config.ref.b))[0];
+      if (!e) break; usadas.add(e.id);
       M.registrar(aluno, { id: e.id, r: 1, ms: 60000, ts: t += 1000 });
       if (M.resumo(aluno, h, t).estado !== "recuperacao") { subiu++; respostas.push(i); break; }
     }
   }
-  const ate6 = respostas.filter(n => n <= 6).length;
-  confere("Recuperação → Fixação com acertos consistentes", ate6 / total >= 0.9, ate6 + " de " + total + " subiram em até 6 respostas (mediana " + (respostas.sort((a, b) => a - b)[Math.floor(respostas.length / 2)] || "-") + ")");
+  const ate8 = respostas.filter(n => n <= 8).length;
+  confere("Recuperação → Fixação com acertos consistentes", ate8 / total >= 0.9, ate8 + " de " + total + " subiram em até 8 respostas (mediana " + (respostas.sort((a, b) => a - b)[Math.floor(respostas.length / 2)] || "-") + ")");
 })();
 
 // 5. Questões geradas e não calibradas não alteram o domínio.
