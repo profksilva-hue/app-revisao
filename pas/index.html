@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Santa Revisão">
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Revisão de Matemática para o PAS/UnB 2026: 12 aulas por etapa, listas com itens A, B, C e D e correção no padrão do PAS."><title>Santa Revisão · PAS/UnB 2026</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
@@ -1050,7 +1051,7 @@ section.base h4, details.base summary { margin: 0 0 8px; font: 700 12px/1.2 var(
         ${P.perdaChute ? `<p class="bad"><b>O custo dos erros:</b> ${P.perdaChute} ${P.perdaChute === 1 ? "item errado de tipo A ou C descontou" : "itens errados de tipo A ou C descontaram"} pontos. Se ${P.perdaChute === 1 ? "ele tivesse ficado" : "eles tivessem ficado"} em branco, o escore seria <b>${fmtE(P.semChute)}</b>.</p>` : `<p class="ok-msg">Nenhum item de tipo A ou C errado: nada foi descontado nesta lista.</p>`}
         ${taxaA != null ? `<p class="${taxaA >= 0.5 ? "note" : "bad"}">Nos itens de tipo A que você marcou, acertou ${pctS(taxaA)}. ${taxaA >= 0.75 ? "Ótimo índice: marcar está valendo a pena." : taxaA >= 0.5 ? "Cada erro anula um acerto: vale marcar só quando você consegue justificar." : "Abaixo de 50%, marcar está tirando pontos. Deixe em branco os itens em que você não consegue justificar a resposta."}</p>` : ""}
       </div>
-      ${hist.length > 1 ? `<div class="tsum"><span>Nesta aula: ${hist.map(x => `${x.t}ª tentativa <b>${fmtE(x.p)}</b>`).join(" → ")}</span></div>` : ""}
+      ${hist.length > 1 ? `<div class="tsum"><span>Nesta aula: ${hist.map(x => `${esc(x.t)}ª tentativa <b>${esc(fmtE(x.p))}</b>`).join(" → ")}</span></div>` : ""}
       <h4>Encaminhamentos por habilidade da Matriz</h4>
       <div class="tcards">${gs.map(card).join("")}</div>
       <details class="tcomo"><summary>Como o PAS pontua</summary>
@@ -1349,12 +1350,23 @@ section.base h4, details.base summary { margin: 0 0 8px; font: 700 12px/1.2 var(
   }
   const b64e = s => btoa(unescape(encodeURIComponent(s)));
   const b64d = s => decodeURIComponent(escape(atob(s)));
-  function codigo() { return "PAS-" + b64e(JSON.stringify({ v: 1, app: LKEY, email: perfil.email, etapa: S.etapa, ans: S.ans, done: S.done, sets: S.sets, tent: S.tent, hist: S.hist || [] })); }
+  function codigo() { return "PAS-" + b64e(JSON.stringify({ v: 2, app: LKEY, etapa: S.etapa, ans: S.ans, done: S.done, sets: S.sets, tent: S.tent, hist: S.hist || [] })); }
+  // Aceita só dados com o formato do próprio app: números, true/false e textos curtos sem caracteres de HTML.
+  function dadosSeguros(o, prof) {
+    if ((prof || 0) > 8) return false;
+    if (o === null || typeof o === "boolean") return true;
+    if (typeof o === "number") return isFinite(o);
+    if (typeof o === "string") return o.length <= 200 && /^[A-Za-z0-9 _.:@+~\/-]*$/.test(o);
+    if (Array.isArray(o)) return o.length <= 2000 && o.every(x => dadosSeguros(x, (prof || 0) + 1));
+    if (typeof o === "object") { const ks = Object.keys(o); return ks.length <= 2000 && ks.every(k => /^[A-Za-z0-9_.~-]{1,40}$/.test(k) && dadosSeguros(o[k], (prof || 0) + 1)); }
+    return false;
+  }
   function lerCodigo(txt) {
     try {
       const s = String(txt || "").trim().replace(/^PAS-/, "").replace(/\s+/g, "");
       const o = JSON.parse(b64d(s));
-      if (!o || o.app !== LKEY || !o.email) return { err: o && o.app && o.app !== LKEY ? "Esse código é de outro app de revisão." : "Código inválido. Copie o código inteiro e tente de novo." };
+      if (!o || o.app !== LKEY) return { err: o && o.app && o.app !== LKEY ? "Esse código é de outro app de revisão." : "Código inválido. Copie o código inteiro e tente de novo." };
+      if (s.length > 600000 || !dadosSeguros(o)) return { err: "Código inválido. Copie o código inteiro e tente de novo." };
       return { ok: o };
     } catch (e) { return { err: "Código inválido. Copie o código inteiro e tente de novo." }; }
   }
@@ -1381,7 +1393,7 @@ section.base h4, details.base summary { margin: 0 0 8px; font: 700 12px/1.2 var(
         <details><summary>Vai continuar de outro aparelho? Cole seu código de progresso</summary>
           <textarea id="g-code" aria-label="Código de progresso" placeholder="PAS-…"></textarea>
           <div class="row" style="margin-top:8px"><button class="btn ghost" type="button" id="importCode">Importar e entrar</button></div>
-          <p class="note" style="margin-top:6px">O código fica na aba Identificação do aparelho onde você já estudou.</p></details>
+          <p class="note" style="margin-top:6px">Digite seu e-mail acima e cole aqui o código, que fica na aba Identificação do aparelho onde você já estudou.</p></details>
       </form>
       <form class="form" id="profForm" novalidate>
         ${gateProf ? `<h3 style="margin:0">Entrar como professor</h3>
@@ -1488,7 +1500,7 @@ section.base h4, details.base summary { margin: 0 0 8px; font: 700 12px/1.2 var(
           ${repMsg ? `<span class="${repMsg.ok ? "ok-msg" : "warn"}">${esc(repMsg.t)}</span>` : ""}</div>` : '<p class="note">Entre com seu e-mail para gerar o relatório.</p>'}
           ${repShow ? `<textarea id="repTxt" readonly aria-label="Relatório">${esc(relatorio())}</textarea>` : ""}</div>
         ${perfil ? `<div class="codebox"><h2>Continuar em outro aparelho</h2>
-          <p>Copie seu código de progresso e cole na tela de entrada do outro aparelho. Ele leva seu e-mail, suas respostas e notas: use só nos seus aparelhos e não publique em grupos.</p>
+          <p>Copie seu código de progresso e cole na tela de entrada do outro aparelho. Ele leva suas respostas e notas, mas não o seu e-mail: no outro aparelho, digite o mesmo e-mail e cole o código. Use só nos seus aparelhos e não publique em grupos.</p>
           <div class="row"><button class="btn ghost" type="button" id="copyCode">Copiar código de progresso</button>
           ${codeMsg ? `<span class="${codeMsg.ok ? "ok-msg" : "warn"}">${esc(codeMsg.t)}</span>` : ""}</div>
           ${codeShow ? `<textarea id="codeTxt" readonly aria-label="Código de progresso">${esc(codigo())}</textarea>` : ""}</div>` : ""}</div></div>`;
@@ -2132,7 +2144,7 @@ section.base h4, details.base summary { margin: 0 0 8px; font: 700 12px/1.2 var(
     if (t.id === "importCode") {
       const r = lerCodigo((document.getElementById("g-code") || {}).value);
       if (r.err) { gateErr = r.err; renderAll(); return; }
-      entrar(r.ok.email, r.ok); return;
+      const em = String((document.getElementById("g-email") || {}).value || "").trim(); entrar(em || r.ok.email, r.ok); return;
     }
     if (t.id === "copyCode") {
       const txt = codigo();
