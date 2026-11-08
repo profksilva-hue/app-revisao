@@ -8,7 +8,7 @@
   const SR = window.SR;
   if (!SR || !window.Motor || !window.Banco) return;
   const L = "ABCDE", esc = SR.esc, DIA = 864e5;
-  const NOME = { recuperacao: "Recuperação", fixacao: "Fixação", aprimoramento: "Aprimoramento", introducao: "Introdução", adiantar: "Adiantar", a_diagnosticar: "A diagnosticar" };
+  const NOME = { recuperacao: "Recuperação", fixacao: "Fixação", aprimoramento: "Aprimoramento", introducao: "Introdução", adiantar: "Adiantar", livre: "Conteúdo escolhido", a_diagnosticar: "A diagnosticar" };
   const ORD = { recuperacao: 0, fixacao: 1, aprimoramento: 2 };
   const MAXQ = 30;                 // diagnose: no máximo 30 questões (cerca de 40 minutos)
   const DIAG_DUPLAS = 15;          // decisão de 08/11: 2 questões para as 15 habilidades de maior peso
@@ -18,9 +18,11 @@
     recuperacao: { alvo: [0.7, 0.8], naoSei: true, relogio: false, min: 20 },
     fixacao: { alvo: [0.55, 0.7], naoSei: true, relogio: false, min: 20 },
     aprimoramento: { alvo: [0.4, 0.55], naoSei: false, relogio: true, min: 24 },
-    adiantar: { alvo: [0.75, 0.85], naoSei: true, relogio: false, min: 10 }
+    adiantar: { alvo: [0.75, 0.85], naoSei: true, relogio: false, min: 10 },
+    livre: { alvo: null, naoSei: true, relogio: false, min: 20 }   // conteúdo escolhido pelo aluno: a chance segue o estado de cada habilidade
   };
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
+  let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
   let marcada = null, inicioQ = 0, qAtualId = null, verMapa = false, dicaAberta = false, tique = null;
 
   const st = () => { const S = SR.S; if (!S.ia) S.ia = { v: 1, serie: null, aluno: {}, naoVistas: [], diag: null }; return S.ia; };
@@ -41,6 +43,11 @@
       H.habilidades.forEach(hb => {
         const c = {}; (M.porHab[hb.id] || []).forEach(i => { if (i.aula != null) c[i.aula] = (c[i.aula] || 0) + 1; });
         const k = Object.keys(c).sort((a, b) => c[b] - c[a])[0]; if (k) AULA[hb.id] = +k;
+      });
+      // habilidades de cada aula (tema da escola), da mais frequente para a menos
+      SR.D.aulas.forEach(a => {
+        const c = {}; itens.forEach(i => { if (i.aula === a.n) c[i.h] = (c[i.h] || 0) + 1; });
+        AULAHABS[a.n] = Object.keys(c).filter(h => HAB[h] && c[h] >= 3).sort((x, y) => c[y] - c[x]);
       });
       // Diagnose: só questões do banco do app (nunca as geradas); as calibradas, quando a habilidade tem ao menos 2.
       const diag = [];
@@ -144,7 +151,7 @@
   }
   function sugestao() {
     const s = st(), rec = habsDaTrilha("recuperacao"), fix = habsDaTrilha("fixacao"), apr = habsDaTrilha("aprimoramento");
-    const ult = (s.sessoes || []).slice(-3).map(x => x.trilha);
+    const ult = (s.sessoes || []).filter(x => x.trilha !== "livre").slice(-3).map(x => x.trilha);
     const repetida = ult.length === 3 && ult.every(x => x === ult[0]) ? ult[0] : null;
     const ok = t => t !== repetida && habsDaTrilha(t).length;
     const base = rec.find(h => (h.base || []).length);
@@ -159,7 +166,15 @@
   }
 
   // ---------- sessão do dia ----------
-  function montarSlots(t, curta) {
+  function montarSlots(t, curta, escolhidas) {
+    if (t === "livre") { // conteúdo escolhido pelo aluno: até 3 habilidades, cada uma na faixa do seu estado
+      const hs = (escolhidas || []).slice(0, 3); if (!hs.length) return [];
+      const temRec = hs.some(h => estadoDe(h) === "recuperacao");
+      const tipos = curta ? (temRec ? ["pratica", "pratica", "pratica", "checagem"] : ["pratica", "pratica", "pratica", "pratica"])
+        : (temRec ? ["pratica", "pratica", "pratica", "pratica", "pratica", "pratica", "checagem", "checagem"] : Array(8).fill("pratica"));
+      const recs = hs.filter(h => estadoDe(h) === "recuperacao");
+      return tipos.map((tipo, i) => ({ h: tipo === "checagem" ? recs[i % recs.length] : hs[i % hs.length], tipo }));
+    }
     const hs = habsDaTrilha(t).slice(0, 3).map(h => h.id); if (!hs.length) return [];
     const reparte = (tipos) => tipos.map((tipo, i) => ({ h: hs[i % hs.length], tipo }));
     if (t === "recuperacao") return reparte(curta ? ["guiada", "pratica", "pratica", "checagem"] : ["guiada", "guiada", "pratica", "pratica", "pratica", "pratica", "checagem", "checagem"]);
@@ -180,6 +195,7 @@
   function alvoDoSlot(sl, t) {
     if (sl.tipo === "checagem") { const c = M.resumo(st().aluno, sl.h).chance; return [Math.max(0.05, c - 0.07), Math.min(0.95, c + 0.07)]; } // nível da questão de referência
     if (sl.tipo === "revisao") return TR.fixacao.alvo;
+    if (t === "livre") { const e = estadoDe(sl.h); return e === "introducao" ? TR.adiantar.alvo : (TR[e] || TR.fixacao).alvo; }
     if (sl.tipo === "vizinha") { const e = estadoDe(sl.h); return TR[e] ? TR[e].alvo : TR.aprimoramento.alvo; }
     return TR[t].alvo;
   }
@@ -192,10 +208,10 @@
     };
     return tentar(sl.h) || se.slots.map(x => x.h).filter(h => h !== sl.h).map(tentar).find(Boolean) || null;
   }
-  function comecarSessao(t, curta) {
-    const s = st(), slots = montarSlots(t, curta); if (!slots.length) return;
+  function comecarSessao(t, curta, escolhidas, rotulo) {
+    const s = st(), slots = montarSlots(t, curta, escolhidas); if (!slots.length) return;
     const antes = {}; [...new Set(slots.map(x => x.h))].forEach(h => { antes[h] = estadoDe(h); });
-    s.sessao = { trilha: t, curta: !!curta, inicio: Date.now(), slots, i: 0, resp: [], ns: 0, antes, atual: null, respondida: null, relogio: TR[t].relogio, fim: null };
+    s.sessao = { trilha: t, curta: !!curta, inicio: Date.now(), slots, i: 0, resp: [], ns: 0, antes, atual: null, respondida: null, relogio: TR[t].relogio, fim: null, rotulo: rotulo || null };
     avancar();
   }
   function avancar() {
@@ -324,7 +340,34 @@
     return `<div class="ia-card"><h2>Hoje</h2><p>Escolha uma sessão curta. A IA sugere uma, mas quem decide é você.</p>
         ${feitas ? `<p class="note">${feitas} ${feitas === 1 ? "sessão feita" : "sessões feitas"} até agora.</p>` : ""}</div>
       <div class="ia-trilhas">${["recuperacao", "fixacao", "aprimoramento"].map(cartao).join("")}${temIntro ? cartao("adiantar") : ""}</div>
+      <div class="ia-card ia-escolher"><h4>Quero escolher outro conteúdo</h4><p class="note">Está estudando um assunto na escola? Escolha o tema e pratique com questões do ENEM no seu nível.</p>
+        <div class="ia-row"><button class="btn" type="button" data-ia="conteudos">Escolher conteúdo</button></div></div>
       <div class="ia-row"><button class="btn ghost" type="button" data-ia="mapa">Ver meu mapa</button></div>`;
+  }
+  function telaEscolha() {
+    const pillsDe = hs => hs.map(h => `<span class="ia-hab">${esc(h)} ${pill(estadoDe(h))}</span>`).join("");
+    const botoes = (hs, rot) => { const v = esc(hs.slice(0, 3).join(",")), r = esc(rot);
+      return `<button class="btn" type="button" data-ia-livre="${v}" data-ia-rot="${r}">Praticar (8)</button><button class="btn ghost" type="button" data-ia-livre="${v}" data-ia-rot="${r}" data-ia-curta="1">4 questões</button>`; };
+    let lista;
+    if (modoConteudos === "tema") {
+      lista = SR.D.aulas.filter(a => (AULAHABS[a.n] || []).length).map(a => {
+        const hs = AULAHABS[a.n].slice(0, 3);
+        return `<div class="ia-cont"><p class="ia-cont-h"><b>Aula ${String(a.n).padStart(2, "0")} · ${esc(a.tema)}</b></p>
+          ${a.cont ? `<p class="note">${esc(a.cont)}</p>` : ""}<div class="ia-habs">${pillsDe(hs)}</div>
+          <div class="ia-row">${botoes(hs, "Aula " + String(a.n).padStart(2, "0") + " · " + a.tema)}<button class="ia-mini" type="button" data-calgo="${a.n}" data-calmode="resumo">Ver a teoria</button></div></div>`;
+      }).join("");
+    } else {
+      lista = H.areas.map(ar => `<h4 class="ia-h4">${esc(ar.nome)}</h4>` + H.habilidades.filter(h => h.area === ar.id).map(h => {
+        const e = estadoDe(h.id);
+        return `<div class="ia-cont"><p class="ia-cont-h"><b>${esc(h.id)} · ${esc(h.curto)}</b> ${pill(e)}</p>
+          <div class="ia-row">${botoes([h.id], h.id + " · " + h.curto)}${e === "introducao" ? `<button class="ia-mini" type="button" data-ia-jaVi="${esc(h.id)}">Já estou estudando isso na escola</button>` : ""}</div></div>`;
+      }).join("")).join("");
+    }
+    return `<div class="ia-card"><h2>Escolher conteúdo</h2>
+        <p>Pratique o que você está vendo na escola. A IA continua ajustando as questões ao seu nível em cada habilidade, e tudo conta para o seu mapa.</p>
+        <div class="mode sm ia-row" role="group" aria-label="Organizar por"><button type="button" data-ia-modo="tema" aria-pressed="${modoConteudos === "tema"}">Por tema das aulas</button><button type="button" data-ia-modo="area" aria-pressed="${modoConteudos === "area"}">Por área do ENEM</button></div></div>
+      ${lista}
+      <div class="ia-row"><button class="btn ghost" type="button" data-ia="hoje">Voltar para Hoje</button><button class="btn ghost" type="button" data-tab="aulas">Abrir Aulas e listas</button></div>`;
   }
   function telaSessao() {
     const s = st(), se = s.sessao, at = se.atual, it = M.itens[at.id], q = it.q, k = se.i + 1, n = se.slots.length, resp = se.respondida;
@@ -346,7 +389,7 @@
         <div class="ia-row">${!certo ? btnTeoria(at.h) : ""}<button class="btn" type="button" data-ia="proxima">${k < n ? "Próxima questão" : "Ver como foi"}</button></div></div>`;
     }
     const relogio = se.relogio ? `<span class="ia-relogio" id="ia-relogio">0:00</span>` : "";
-    return `<div class="ia-prog"><span>${NOME[se.trilha]} · questão <b>${k}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span>${relogio}
+    return `<div class="ia-prog"><span>${esc(se.rotulo || NOME[se.trilha])} · questão <b>${k}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span>${relogio}
         <button class="ia-mini" type="button" data-ia="relogio">${se.relogio ? "Desligar" : "Ligar"} cronômetro</button></div>
       ${antes}
       <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r"><small class="ia-motivo">${esc(at.motivo || "")}</small></span></div>
@@ -390,7 +433,7 @@
     else if (s.diag && s.diag.fim) {
       if (s.sessao && !s.sessao.fim && s.sessao.atual) html = telaSessao();
       else if (s.sessao && s.sessao.fim && !s.sessao.visto) html = telaFimSessao();
-      else html = verMapa || !s.diag.mapaVisto ? telaResultado() : telaHoje();
+      else html = telaConteudos ? telaEscolha() : verMapa || !s.diag.mapaVisto ? telaResultado() : telaHoje();
     }
     else if (s.diag && s.diag.atual && s.diag.emCurso) html = telaDiag();
     else html = telaConvite();
@@ -405,7 +448,10 @@
     const s = st(); const topo = () => window.scrollTo({ top: 0 });
     if (b.dataset.iaSerie) { s.serie = b.dataset.iaSerie; salvar(); SR.renderAll(); return; }
     if (b.dataset.iao != null) { if (!(s.sessao && s.sessao.respondida && !s.sessao.fim)) { marcada = +b.dataset.iao; render(); } return; }
-    if (b.dataset.iaTrilha) { verMapa = false; s.diag.mapaVisto = true; comecarSessao(b.dataset.iaTrilha, !!b.dataset.iaCurta); render(); topo(); return; }
+    if (b.dataset.iaLivre) { telaConteudos = false; verMapa = false; s.diag.mapaVisto = true; comecarSessao("livre", !!b.dataset.iaCurta, b.dataset.iaLivre.split(","), b.dataset.iaRot); render(); topo(); return; }
+    if (b.dataset.iaModo) { modoConteudos = b.dataset.iaModo; render(); return; }
+    if (b.dataset.iaJavi) { s.naoVistas = s.naoVistas.filter(h => h !== b.dataset.iaJavi); salvar(); render(); return; }
+    if (b.dataset.iaTrilha) { telaConteudos = false; verMapa = false; s.diag.mapaVisto = true; comecarSessao(b.dataset.iaTrilha, !!b.dataset.iaCurta); render(); topo(); return; }
     const a = b.dataset.ia;
     if (a === "comecar") { comecarDiag(); SR.renderAll(); topo(); }
     else if (a === "continuar") { s.diag.emCurso = true; salvar(); SR.renderAll(); topo(); }
@@ -419,8 +465,9 @@
     else if (a === "proxima") { s.sessao.i++; avancar(); render(); topo(); }
     else if (a === "relogio") { s.sessao.relogio = !s.sessao.relogio; salvar(); render(); }
     else if (a === "sair") { terminarSessao(); render(); topo(); }
-    else if (a === "hoje") { verMapa = false; s.diag.mapaVisto = true; if (s.sessao && s.sessao.fim) s.sessao.visto = true; salvar(); render(); topo(); }
-    else if (a === "mapa") { verMapa = true; render(); topo(); }
+    else if (a === "hoje") { verMapa = false; telaConteudos = false; s.diag.mapaVisto = true; if (s.sessao && s.sessao.fim) s.sessao.visto = true; salvar(); render(); topo(); }
+    else if (a === "mapa") { verMapa = true; telaConteudos = false; render(); topo(); }
+    else if (a === "conteudos") { telaConteudos = true; verMapa = false; render(); topo(); }
   });
   // cronômetro opcional (ligado por padrão só no Aprimoramento)
   tique = setInterval(() => {
@@ -457,6 +504,11 @@
   .ia-sug{box-shadow:0 0 0 2px var(--pen)}
   .ia-selo{display:inline-block;margin:0 0 4px;padding:2px 10px;border-radius:99px;background:var(--pen);color:#fff;font-size:12px;font-weight:700}
   .ia-trilha h4{margin:0}.ia-trilha ul{margin:6px 0 8px;padding-left:18px;font-size:13px;line-height:1.5}
+  .ia-escolher{margin-top:16px;border-style:dashed}.ia-escolher h4{margin:0 0 4px}
+  .ia-cont{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--radius);padding:12px 14px;margin:0 0 10px}
+  .ia-cont p{margin:2px 0}.ia-cont .ia-row{margin-top:8px}
+  .ia-habs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ia-hab{font-size:13px;color:var(--ink-2)}
+  .ia-h4{font-family:var(--f-display);margin:18px 0 8px}
   .ia-motivo{color:var(--ink-2);font-weight:400}
   .ia-antes,.ia-dica{background:var(--pen-soft);border-radius:8px;padding:10px 14px;margin:0 0 12px}
   .ia-antes summary{cursor:pointer;font-weight:700;color:var(--pen)}
