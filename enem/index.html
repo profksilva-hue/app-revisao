@@ -2082,7 +2082,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
         <button class="btn ghost" type="button" id="cancelEdit">Cancelar</button></div>
       </form>`;
     }
-    v.innerHTML = `<div class="panel">${form}
+    v.innerHTML = `${perfil && window.IA && window.IA.relatorioHTML ? window.IA.relatorioHTML() : ""}<div class="panel">${form}
       <div class="side"><h2>O que fica registrado</h2>
         ${guest ? '<p class="info">Sem e-mail, nada fica registrado: nem neste aparelho, nem para o professor.</p>' : localMode() ? `<p class="info">${cloud === "local"
             ? "Seu acesso a esta página é de visualização. O app funciona normalmente e guarda seu progresso neste aparelho, separado por e-mail; ele não chega sozinho ao painel do professor."

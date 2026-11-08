@@ -23,7 +23,7 @@
   };
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
   let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
-  let BIB = {}, resumoAberto = null, telaBiblio = false;
+  let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null;
   let marcada = null, inicioQ = 0, qAtualId = null, verMapa = false, dicaAberta = false, tique = null;
 
   const st = () => { const S = SR.S; if (!S.ia) S.ia = { v: 1, serie: null, aluno: {}, naoVistas: [], diag: null }; return S.ia; };
@@ -36,8 +36,9 @@
       const [h, g] = await Promise.all([
         fetch("../ia/habilidades.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
         fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null)
-      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); return x; });
+        fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null)
+      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; return x; });
       H = h; H.habilidades.forEach(x => { HAB[x.id] = x; });
       const itens = Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
       M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
@@ -127,7 +128,7 @@
       d.feitas.push({ h: at.h, id: at.id, r: "nv" });
     } else {
       const r = valor === it.q.a ? 1 : 0;
-      M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa });
+      M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa, v: valor });
       d.feitas.push({ h: at.h, id: at.id, r, ms: ms == null ? null : Math.round(ms) });
     }
     d.usadas.push(at.id);
@@ -234,7 +235,7 @@
     if (r === "ns") se.ns++;
     if (r === 0 && typeof valor === "number") { s.errosHab = s.errosHab || {}; (s.errosHab[at.h] = s.errosHab[at.h] || []).push({ id: at.id, v: valor }); s.errosHab[at.h] = s.errosHab[at.h].slice(-6); }
     const total = se.resp.length + 1;
-    const out = M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa, sessao: { ns: se.ns, total } });
+    const out = M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa, sessao: { ns: se.ns, total }, v: typeof valor === "number" ? valor : undefined });
     se.resp.push({ h: at.h, id: at.id, r, tipo: at.tipo, ms: ms == null ? null : Math.round(ms) });
     se.respondida = { valor, r, mudou: out && out.mudou ? { de: out.de, para: out.para } : null, avisoNs: r === "ns" && total >= 3 && se.ns / total > 0.3 && !se.avisouNs };
     if (se.respondida.avisoNs) se.avisouNs = true;
@@ -244,6 +245,7 @@
     const s = st(), se = s.sessao;
     se.fim = Date.now(); se.atual = null;
     se.depois = {}; Object.keys(se.antes).forEach(h => { se.depois[h] = estadoDe(h); });
+    registrarEvolucao();
     s.sessoes = (s.sessoes || []).concat([{ ts: se.fim, trilha: se.trilha, n: se.resp.length, ac: se.resp.filter(r => r.r === 1).length }]).slice(-60);
     salvar();
   }
@@ -304,8 +306,115 @@
     const s = st(); s.listasReg = s.listasReg || {}; const chave = n + ":" + tent; if (s.listasReg[chave]) return;
     const agora = Date.now();
     qs.forEach((q, i) => { if (ans[i] == null || !q || !q.h) return; const id = Banco.qid(q); if (!M.itens[id]) return;
-      M.registrar(s.aluno, { id, r: ans[i] === q.a ? 1 : 0, ms: null, ts: agora }); });
+      M.registrar(s.aluno, { id, r: ans[i] === q.a ? 1 : 0, ms: null, ts: agora, v: ans[i] }); });
     s.listasReg[chave] = 1;
+  }
+
+  // ---------- relatório detalhado (Fase 6, aba Identificação) ----------
+  const thParaChance = p => { let lo = -2, hi = 5; for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; if (M.fRef(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; };
+  let thFix = null; const TH_FIX_ = () => thFix == null ? (thFix = thParaChance(0.6)) : thFix;   // meio da faixa de Fixação
+  function estimativaGeral(troca) {   // média das habilidades vistas, ponderada pelo peso na prova
+    let sw = 0, st_ = 0, sv = 0;
+    vistas().forEach(h => { const r = M.resumo(st().aluno, h.id); const th = troca && troca[h.id] != null ? Math.max(troca[h.id], r.theta) : r.theta;
+      sw += h.peso; st_ += h.peso * th; sv += (h.peso * r.ep) ** 2; });
+    if (!sw) return null;
+    const th = st_ / sw, ep = Math.sqrt(sv) / sw, pts = v => Math.round((500 + 100 * v) / 5) * 5;
+    return { th, pts: pts(th), lo: pts(th - 1.28 * ep), hi: pts(th + 1.28 * ep) };
+  }
+  function caminhoMaisCurto() {
+    const base = estimativaGeral(); if (!base) return [];
+    return vistas().filter(h => estadoDe(h.id) === "recuperacao").map(h => { const t = {}; t[h.id] = TH_FIX_(); return { h, ganho: estimativaGeral(t).th - base.th }; })
+      .sort((a, b) => b.ganho - a.ganho).slice(0, 3).map(x => x.h);
+  }
+  function todasRespostas() { const out = []; const rs = st().aluno.resp || {}; Object.keys(rs).forEach(h => rs[h].forEach(x => out.push({ h, id: x[0], r: x[1], ms: x[2], ts: x[3], v: x[5] }))); return out.sort((a, b) => a.ts - b.ts); }
+  function registrarEvolucao() {
+    const e = estimativaGeral(); if (!e) return; const s = st(), d = new Date().toISOString().slice(0, 10);
+    s.evol = (s.evol || []).filter(x => x.d !== d).concat([{ d, p: e.pts }]).slice(-60);
+  }
+  function grafEvol(pts) {
+    if (pts.length < 2) return "";
+    const W = 300, Hh = 70, vs = pts.map(x => x.p), mn = Math.min(...vs) - 10, mx = Math.max(...vs) + 10;
+    const X = i => 10 + i * (W - 20) / (pts.length - 1), Y = v => Hh - 10 - (v - mn) * (Hh - 20) / (mx - mn || 1);
+    return `<svg class="ia-spark" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Evolução da estimativa: de ${vs[0]} para ${vs[vs.length - 1]} pontos">
+      <polyline fill="none" stroke="currentColor" stroke-width="2" points="${pts.map((x, i) => X(i) + "," + Y(x.p)).join(" ")}"/>
+      ${pts.map((x, i) => `<circle cx="${X(i)}" cy="${Y(x.p)}" r="3"/>`).join("")}</svg>`;
+  }
+  const dataBR = ts => new Date(ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  function relatorioHTML() {
+    if (!pronto) return "";
+    const s = SR.S.ia; if (!s || !s.diag || !s.diag.fim) return `<div class="ia-relat ia-card"><h2>Meu relatório</h2><p>O relatório detalhado aparece depois da diagnose. Ela está na aba <b>Hoje</b>.</p></div>`;
+    registrarEvolucao();
+    const e = estimativaGeral(), alvo = s.meta || Math.ceil((e.pts + 1) / 50) * 50, cam = caminhoMaisCurto();
+    const t = {}; cam.slice(0, 2).forEach(h => { t[h.id] = TH_FIX_(); }); const proj = cam.length ? estimativaGeral(t) : null;
+    const nome = h => `${esc(h.id)} · ${esc(h.curto)}`;
+    // 1. resumo em uma frase
+    const frase = `Sua estimativa é de <b>${e.pts} pontos</b> (faixa provável de ${e.lo} a ${e.hi}).` + (s.meta ? ` Sua meta é <b>${s.meta}</b>${s.meta > e.pts ? `: faltam ${s.meta - e.pts} pontos` : ": você já está nela"}.` : "") + (cam.length ? ` As habilidades que mais fazem a sua estimativa subir agora são ${cam.map(h => `<b>${esc(h.id)}</b> (${esc(h.curto.toLowerCase())})`).join(", ").replace(/, ([^,]*)$/, " e $1")}.` : ` Nenhuma habilidade está em Recuperação: o ganho agora vem de confirmar a Fixação e subir para o Aprimoramento.`);
+    const meta = `<div class="ia-row"><label class="note" for="ia-meta">Minha meta de pontos</label><input id="ia-meta" class="ia-meta" type="number" min="400" max="950" step="10" value="${s.meta || ""}" placeholder="${alvo}"><button class="ia-mini" type="button" data-iar="meta">Salvar meta</button></div>`;
+    // 2. mapa das 30 habilidades
+    const status = h => { const est = (s.aluno.est || {})[h.id]; if (estadoDe(h.id) === "introducao") return "ainda não estudou"; const r = M.resumo(s.aluno, h.id);
+      return r.validado ? "confirmada" : r.observacao ? "em observação" : !r.n && est && est.area ? "estimada pela área" : "provisória"; };
+    const mapa = `<div class="ia-mapa">${H.habilidades.map(h => { const r = M.resumo(s.aluno, h.id); return `<div class="ia-mh ia-mh-${estadoDe(h.id)}"><b>${esc(h.id)}</b><span>${esc(h.curto)}</span><small>${pill(estadoDe(h.id))} ${r.n} ${r.n === 1 ? "resposta" : "respostas"} · ${status(h)}</small></div>`; }).join("")}</div>`;
+    // 3. onde perde mais pontos: erros em questões com boa chance de acerto
+    const resp = todasRespostas(), erradas = resp.filter(x => x.r === 0 && M.itens[x.id]);
+    const faceis = erradas.filter(x => { const pr = M.params(M.itens[x.id]); return M.p3(M.resumo(s.aluno, x.h).theta, pr.a, pr.b, pr.c) >= 0.6 || (M.itens[x.id].nv || 3) <= 2; });
+    const perde = faceis.length ? `<p>Você errou <b>${faceis.length} ${faceis.length === 1 ? "questão" : "questões"}</b> que estavam ao seu alcance (chance de acerto de 60% ou mais). Na TRI, esses erros derrubam mais a nota do que errar as difíceis.</p>
+      <ul>${faceis.slice(-6).reverse().map(x => { const q = M.itens[x.id].q; return `<li><b>${esc(x.h)}</b> · ${esc(q.hab || HAB[x.h].curto)} (${dataBR(x.ts)})${Number.isInteger(x.v) && q.e && q.e[x.v] ? `: você marcou ${L[x.v]}. ${q.e[x.v]}` : ""}</li>`; }).join("")}</ul>`
+      : `<p>Nenhum erro em questão ao seu alcance até agora.</p>`;
+    // 4. tipos de erro
+    const tipos = {}; let comV = 0;
+    erradas.forEach(x => { if (!Number.isInteger(x.v) || !ERROS) return; const k = (ERROS.porQuestao[x.id] || [])[x.v]; if (!k) return; comV++; tipos[k] = (tipos[k] || 0) + 1; });
+    const ordT = Object.keys(tipos).filter(k => k !== "outros").sort((a, b) => tipos[b] - tipos[a]);
+    const maxT = Math.max(1, ...Object.values(tipos));
+    const tiposHTML = ordT.length ? `<div class="ia-barras">${ordT.slice(0, 6).map(k => `<div><span>${esc(ERROS.tipos[k])}</span><i style="width:${Math.round(100 * tipos[k] / maxT)}%"></i><b>${tipos[k]}</b></div>`).join("")}</div>
+      <p>O tipo de erro que mais se repete é <b>${esc(ERROS.tipos[ordT[0]].toLowerCase())}</b>. Antes de marcar a resposta, confira esse ponto.</p>`
+      : `<p class="note">Os tipos de erro aparecem conforme você resolve sessões e listas.</p>`;
+    // 5. impacto futuro
+    const rec = vistas().filter(h => estadoDe(h.id) === "recuperacao" && (h.base || []).length).sort(prioridade).slice(0, 4);
+    const impacto = rec.length ? `<ul>${rec.map(h => `<li><b>${nome(h)}</b> em Recuperação afeta ${h.base.map(b => esc(b)).join(", ")}.</li>`).join("")}</ul>` : `<p>Nenhuma habilidade de base está em Recuperação.</p>`;
+    // 6. projeção
+    const projHTML = proj ? `<p>Se ${cam.slice(0, 2).map(nome).join(" e ")} ${cam.length > 1 ? "chegarem" : "chegar"} à Fixação, sua estimativa sobe para cerca de <b>${proj.pts} pontos</b> (+${proj.pts - e.pts}).</p>` : "";
+    // 7. hábitos
+    const comMs = resp.filter(x => x.ms != null && x.r !== "ns"), media = comMs.length ? comMs.reduce((a, x) => a + x.ms, 0) / comMs.length : 0;
+    const rapidas = comMs.filter(x => x.ms < 15000 && M.itens[x.id] && M.itens[x.id].longa).length, ns = resp.filter(x => x.r === "ns").length;
+    const sem7 = (s.sessoes || []).filter(x => Date.now() - x.ts < 7 * DIA).length, totS = (s.sessoes || []).length;
+    const porT = {}; (s.sessoes || []).forEach(x => { porT[x.trilha] = (porT[x.trilha] || 0) + 1; });
+    const evita = totS >= 5 && habsDaTrilha("recuperacao").length && (porT.recuperacao || 0) / totS < 0.2 ? `<li>Você fez ${porT.recuperacao || 0} ${(porT.recuperacao || 0) === 1 ? "sessão" : "sessões"} de Recuperação em ${totS}. É nela que estão os pontos mais fáceis de ganhar.</li>` : "";
+    const habitos = `<ul>
+      ${comMs.length ? `<li>Tempo médio por questão: <b>${(media / 60000).toFixed(1).replace(".", ",")} min</b> (no ENEM, cerca de 3 min).</li>` : ""}
+      ${rapidas ? `<li><b>${rapidas}</b> ${rapidas === 1 ? "resposta rápida demais" : "respostas rápidas demais"} em questões longas (menos de 15 s): podem ter sido chutes.</li>` : ""}
+      <li>“Não sei” usado ${ns} ${ns === 1 ? "vez" : "vezes"}.</li>
+      <li>Sessões nos últimos 7 dias: <b>${sem7}</b>${totS ? ` (total: ${totS})` : ""}.</li>${evita}</ul>`;
+    // 8. evolução
+    const movs = Object.keys(s.aluno.est || {}).map(h => ({ h, x: s.aluno.est[h] })).filter(m => m.x.de && ORD[m.x.de] != null && ORD[m.x.estado] != null).sort((a, b) => b.x.ts - a.x.ts).slice(0, 6);
+    const evol = `${grafEvol((s.evol || []).slice(-8))}${(s.evol || []).length < 2 ? `<p class="note">O gráfico aparece a partir do segundo dia de estudo.</p>` : ""}
+      ${movs.length ? `<ul>${movs.map(m => `<li>${dataBR(m.x.ts)}: <b>${esc(m.h)}</b> ${ORD[m.x.estado] > ORD[m.x.de] ? "subiu" : "desceu"} de ${NOME[m.x.de]} para ${NOME[m.x.estado]}.</li>`).join("")}</ul>` : ""}`;
+    // 9. plano da próxima semana
+    const plano = []; const R = habsDaTrilha("recuperacao"), F = habsDaTrilha("fixacao"), A = habsDaTrilha("aprimoramento"), rev = revisoesVencidas();
+    if (R.length) plano.push(`2 sessões de <b>Recuperação</b>: ${R.slice(0, 3).map(nome).join(", ")}.`);
+    if (rev.length) plano.push(`1 sessão de <b>Fixação</b> para revisar ${rev.slice(0, 2).map(nome).join(" e ")}.`);
+    else if (F.length) plano.push(`1 sessão de <b>Fixação</b>: ${F.slice(0, 3).map(nome).join(", ")}.`);
+    if (A.length) plano.push(`1 sessão de <b>Aprimoramento</b> no ritmo de prova: ${A.slice(0, 2).map(nome).join(", ")}.`);
+    const ler = R.find(h => BIB[h.id]); if (ler) plano.push(`Ler o resumo de ${nome(ler)} na Biblioteca, na versão para Recuperação.`);
+    if (ordT.length) plano.push(`Em toda questão, antes de marcar, confira: ${esc(ERROS.tipos[ordT[0]].toLowerCase())}.`);
+    // versão do professor
+    const prof = `<details class="ia-prof"><summary>Detalhes técnicos (para o professor)</summary>
+      <table class="ia-tab"><thead><tr><th>Hab.</th><th>Estado</th><th>Pontos</th><th>± (80%)</th><th>Resp.</th><th>Situação</th><th>Rápidas</th></tr></thead><tbody>
+      ${H.habilidades.map(h => { const r = M.resumo(s.aluno, h.id), rp = comMs.filter(x => x.h === h.id && x.ms < 15000 && M.itens[x.id] && M.itens[x.id].longa).length;
+        return `<tr><td>${esc(h.id)}</td><td>${NOME[estadoDe(h.id)]}</td><td>${r.pontos || "–"}</td><td>${r.ep != null ? Math.round(128 * r.ep) : "–"}</td><td>${r.n}</td><td>${status(h)}</td><td>${rp || ""}</td></tr>`; }).join("")}</tbody></table>
+      <p class="note">Estimativa geral: θ = ${e.th.toFixed(2)} (média das habilidades ponderada pelo peso na prova). Listas niveladas: ${Object.keys(s.nivel || {}).map(n => `aula ${n} (${s.nivel[n].f}F/${s.nivel[n].m}M/${s.nivel[n].d}D, chance média prevista ${s.nivel[n].ch}%)`).join("; ") || "nenhuma ainda"}.</p></details>`;
+    const sec = (n, t, c) => c ? `<section class="ia-sec"><h3>${n}. ${t}</h3>${c}</section>` : "";
+    return `<div class="ia-relat ia-card"><h2>Meu relatório</h2><p class="note">Atualizado em ${new Date().toLocaleDateString("pt-BR")}. Estimativas na escala do ENEM, calculadas com as suas respostas.</p>
+      <p class="ia-frase">${frase}</p>${meta}
+      ${sec(1, "Plano para a próxima semana", plano.length ? `<ol>${plano.map(x => `<li>${x}</li>`).join("")}</ol>` : "")}
+      ${sec(2, "Onde você perde mais pontos", perde)}
+      ${sec(3, "Seus tipos de erro mais frequentes", tiposHTML)}
+      ${sec(4, "Projeção", projHTML)}
+      ${sec(5, "Impacto futuro das defasagens", impacto)}
+      ${sec(6, "Seus hábitos de estudo", habitos)}
+      ${sec(7, "Evolução", evol)}
+      ${sec(8, "Mapa das 30 habilidades", mapa)}
+      ${prof}
+      <div class="ia-row ia-noprint"><button class="btn ghost" type="button" data-iar="imprimir">Baixar em PDF / imprimir</button><button class="btn ghost" type="button" data-tab="ia">Ir para Hoje</button></div></div>`;
   }
 
   // ---------- telas ----------
@@ -571,6 +680,11 @@
   const convite = () => pronto && SR.logado() && !(SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim);
 
   document.addEventListener("click", ev => {
+    const br = ev.target.closest("#view-id button[data-iar]");
+    if (br) { const s = st();
+      if (br.dataset.iar === "meta") { const v = +((document.getElementById("ia-meta") || {}).value || 0); s.meta = v >= 400 && v <= 950 ? Math.round(v) : null; salvar(); SR.renderAll(); }
+      if (br.dataset.iar === "imprimir") { document.body.classList.add("ia-imprimir-rel"); window.print(); setTimeout(() => document.body.classList.remove("ia-imprimir-rel"), 500); }
+      return; }
     const bl = ev.target.closest("button[data-ia-lista]");
     if (bl) { const s = st(), n = +bl.dataset.iaAula; s.listaTurma = s.listaTurma || {}; s.nivel = s.nivel || {};
       if (bl.dataset.iaLista === "turma") { s.listaTurma[n] = 1; delete SR.S.sets[n]; delete s.nivel[n]; }
@@ -667,6 +781,19 @@
   .ia-check{list-style:none;padding-left:0}.ia-check li{padding-left:26px;position:relative;margin:4px 0}.ia-check li::before{content:"☐";position:absolute;left:4px;color:var(--pen)}
   @media print{body.ia-imprimir *{visibility:hidden}body.ia-imprimir .ia-resumo,body.ia-imprimir .ia-resumo *{visibility:visible}
     body.ia-imprimir .ia-resumo{position:absolute;left:0;top:0;width:100%;border:0}body.ia-imprimir .ia-noprint{display:none}}
+  .ia-relat{margin:0 0 18px;font-family:var(--f-ui)}.ia-relat h2{font-family:var(--f-display);margin:0 0 4px}
+  .ia-frase{font-size:17px;line-height:1.5;margin:12px 0 4px}
+  .ia-meta{width:90px;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;font:15px var(--f-ui);background:var(--sheet);color:var(--ink)}
+  .ia-mapa{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .ia-mh{border:1px solid var(--rule);border-left:4px solid var(--pen);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;font-size:13px}
+  .ia-mh small{color:var(--ink-2)}.ia-mh-recuperacao{border-left-color:var(--bad)}.ia-mh-fixacao{border-left-color:var(--mark)}.ia-mh-aprimoramento{border-left-color:var(--ok)}
+  .ia-barras div{display:grid;grid-template-columns:minmax(120px,190px) 1fr 30px;gap:8px;align-items:center;margin:4px 0;font-size:14px}
+  .ia-barras i{display:block;height:10px;border-radius:99px;background:var(--pen)}.ia-barras b{text-align:right}
+  .ia-spark{width:100%;max-width:340px;height:auto;color:var(--pen);fill:var(--pen)}
+  .ia-prof{margin-top:16px}.ia-prof summary{cursor:pointer;font-weight:700;color:var(--pen)}
+  .ia-tab{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}.ia-tab th,.ia-tab td{border-bottom:1px solid var(--rule);padding:4px 6px;text-align:left}
+  @media print{body.ia-imprimir-rel *{visibility:hidden}body.ia-imprimir-rel .ia-relat,body.ia-imprimir-rel .ia-relat *{visibility:visible}
+    body.ia-imprimir-rel .ia-relat{position:absolute;left:0;top:0;width:100%;border:0}body.ia-imprimir-rel .ia-noprint{display:none}body.ia-imprimir-rel .ia-prof{display:none}}
   .ia-motivo{color:var(--ink-2);font-weight:400}
   .ia-antes,.ia-dica{background:var(--pen-soft);border-radius:8px;padding:10px 14px;margin:0 0 12px}
   .ia-antes summary{cursor:pointer;font-weight:700;color:var(--pen)}
@@ -680,6 +807,6 @@
   @media (prefers-reduced-motion:reduce){.ia-sobe{animation:none}}`;
   document.head.appendChild(css);
 
-  window.IA = { render, convite, nivelar, rotuloLista, registrarLista };
+  window.IA = { render, convite, nivelar, rotuloLista, registrarLista, relatorioHTML };
   carregar();
 })();

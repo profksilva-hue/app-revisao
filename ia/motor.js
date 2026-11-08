@@ -152,7 +152,7 @@
       let w = 1;
       if (resposta.r !== "ns" && resposta.longa && resposta.ms != null && resposta.ms < cfg.chute.ms) w *= cfg.chute.peso; // possível chute
       if (resposta.r === "ns" && resposta.sessao && resposta.sessao.total >= 3 && resposta.sessao.ns / resposta.sessao.total > cfg.naoSei.limiteSessao) w *= cfg.naoSei.pesoSeAbuso;
-      (aluno.resp[h] = aluno.resp[h] || []).push([resposta.id, resposta.r === "ns" ? "ns" : resposta.r ? 1 : 0, resposta.ms == null ? null : Math.round(resposta.ms), ts, w]);
+      (aluno.resp[h] = aluno.resp[h] || []).push([resposta.id, resposta.r === "ns" ? "ns" : resposta.r ? 1 : 0, resposta.ms == null ? null : Math.round(resposta.ms), ts, w].concat(Number.isInteger(resposta.v) ? [resposta.v] : []));   // v = alternativa marcada (relatório)
       const r = resumo(aluno, h, ts, true);
       const atual = aluno.est[h] || { estado: null, nDesde: 0, ts };
       const novo = proximoEstado(atual.estado, r, atual.nDesde);
