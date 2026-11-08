@@ -81,11 +81,12 @@ th { color: var(--ink-2); font-weight: 600; }
   const ALVO = { recuperacao: [0.7, 0.8], fixacao: [0.55, 0.7], aprimoramento: [0.4, 0.55], a_diagnosticar: [0.4, 0.6] };
   let D, H, M;
   try {
-    [D, H] = await Promise.all([Banco.carregarDoSite("../enem/index.html"), fetch("habilidades.json").then(r => r.json())]);
-    M = Motor.criar({ itens: Banco.extrair(D), habilidades: H.habilidades, nivelParaB: H.nivelParaB });
+    let G;
+    [D, H, G] = await Promise.all([Banco.carregarDoSite("../enem/index.html"), fetch("habilidades.json").then(r => r.json()), fetch("questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null)]);
+    M = Motor.criar({ itens: Banco.extrair(D).concat(Banco.extrairGeradas(G)), habilidades: H.habilidades, nivelParaB: H.nivelParaB });
   } catch (e) { $("status").textContent = "Não foi possível carregar o banco de questões."; return; }
   const itens = Object.values(M.itens);
-  $("status").textContent = `Banco carregado: ${itens.length} questões, ${itens.filter(i => i.ip).length} com parâmetros TRI do INEP, ${H.habilidades.length} habilidades.`;
+  $("status").textContent = `Banco carregado: ${itens.length} questões, ${itens.filter(i => i.ip).length} com parâmetros TRI do INEP, ${itens.filter(i => i.gerada).length} geradas e aprovadas, ${H.habilidades.length} habilidades.`;
   const opts = H.habilidades.map(h => `<option value="${esc(h.id)}">${esc(h.id)} · ${esc(h.nome)} (${(M.porHab[h.id] || []).length})</option>`).join("");
   $("s-hab").innerHTML = opts; $("m-hab").innerHTML = opts;
   const pct = p => Math.round(p * 100) + "%";

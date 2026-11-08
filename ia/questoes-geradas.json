@@ -1,8 +1,17 @@
 {
-  "lote": 1,
-  "data": "2026-11-07",
-  "status": "proposta – aguardando aprovação do professor",
-  "observacao": "Questões geradas com Claude (princípio 9). Entram como não calibradas (gerada: true, peso 0 no domínio) e só depois da aprovação.",
+  "versao": 1,
+  "observacao": "Questões geradas com Claude e aprovadas pelo professor (princípio 9). Entram como não calibradas: aparecem nas trilhas, mas não mudam a estimativa de domínio.",
+  "lotes": [
+    {
+      "lote": 1,
+      "proposto": "2026-11-07",
+      "aprovado": "2026-11-07",
+      "habilidades": [
+        "H5",
+        "H11"
+      ]
+    }
+  ],
   "questoes": [
     {
       "id": "G1-H5-01",
@@ -33,7 +42,8 @@
         "Calculou só 1 garrafa por aluno (120 garrafas).",
         "Calculou só 1 garrafa por aluno (120 garrafas).",
         "Só A custa R$ 360,00; B custa R$ 336,00."
-      ]
+      ],
+      "lote": 1
     },
     {
       "id": "G1-H5-02",
@@ -65,7 +75,8 @@
         "III economiza 2,5 m³, menos que I (3 m³).",
         "Verifique II: 0,08 · 30 = 2,4 m³, não 3 m³.",
         "II (2,4 m³) e III (2,5 m³) são próximas, mas não iguais, e nenhuma é a maior."
-      ]
+      ],
+      "lote": 1
     },
     {
       "id": "G1-H5-03",
@@ -96,7 +107,8 @@
         "R$ 8,00 é o desconto de P1 em relação ao preço cheio (R$ 24,00), não em relação a P2.",
         "R$ 6,00 é o desconto de P2 em relação ao preço cheio, e P2 não é a mais vantajosa.",
         "P1 custa R$ 16,00 e P2 custa R$ 18,00."
-      ]
+      ],
+      "lote": 1
     },
     {
       "id": "G1-H11-01",
@@ -125,7 +137,8 @@
         "Converteu de cm para km dividindo por 10 000.",
         "Dividiu por 1 000 em vez de 100 000 na conversão de cm para km.",
         "Errou a conversão por um fator de 100."
-      ]
+      ],
+      "lote": 1
     },
     {
       "id": "G1-H11-02",
@@ -154,7 +167,8 @@
         "",
         "Calculou o perímetro (2 · 4,5 + 2 · 3), não a área.",
         "Multiplicou o resultado por 10 sem motivo."
-      ]
+      ],
+      "lote": 1
     },
     {
       "id": "G1-H11-03",
@@ -183,7 +197,8 @@
         "",
         "Converteu 430 cm dividindo por 10 em vez de 100.",
         "Esqueceu de converter: 430 é o valor em centímetros."
-      ]
+      ],
+      "lote": 1
     }
   ]
 }

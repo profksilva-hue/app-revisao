@@ -28,6 +28,14 @@
     });
     return Array.from(vistos.values());
   }
+  // Questões geradas com Claude e aprovadas pelo professor (ia/questoes-geradas.json).
+  // Não calibradas: o motor as usa nas trilhas, mas com peso zero no domínio.
+  function extrairGeradas(J) {
+    return ((J && J.questoes) || []).filter(q => q && q.id && q.h && Array.isArray(q.o) && q.o.length === 5).map(q => {
+      const texto = (q.t || []).join(" ") + " " + (q.c || "");
+      return { id: q.id, h: q.h, aula: null, nv: q.nv || 2, ip: null, gerada: true, longa: texto.length > 350, oficial: false, fonte: "Gerada com Claude · lote " + (q.lote || "?"), q };
+    });
+  }
   // No navegador: lê os dados embutidos na página do ENEM.
   async function carregarDoSite(caminho) {
     const html = await fetch(caminho || "../enem/index.html").then(r => { if (!r.ok) throw new Error(r.status); return r.text(); });
@@ -35,6 +43,6 @@
     if (!m) throw new Error("dados não encontrados");
     return JSON.parse(m[1]);
   }
-  const Banco = { extrair, carregarDoSite, qid };
+  const Banco = { extrair, extrairGeradas, carregarDoSite, qid };
   if (typeof module !== "undefined" && module.exports) module.exports = Banco; else raiz.Banco = Banco;
 })(typeof window !== "undefined" ? window : globalThis);

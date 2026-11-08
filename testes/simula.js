@@ -9,7 +9,7 @@ const raiz = path.join(__dirname, "..");
 const html = fs.readFileSync(path.join(raiz, "enem/index.html"), "utf8");
 const D = JSON.parse(html.match(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 const H = JSON.parse(fs.readFileSync(path.join(raiz, "ia/habilidades.json"), "utf8"));
-const itens = Banco.extrair(D);
+const itens = Banco.extrair(D).concat(Banco.extrairGeradas(JSON.parse(fs.readFileSync(path.join(raiz, "ia/questoes-geradas.json"), "utf8"))));
 const M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
 
 let semente = 7; const rnd = () => { semente = (semente * 1103515245 + 12345) % 2147483648; return semente / 2147483648; };
@@ -137,6 +137,6 @@ const habs = Object.keys(M.porHab).filter(h => M.porHab[h].length >= 15);
   confere("Tempo por resposta registrada", ms < 50, ms.toFixed(1) + " ms");
 })();
 
-console.log("Banco: " + itens.length + " questões, " + itens.filter(i => i.ip).length + " calibradas, " + habs.length + " habilidades com 15+ questões\n");
+console.log("Banco: " + itens.length + " questões (" + itens.filter(i => i.gerada).length + " geradas), " + itens.filter(i => i.ip).length + " calibradas, " + habs.length + " habilidades com 15+ questões\n");
 resultados.forEach(r => console.log((r.ok ? "PASSOU " : "FALHOU ") + "· " + r.nome + " · " + r.detalhe));
 process.exitCode = resultados.every(r => r.ok) ? 0 : 1;
