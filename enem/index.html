@@ -905,6 +905,7 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
 
   const toTri = () => { const el = document.querySelector("#main .tri"); if (el) el.scrollIntoView({ block: "start", behavior: "smooth" }); };
   function registraTri(n) {
+    if (window.IA && window.IA.registrarLista) window.IA.registrarLista(n, QS(aula(n)), (S.ans && S.ans[n]) || {}, tentOf(n));   // respostas das listas alimentam o modelo do aluno
     if (!D.tri) return;
     const e = triLista(n, S.ans, S.sets);
     S.trih = S.trih || {}; const h = S.trih[n] = (S.trih[n] || []).filter(x => x.t !== tentOf(n));
@@ -1205,6 +1206,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
   }
 
   function renderMain() {
+    if (window.IA && window.IA.nivelar) window.IA.nivelar(S.sel);   // lista nivelada pela IA (Fase 4)
     const a = aula(S.sel), done = S.done[a.n], k = nAns(a.n);
     const wk = D.semanas.find(w => w.ns.includes(a.n));
     const one = S.mode === "uma";
@@ -1264,6 +1266,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
           <button type="button" data-mode="uma" aria-pressed="${one}">Uma questão por vez</button>
           ${teacherUI() ? `<button type="button" data-mode="gab" aria-pressed="${gab}">Gabarito comentado</button>` : ""}
         </div>
+        ${window.IA && window.IA.rotuloLista && !gab ? window.IA.rotuloLista(a.n) : ""}
       </section>
       <div class="body">
         <div class="qs">${done && D.tri && S.mode !== "resumo" && !gab ? triHTML(a) : ""}${list}</div>
@@ -2371,7 +2374,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
   if (window.claude && typeof window.claude.use === "function") initCloud();
   else { cloud = "off"; renderAll(); }
   // ponte para a IA adaptativa (ia/app-ia.js): só leitura do estado e funções de exibição/salvamento
-  window.SR = { get S() { return S; }, D, esc, optT, persist, renderAll, logado: () => !!(perfil && perfil.email) };
+  window.SR = { get S() { return S; }, D, esc, optT, persist, renderAll, aula, pool, tentOf, nAns, logado: () => !!(perfil && perfil.email) };
 })();
 </script>
 

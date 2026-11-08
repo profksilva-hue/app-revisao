@@ -23,6 +23,7 @@
   };
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
   let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
+  let BIB = {}, resumoAberto = null, telaBiblio = false;
   let marcada = null, inicioQ = 0, qAtualId = null, verMapa = false, dicaAberta = false, tique = null;
 
   const st = () => { const S = SR.S; if (!S.ia) S.ia = { v: 1, serie: null, aluno: {}, naoVistas: [], diag: null }; return S.ia; };
@@ -34,8 +35,9 @@
     try {
       const [h, g] = await Promise.all([
         fetch("../ia/habilidades.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
-        fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null)
-      ]);
+        fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null)
+      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); return x; });
       H = h; H.habilidades.forEach(x => { HAB[x.id] = x; });
       const itens = Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
       M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
@@ -243,9 +245,116 @@
     salvar();
   }
 
+  // ---------- nivelamento das aulas (etapa 6, Fase 4) ----------
+  // Depois da diagnose, a lista de cada aula é montada pelo nível do aluno em cada habilidade,
+  // seguindo as habilidades da lista fixa (conteúdos centrais) e na faixa de chance de cada estado.
+  const ALVO_LISTA = { recuperacao: [0.7, 0.8], fixacao: [0.55, 0.7], aprimoramento: [0.4, 0.55], introducao: [0.75, 0.85] };
+  const nvDe = q => q.nv || 3;
+  function vistoRecente(id, agora) {
+    const rs = (st().aluno.resp || {}); for (const h in rs) for (const x of rs[h]) if (x[0] === id) { const dias = (agora - x[3]) / DIA; if (x[1] === 1 ? dias < 30 : dias < 3) return true; }
+    return false;
+  }
+  function montarLista(n) {
+    const a = SR.aula(n), P = SR.pool(a), ad = new Set(a.ad || []), agora = Date.now();
+    const cand = P.map((q, i) => ({ q, i, id: Banco.qid(q) })).filter(x => !ad.has(x.q) && x.q.h && HAB[x.q.h] && M.itens[x.id] && !vistoRecente(x.id, agora));
+    const habs = (a.q || []).map(q => q.h).filter(h => HAB[h]);
+    while (habs.length < 8 && cand.length) habs.push(cand[habs.length % cand.length].q.h);
+    const usados = new Set(), grupos = new Set(), out = [], chances = [];
+    const nota = (x, alvo) => { const pr = M.params(M.itens[x.id]); const th = M.resumo(st().aluno, x.q.h).theta; const p = M.p3(th, pr.a, pr.b, pr.c);
+      const c = (alvo[0] + alvo[1]) / 2; return { p, v: Math.abs(p - c) - (p >= alvo[0] && p <= alvo[1] ? 1 : 0) + Math.random() * 0.05 }; };
+    habs.slice(0, 8).forEach(h => {
+      const e = estadoDe(h), alvo = ALVO_LISTA[e] || ALVO_LISTA.fixacao;
+      const livre = x => !usados.has(x.i) && !grupos.has(x.q.g || ("i" + x.i));
+      let opc = cand.filter(x => x.q.h === h && livre(x));
+      if (e === "introducao") { const f = opc.filter(x => nvDe(x.q) <= 2); if (f.length) opc = f; }
+      if (e === "aprimoramento") { const of = opc.filter(x => x.q.of); if (of.length) opc = of; }
+      if (!opc.length) opc = cand.filter(livre);
+      const best = opc.map(x => Object.assign({ n: nota(x, alvo) }, x)).sort((x, y) => x.n.v - y.n.v)[0];
+      if (!best) return;
+      usados.add(best.i); grupos.add(best.q.g || ("i" + best.i)); out.push(best.i); chances.push(best.n.p);
+    });
+    if (out.length < 8) return null;  // banco insuficiente: fica a lista da turma
+    out.sort((x, y) => nvDe(P[x]) - nvDe(P[y]));
+    const nv = out.map(i => nvDe(P[i]));
+    return { set: out, f: nv.filter(v => v <= 2).length, m: nv.filter(v => v === 3).length, d: nv.filter(v => v >= 4).length, ch: Math.round(100 * chances.reduce((x, y) => x + y, 0) / chances.length) };
+  }
+  function nivelar(n) {
+    if (!pronto || !SR.logado()) return;
+    const S = SR.S, s = st(); if (!s.diag || !s.diag.fim) return;
+    s.nivel = s.nivel || {}; s.listaTurma = s.listaTurma || {};
+    if (s.listaTurma[n] || S.done[n] || SR.nAns(n) > 0 || SR.tentOf(n) > 1 || (S.sets && S.sets[n])) return;
+    const r = montarLista(n); if (!r) return;
+    S.sets[n] = r.set; s.nivel[n] = { set: r.set.join(","), f: r.f, m: r.m, d: r.d, ch: r.ch };
+    salvar();
+  }
+  function rotuloLista(n) {
+    if (!pronto) return "";
+    const S = SR.S, s = S.ia; if (!s || !s.diag || !s.diag.fim) return "";
+    const nv = s.nivel && s.nivel[n], atual = S.sets && S.sets[n] ? S.sets[n].join(",") : "";
+    const podeTrocar = !S.done[n] && SR.nAns(n) === 0 && SR.tentOf(n) === 1;
+    if (nv && nv.set === atual) return `<div class="ia-lista"><span><b>Lista nivelada para você:</b> ${nv.f} ${nv.f === 1 ? "fácil" : "fáceis"} · ${nv.m} ${nv.m === 1 ? "média" : "médias"} · ${nv.d} ${nv.d === 1 ? "difícil" : "difíceis"}</span>${podeTrocar ? `<button class="ia-mini" type="button" data-ia-lista="turma" data-ia-aula="${n}">Usar a lista da turma</button>` : ""}</div>`;
+    if (s.listaTurma && s.listaTurma[n]) return `<div class="ia-lista"><span><b>Lista da turma</b> (igual para todos)</span>${podeTrocar ? `<button class="ia-mini" type="button" data-ia-lista="nivelada" data-ia-aula="${n}">Voltar para a lista nivelada</button>` : ""}</div>`;
+    return "";
+  }
+  function registrarLista(n, qs, ans, tent) {
+    if (!pronto) return;
+    const s = st(); s.listasReg = s.listasReg || {}; const chave = n + ":" + tent; if (s.listasReg[chave]) return;
+    const agora = Date.now();
+    qs.forEach((q, i) => { if (ans[i] == null || !q || !q.h) return; const id = Banco.qid(q); if (!M.itens[id]) return;
+      M.registrar(s.aluno, { id, r: ans[i] === q.a ? 1 : 0, ms: null, ts: agora }); });
+    s.listasReg[chave] = 1;
+  }
+
   // ---------- telas ----------
   const pill = e => `<span class="ia-pill ia-${e}">${esc(NOME[e] || e)}</span>`;
-  const btnTeoria = h => AULA[h] ? `<button class="btn ghost" type="button" data-calgo="${AULA[h]}" data-calmode="resumo">Rever a teoria (aula ${String(AULA[h]).padStart(2, "0")})</button>` : "";
+  const btnTeoria = (h, foco) => BIB[h] ? `<button class="btn ghost" type="button" data-ia-resumo="${esc(h)}" data-ia-foco="${foco || ""}">Rever a teoria</button>`
+    : AULA[h] ? `<button class="btn ghost" type="button" data-calgo="${AULA[h]}" data-calmode="resumo">Rever a teoria (aula ${String(AULA[h]).padStart(2, "0")})</button>` : "";
+
+  // ---------- biblioteca teórica (etapa 6, Fase 4) ----------
+  const SECOES = [["ideia", "Ideia central"], ["formulas", "Fórmulas essenciais"], ["porque", "Por que funciona"], ["passos", "Passo a passo"], ["exemplo", "Exemplo resolvido"], ["erros", "Erros comuns"], ["enem", "Como o ENEM cobra"], ["lembrar", "Para lembrar"], ["prereq", "Pré-requisitos"]];
+  const PROF = { // o que o aluno vê primeiro, conforme o estado; o resumo completo fica a um toque
+    introducao: SECOES.map(x => x[0]), recuperacao: ["ideia", "formulas", "passos", "erros", "prereq"],
+    fixacao: ["formulas", "lembrar", "exemplo"], aprimoramento: ["enem", "lembrar"]
+  };
+  function secaoHTML(r, k) {
+    const lista = a => `<ul>${a.map(x => `<li>${x}</li>`).join("")}</ul>`;
+    if (k === "ideia") return `<p>${r.ideia}</p>`;
+    if (k === "formulas") return `<div class="ia-forms">${r.formulas.map(f => `<div class="ia-form"><div class="ia-mat">${f.f}</div><p>${f.sig}</p></div>`).join("")}</div>`;
+    if (k === "porque") return `<p>${r.porque}</p>`;
+    if (k === "passos") return `<ol>${r.passos.map(x => `<li>${x}</li>`).join("")}</ol>`;
+    if (k === "exemplo") { const it = r.exemplo && M.itens[r.exemplo.id]; if (!it) return "";
+      const q = it.q, op = q.o.map((o, j) => `<button class="opt${j === q.a ? " is-right" : ""}" type="button" disabled><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`).join("");
+      return `<article class="q ia-ex">${corpoQuestao(q, op)}</article><p><b>Resposta: ${L[q.a]}.</b> ${r.exemplo.comentario}</p>`; }
+    if (k === "erros") return lista(r.erros);
+    if (k === "enem") return `<p>${r.enem}</p>`;
+    if (k === "lembrar") return lista(r.lembrar);
+    if (k === "prereq") { const ds = (HAB[r.h].depende || []); if (!ds.length) return "";
+      return `<p>Esta habilidade se apoia em:</p><div class="ia-row">${ds.map(d => BIB[d] ? `<button class="ia-mini" type="button" data-ia-resumo="${esc(d)}">${esc(d)} · ${esc(HAB[d].curto)}</button>` : `<span class="note">${esc(d)} · ${esc(HAB[d].curto)}</span>`).join("")}</div>`; }
+    return "";
+  }
+  function telaResumo() {
+    const { h, completo, foco } = resumoAberto, r = BIB[h], e = estadoDe(h), mostra = completo ? PROF.introducao : (PROF[e] || PROF.introducao).concat(foco && !(PROF[e] || []).includes(foco) ? [foco] : []);
+    const corpo = SECOES.filter(([k]) => mostra.includes(k)).map(([k, t]) => { const c = secaoHTML(r, k); return c ? `<section class="ia-sec" id="ia-sec-${k}"><h3>${t}</h3>${c}</section>` : ""; }).join("");
+    return `<div class="ia-resumo">
+      ${r.aprovado ? "" : `<p class="ia-rasc">Rascunho em revisão pelo professor · só aparece no site de teste</p>`}
+      <p class="note">${esc(h)} · ${esc(HAB[h].nome)} · ${esc(r.serie || "")}</p>
+      <h2>${esc(r.topico)}</h2>
+      <p>${pill(e)} ${completo || e === "introducao" ? "Resumo completo" : `Versão para quem está em ${NOME[e]}`}</p>
+      ${corpo}
+      <div class="ia-row ia-noprint">${completo || e === "introducao" ? "" : `<button class="btn ghost" type="button" data-ia="resumoCompleto">Ver o resumo completo</button>`}
+        <button class="btn ghost" type="button" data-ia="imprimir">Baixar em PDF / imprimir</button>
+        <button class="btn" type="button" data-ia="fecharResumo">Voltar</button></div></div>`;
+  }
+  function telaBiblioteca() {
+    const itens = H.areas.map(ar => `<h4 class="ia-h4">${esc(ar.nome)}</h4>` + H.habilidades.filter(h => h.area === ar.id).map(h => {
+      const r = BIB[h.id], txt = (h.id + " " + h.nome + " " + h.curto + " " + (r ? r.topico : "")).toLowerCase();
+      return `<div class="ia-cont ia-bib" data-ia-texto="${esc(txt)}"><p class="ia-cont-h"><b>${esc(h.id)} · ${esc(r ? r.topico : h.curto)}</b> ${pill(estadoDe(h.id))}</p>
+        <div class="ia-row">${r ? `<button class="btn ghost" type="button" data-ia-resumo="${esc(h.id)}">Abrir resumo</button>${r.aprovado ? "" : `<small class="note">rascunho</small>`}` : `<small class="note">Resumo em produção</small>`}</div></div>`;
+    }).join("")).join("");
+    return `<div class="ia-card"><h2>Biblioteca</h2><p>Resumos por tópico, com fórmulas, passo a passo e erros comuns. Cada resumo se ajusta ao seu momento em cada habilidade.</p>
+        <input id="ia-busca" class="ia-busca" type="search" placeholder="Buscar tópico (ex.: escala, porcentagem)" aria-label="Buscar tópico"></div>
+      ${itens}<div class="ia-row"><button class="btn ghost" type="button" data-ia="hoje">Voltar para Hoje</button></div>`;
+  }
   function corpoQuestao(q, opts) { // enunciados e alternativas são conteúdo do próprio banco do app, renderizados como nas listas
     const tb = q.tb ? `<div class="tbl"><table><thead><tr>${q.tb[0].map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${q.tb.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
     const fig = q.f && SR.D.figs && SR.D.figs[q.f] ? `<div class="fig"><img src="${SR.D.figs[q.f]}" alt="Figura da questão"></div>` : "";
@@ -342,7 +451,7 @@
       <div class="ia-trilhas">${["recuperacao", "fixacao", "aprimoramento"].map(cartao).join("")}${temIntro ? cartao("adiantar") : ""}</div>
       <div class="ia-card ia-escolher"><h4>Quero escolher outro conteúdo</h4><p class="note">Está estudando um assunto na escola? Escolha o tema e pratique com questões do ENEM no seu nível.</p>
         <div class="ia-row"><button class="btn" type="button" data-ia="conteudos">Escolher conteúdo</button></div></div>
-      <div class="ia-row"><button class="btn ghost" type="button" data-ia="mapa">Ver meu mapa</button></div>`;
+      <div class="ia-row"><button class="btn ghost" type="button" data-ia="mapa">Ver meu mapa</button><button class="btn ghost" type="button" data-ia="biblioteca">Biblioteca</button></div>`;
   }
   function telaEscolha() {
     const pillsDe = hs => hs.map(h => `<span class="ia-hab">${esc(h)} ${pill(estadoDe(h))}</span>`).join("");
@@ -375,6 +484,7 @@
     const tipoTxt = { guiada: "Questão guiada", pratica: "Prática", checagem: "Checagem: nível da Fixação", revisao: "Revisão espaçada", prova: "Ritmo de prova", vizinha: "Habilidade vizinha", facil: "Primeiros passos" }[at.tipo] || "";
     const aula = AULA[at.h] && SR.D.aulas.find(a => a.n === AULA[at.h]);
     const antes = k === 1 && !resp ? (se.trilha === "recuperacao" || se.trilha === "adiantar" ? `<div class="ia-antes"><b>Antes de começar:</b> se quiser, leia o resumo da teoria. ${btnTeoria(at.h)}</div>`
+      : se.trilha === "fixacao" && BIB[at.h] ? `<div class="ia-antes"><b>Ficha rápida (opcional):</b> ${btnTeoria(at.h)}</div>`
       : se.trilha === "fixacao" && aula && aula.dica ? `<details class="ia-antes"><summary>Ficha rápida (opcional)</summary><p>${aula.dica}</p></details>` : "") : "";
     const dica = at.tipo === "guiada" && !resp && aula && aula.dica ? (dicaAberta ? `<div class="ia-dica"><b>Dica:</b> ${aula.dica}</div>` : `<button class="btn ghost" type="button" data-ia="dica">Ver uma dica</button>`) : "";
     let fb = "";
@@ -386,7 +496,7 @@
         ${q.sol ? `<p class="sol"><b>Resolução:</b> ${q.sol}</p>` : ""}
         ${resp.mudou ? `<p class="ia-sobe"><b>${esc(at.h)}</b> mudou de trilha: ${pill(resp.mudou.de)} → ${pill(resp.mudou.para)}</p>` : ""}
         ${resp.avisoNs ? `<p class="note">Você usou bastante o “não sei” nesta sessão. Ele ajuda quando você realmente não sabe; quando tiver uma ideia, arrisque: errar também ensina. A partir de agora, o “não sei” pesa pela metade.</p>` : ""}
-        <div class="ia-row">${!certo ? btnTeoria(at.h) : ""}<button class="btn" type="button" data-ia="proxima">${k < n ? "Próxima questão" : "Ver como foi"}</button></div></div>`;
+        <div class="ia-row">${!certo ? btnTeoria(at.h, "erros") : ""}<button class="btn" type="button" data-ia="proxima">${k < n ? "Próxima questão" : "Ver como foi"}</button></div></div>`;
     }
     const relogio = se.relogio ? `<span class="ia-relogio" id="ia-relogio">0:00</span>` : "";
     return `<div class="ia-prog"><span>${esc(se.rotulo || NOME[se.trilha])} · questão <b>${k}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span>${relogio}
@@ -430,6 +540,8 @@
     const s = st();
     let html;
     if (!s.serie) html = telaSerie();
+    else if (resumoAberto && BIB[resumoAberto.h]) html = telaResumo();
+    else if (telaBiblio && s.diag && s.diag.fim) html = telaBiblioteca();
     else if (s.diag && s.diag.fim) {
       if (s.sessao && !s.sessao.fim && s.sessao.atual) html = telaSessao();
       else if (s.sessao && s.sessao.fim && !s.sessao.visto) html = telaFimSessao();
@@ -438,17 +550,24 @@
     else if (s.diag && s.diag.atual && s.diag.emCurso) html = telaDiag();
     else html = telaConvite();
     v.innerHTML = `<div class="ia-wrap">${html}</div>`;
-    const at = (s.sessao && !s.sessao.fim && s.sessao.atual) || (s.diag && !s.diag.fim && s.diag.emCurso && s.diag.atual);
+    const at = resumoAberto ? (BIB[resumoAberto.h] && BIB[resumoAberto.h].exemplo) : (s.sessao && !s.sessao.fim && s.sessao.atual) || (s.diag && !s.diag.fim && s.diag.emCurso && s.diag.atual);
     if (at && M.itens[at.id]) preencherOficiais(M.itens[at.id].aula);
+    if (resumoAberto && resumoAberto.foco && !resumoAberto.rolou) { resumoAberto.rolou = true; const el = document.getElementById("ia-sec-" + resumoAberto.foco); if (el) el.scrollIntoView({ block: "start" }); }
   }
   const convite = () => pronto && SR.logado() && !(SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim);
 
   document.addEventListener("click", ev => {
+    const bl = ev.target.closest("button[data-ia-lista]");
+    if (bl) { const s = st(), n = +bl.dataset.iaAula; s.listaTurma = s.listaTurma || {}; s.nivel = s.nivel || {};
+      if (bl.dataset.iaLista === "turma") { s.listaTurma[n] = 1; delete SR.S.sets[n]; delete s.nivel[n]; }
+      else { delete s.listaTurma[n]; delete SR.S.sets[n]; }
+      salvar(); SR.renderAll(); return; }
     const b = ev.target.closest("#view-ia button"); if (!b || b.disabled) return;
     const s = st(); const topo = () => window.scrollTo({ top: 0 });
     if (b.dataset.iaSerie) { s.serie = b.dataset.iaSerie; salvar(); SR.renderAll(); return; }
     if (b.dataset.iao != null) { if (!(s.sessao && s.sessao.respondida && !s.sessao.fim)) { marcada = +b.dataset.iao; render(); } return; }
     if (b.dataset.iaLivre) { telaConteudos = false; verMapa = false; s.diag.mapaVisto = true; comecarSessao("livre", !!b.dataset.iaCurta, b.dataset.iaLivre.split(","), b.dataset.iaRot); render(); topo(); return; }
+    if (b.dataset.iaResumo) { resumoAberto = { h: b.dataset.iaResumo, completo: false, foco: b.dataset.iaFoco || "" }; render(); if (!resumoAberto.foco) topo(); return; }
     if (b.dataset.iaModo) { modoConteudos = b.dataset.iaModo; render(); return; }
     if (b.dataset.iaJavi) { s.naoVistas = s.naoVistas.filter(h => h !== b.dataset.iaJavi); salvar(); render(); return; }
     if (b.dataset.iaTrilha) { telaConteudos = false; verMapa = false; s.diag.mapaVisto = true; comecarSessao(b.dataset.iaTrilha, !!b.dataset.iaCurta); render(); topo(); return; }
@@ -465,9 +584,18 @@
     else if (a === "proxima") { s.sessao.i++; avancar(); render(); topo(); }
     else if (a === "relogio") { s.sessao.relogio = !s.sessao.relogio; salvar(); render(); }
     else if (a === "sair") { terminarSessao(); render(); topo(); }
-    else if (a === "hoje") { verMapa = false; telaConteudos = false; s.diag.mapaVisto = true; if (s.sessao && s.sessao.fim) s.sessao.visto = true; salvar(); render(); topo(); }
+    else if (a === "hoje") { verMapa = false; telaConteudos = false; telaBiblio = false; s.diag.mapaVisto = true; if (s.sessao && s.sessao.fim) s.sessao.visto = true; salvar(); render(); topo(); }
     else if (a === "mapa") { verMapa = true; telaConteudos = false; render(); topo(); }
+    else if (a === "resumoCompleto") { resumoAberto.completo = true; render(); }
+    else if (a === "fecharResumo") { resumoAberto = null; render(); topo(); }
+    else if (a === "biblioteca") { telaBiblio = true; telaConteudos = false; verMapa = false; render(); topo(); }
+    else if (a === "imprimir") { document.body.classList.add("ia-imprimir"); window.print(); setTimeout(() => document.body.classList.remove("ia-imprimir"), 500); }
     else if (a === "conteudos") { telaConteudos = true; verMapa = false; render(); topo(); }
+  });
+  document.addEventListener("input", ev => {
+    if (ev.target.id !== "ia-busca") return;
+    const t = ev.target.value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    document.querySelectorAll("#view-ia .ia-bib").forEach(el => { el.hidden = !!t && !el.dataset.iaTexto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(t); });
   });
   // cronômetro opcional (ligado por padrão só no Aprimoramento)
   tique = setInterval(() => {
@@ -509,6 +637,18 @@
   .ia-cont p{margin:2px 0}.ia-cont .ia-row{margin-top:8px}
   .ia-habs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ia-hab{font-size:13px;color:var(--ink-2)}
   .ia-h4{font-family:var(--f-display);margin:18px 0 8px}
+  .ia-lista{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:12px;padding:8px 12px;border-radius:8px;background:var(--pen-soft);font:14px var(--f-ui)}
+  .ia-resumo{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px}
+  .ia-resumo h2{font-family:var(--f-display);margin:4px 0 6px}
+  .ia-sec{border-top:1px solid var(--rule);padding-top:10px;margin-top:12px}.ia-sec h3{font-family:var(--f-display);font-size:17px;margin:0 0 6px}
+  .ia-sec ul,.ia-sec ol{padding-left:22px;line-height:1.6;margin:4px 0}
+  .ia-forms{display:grid;gap:10px}.ia-form{background:var(--pen-soft);border-radius:8px;padding:10px 14px}.ia-form p{margin:6px 0 0;font-size:14px}
+  .ia-mat{font-size:1.35em;overflow-x:auto}.ia-mat math{font-size:1em;math-style:normal}
+  .ia-rasc{display:inline-block;margin:0 0 6px;padding:3px 10px;border-radius:99px;background:var(--mark-soft);color:var(--mark);font-size:12px;font-weight:700}
+  .ia-busca{width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;font:15px var(--f-ui);background:var(--sheet);color:var(--ink)}
+  .ia-ex{margin:6px 0}
+  @media print{body.ia-imprimir *{visibility:hidden}body.ia-imprimir .ia-resumo,body.ia-imprimir .ia-resumo *{visibility:visible}
+    body.ia-imprimir .ia-resumo{position:absolute;left:0;top:0;width:100%;border:0}body.ia-imprimir .ia-noprint{display:none}}
   .ia-motivo{color:var(--ink-2);font-weight:400}
   .ia-antes,.ia-dica{background:var(--pen-soft);border-radius:8px;padding:10px 14px;margin:0 0 12px}
   .ia-antes summary{cursor:pointer;font-weight:700;color:var(--pen)}
@@ -522,6 +662,6 @@
   @media (prefers-reduced-motion:reduce){.ia-sobe{animation:none}}`;
   document.head.appendChild(css);
 
-  window.IA = { render, convite };
+  window.IA = { render, convite, nivelar, rotuloLista, registrarLista };
   carregar();
 })();

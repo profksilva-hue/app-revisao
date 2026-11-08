@@ -1,0 +1,82 @@
+{
+  "versao": 1,
+  "observacao": "Biblioteca teórica (etapa 6). Cada resumo é escrito com o Claude e só é publicado no site dos alunos depois de aprovado pelo professor (aprovado: true). Fórmulas em MathML, sem serviço externo.",
+  "resumos": [
+    {
+      "h": "H16",
+      "topico": "Proporcionalidade direta e inversa · regra de três",
+      "serie": "1ª série",
+      "aprovado": false,
+      "ideia": "Duas grandezas são <b>diretamente proporcionais</b> quando, ao multiplicar uma delas por um número, a outra fica multiplicada pelo mesmo número: a razão entre elas é constante. São <b>inversamente proporcionais</b> quando, ao multiplicar uma, a outra fica dividida pelo mesmo número: o produto é constante. Serve para receitas, consumo, velocidade e tempo, trabalho em equipe e divisão de valores.",
+      "formulas": [
+        { "f": "<math><mfrac><mi>y</mi><mi>x</mi></mfrac><mo>=</mo><mi>k</mi></math>", "sig": "Direta: a razão entre as grandezas y e x é sempre a mesma constante k (por exemplo, preço por quilo)." },
+        { "f": "<math><mi>x</mi><mo>·</mo><mi>y</mi><mo>=</mo><mi>k</mi></math>", "sig": "Inversa: o produto é sempre o mesmo (por exemplo, velocidade × tempo = distância fixa)." },
+        { "f": "<math><mfrac><mi>a</mi><mi>b</mi></mfrac><mo>=</mo><mfrac><mi>c</mi><mi>x</mi></mfrac><mo>⇒</mo><mi>x</mi><mo>=</mo><mfrac><mrow><mi>b</mi><mo>·</mo><mi>c</mi></mrow><mi>a</mi></mfrac></math>", "sig": "Regra de três direta: a e c são valores da mesma grandeza; b e x, da outra, na mesma unidade." }
+      ],
+      "porque": "Se y = k·x, dobrar x dobra y e triplicar x triplica y: é por isso que a razão y/x não muda. Na inversa, y = k/x: dobrar x divide y por 2. Na regra de três inversa, antes de multiplicar em cruz, inverta uma das razões, porque o que se mantém é o produto, e não a razão.",
+      "passos": [
+        "Organize os dados em colunas, uma para cada grandeza, sempre com a mesma unidade na coluna.",
+        "Pergunte: se uma grandeza aumenta, a outra aumenta (direta) ou diminui (inversa)? Marque com setas.",
+        "Direta: multiplique em cruz. Inversa: inverta uma das razões antes de multiplicar.",
+        "Regra de três composta: compare cada grandeza com a incógnita separadamente, imaginando as outras fixas.",
+        "Confira se o resultado faz sentido (mais pedreiros devem levar menos dias)."
+      ],
+      "exemplo": {
+        "id": "q~fj4dct",
+        "comentario": "Dias são inversamente proporcionais ao número de pedreiros (menos pedreiros, mais dias) e às horas por dia (menos horas, mais dias). Por isso as duas razões entram invertidas: <math><mi>x</mi><mo>=</mo><mn>10</mn><mo>·</mo><mfrac><mn>6</mn><mn>4</mn></mfrac><mo>·</mo><mfrac><mn>8</mn><mn>6</mn></mfrac><mo>=</mo><mn>20</mn></math> dias."
+      },
+      "erros": [
+        "Tratar como direta uma relação inversa (por exemplo, achar que menos pedreiros levam menos dias).",
+        "Montar a regra de três com unidades diferentes na mesma coluna (gramas e quilogramas, minutos e horas).",
+        "Arredondar para baixo quando a situação exige para cima, como na compra de sacos fechados.",
+        "Na regra de três composta, comparar as grandezas entre si em vez de comparar cada uma com a incógnita."
+      ],
+      "enem": "O ENEM esconde a proporção em situações do dia a dia: receitas, consumo de combustível, torneiras enchendo tanques, equipes de trabalho, divisão de prêmios e de custos. As armadilhas mais comuns são a relação inversa disfarçada e a resposta que pede arredondamento (número inteiro de embalagens, viagens ou pessoas).",
+      "lembrar": [
+        "Direta: razão constante. Inversa: produto constante.",
+        "Mesma unidade em cada coluna antes de calcular.",
+        "Na inversa, inverta uma razão antes de multiplicar em cruz.",
+        "Na composta, cada grandeza é comparada só com a incógnita.",
+        "Confira se o resultado faz sentido na situação."
+      ]
+    },
+    {
+      "h": "H11",
+      "topico": "Escalas em mapas, plantas e maquetes",
+      "serie": "1ª série",
+      "aprovado": false,
+      "ideia": "A <b>escala</b> compara uma medida no desenho com a medida real correspondente, na mesma unidade. Na escala 1 : 50 000, cada 1 cm no mapa representa 50 000 cm na realidade. Aparece em mapas, plantas baixas, maquetes, miniaturas e ampliações.",
+      "formulas": [
+        { "f": "<math><mi>E</mi><mo>=</mo><mfrac><mi>d</mi><mi>D</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac></math>", "sig": "d é a medida no desenho e D a medida real, na mesma unidade; n é o denominador da escala." },
+        { "f": "<math><mi>D</mi><mo>=</mo><mi>d</mi><mo>·</mo><mi>n</mi></math>", "sig": "Medida real: multiplique a medida do desenho pelo denominador. O resultado sai na unidade do desenho." },
+        { "f": "<math><msub><mi>A</mi><mtext>real</mtext></msub><mo>=</mo><msub><mi>A</mi><mtext>desenho</mtext></msub><mo>·</mo><msup><mi>n</mi><mn>2</mn></msup></math>", "sig": "Áreas: o fator é o quadrado do denominador. Para volumes, o cubo." },
+        { "f": "<math><mn>1</mn><mspace width=\"0.2em\"></mspace><mtext>km</mtext><mo>=</mo><mn>100 000</mn><mspace width=\"0.2em\"></mspace><mtext>cm</mtext><mspace width=\"1.5em\"></mspace><mn>1</mn><mspace width=\"0.2em\"></mspace><msup><mtext>m</mtext><mn>2</mn></msup><mo>=</mo><mn>10 000</mn><mspace width=\"0.2em\"></mspace><msup><mtext>cm</mtext><mn>2</mn></msup></math>", "sig": "As conversões que mais aparecem com escalas." }
+      ],
+      "porque": "Uma escala é uma semelhança: todas as medidas de comprimento ficam multiplicadas pelo mesmo número n. Uma área tem duas dimensões (comprimento × largura), então fica multiplicada por n · n = n². Um volume tem três dimensões e fica multiplicado por n³.",
+      "passos": [
+        "Escreva a escala na forma 1 : n.",
+        "Multiplique a medida do desenho por n: o resultado fica na mesma unidade do desenho (em geral, centímetros).",
+        "Só no fim, converta para a unidade pedida (cm para m: divida por 100; cm para km: divida por 100 000).",
+        "Para áreas, o caminho mais seguro é converter cada lado para a medida real e só depois calcular a área."
+      ],
+      "exemplo": {
+        "id": "q~1ah1qa1",
+        "comentario": "Converta os lados antes: 8 cm · 200 = 1 600 cm = 16 m e 5 cm · 200 = 1 000 cm = 10 m. A área real é 16 · 10 = 160 m². Pelo outro caminho: 40 cm² · 200² = 1 600 000 cm² = 160 m²."
+      },
+      "erros": [
+        "Esquecer de converter a unidade no fim (deixar a resposta em centímetros quando o comando pede quilômetros).",
+        "Dividir por 1 000 000 ou por 10 000 ao passar de centímetros para quilômetros; o certo é 100 000.",
+        "Usar a escala linear para áreas: multiplicar a área do desenho por n, e não por n².",
+        "Dividir pelo denominador em vez de multiplicar (o real é sempre maior que o desenho, exceto em ampliações)."
+      ],
+      "enem": "O ENEM cobra escala em mapas rodoviários, plantas de casas, maquetes e miniaturas, e às vezes pede a escala que faz um desenho caber numa folha. A armadilha mais comum é a área: a resposta errada que multiplica pela escala linear quase sempre está entre as alternativas.",
+      "lembrar": [
+        "Escala = desenho : real, na mesma unidade.",
+        "Real = desenho × denominador.",
+        "Área: fator ao quadrado. Volume: fator ao cubo.",
+        "1 km = 100 000 cm e 1 m² = 10 000 cm².",
+        "Converta a unidade só no fim."
+      ]
+    }
+  ]
+}
