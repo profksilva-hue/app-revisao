@@ -230,6 +230,7 @@
     const ms = inicioQ ? Date.now() - inicioQ : null;
     const r = valor === "ns" ? "ns" : (valor === it.q.a ? 1 : 0);
     if (r === "ns") se.ns++;
+    if (r === 0 && typeof valor === "number") { s.errosHab = s.errosHab || {}; (s.errosHab[at.h] = s.errosHab[at.h] || []).push({ id: at.id, v: valor }); s.errosHab[at.h] = s.errosHab[at.h].slice(-6); }
     const total = se.resp.length + 1;
     const out = M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa, sessao: { ns: se.ns, total } });
     se.resp.push({ h: at.h, id: at.id, r, tipo: at.tipo, ms: ms == null ? null : Math.round(ms) });
@@ -311,9 +312,12 @@
     : AULA[h] ? `<button class="btn ghost" type="button" data-calgo="${AULA[h]}" data-calmode="resumo">Rever a teoria (aula ${String(AULA[h]).padStart(2, "0")})</button>` : "";
 
   // ---------- biblioteca teórica (etapa 6, Fase 4) ----------
-  const SECOES = [["ideia", "Ideia central"], ["formulas", "Fórmulas essenciais"], ["porque", "Por que funciona"], ["passos", "Passo a passo"], ["exemplo", "Exemplo resolvido"], ["erros", "Erros comuns"], ["enem", "Como o ENEM cobra"], ["lembrar", "Para lembrar"], ["prereq", "Pré-requisitos"]];
+  const SECOES = [["ideia", "Ideia central"], ["base", "Comece do zero"], ["formulas", "Fórmulas essenciais"], ["porque", "Por que funciona"],
+    ["detalhado", "Passo a passo detalhado"], ["passos", "Passo a passo"], ["exemploPasso", "Exemplo resolvido passo a passo"], ["exemplo", "Outro exemplo resolvido"],
+    ["meus", "Os erros que você cometeu"], ["erros", "Erros comuns"], ["confira", "Antes de marcar a resposta"], ["enem", "Como o ENEM cobra"], ["lembrar", "Para lembrar"], ["prereq", "Pré-requisitos"]];
   const PROF = { // o que o aluno vê primeiro, conforme o estado; o resumo completo fica a um toque
-    introducao: SECOES.map(x => x[0]), recuperacao: ["ideia", "formulas", "passos", "erros", "prereq"],
+    introducao: SECOES.map(x => x[0]),
+    recuperacao: ["ideia", "base", "formulas", "detalhado", "exemploPasso", "meus", "erros", "confira", "prereq"],
     fixacao: ["formulas", "lembrar", "exemplo"], aprimoramento: ["enem", "lembrar"]
   };
   function secaoHTML(r, k) {
@@ -322,6 +326,14 @@
     if (k === "formulas") return `<div class="ia-forms">${r.formulas.map(f => `<div class="ia-form"><div class="ia-mat">${f.f}</div><p>${f.sig}</p></div>`).join("")}</div>`;
     if (k === "porque") return `<p>${r.porque}</p>`;
     if (k === "passos") return `<ol>${r.passos.map(x => `<li>${x}</li>`).join("")}</ol>`;
+    if (k === "base") return (r.base || []).length ? `<div class="ia-base">${r.base.map(b => `<div class="ia-bloco"><h4>${b.t}</h4><p>${b.txt}</p><p class="ia-exm"><b>Exemplo:</b> ${b.ex}</p></div>`).join("")}</div>` : "";
+    if (k === "detalhado") return (r.passosDetalhados || []).length ? `<ol class="ia-passos">${r.passosDetalhados.map(x => `<li><b>${x.passo}.</b> ${x.como}<div class="ia-exm">${x.ex}</div></li>`).join("")}</ol>` : "";
+    if (k === "exemploPasso") { const ep = r.exemploPasso, it = ep && M.itens[ep.id]; if (!it) return "";
+      const q = it.q, op = q.o.map((o, j) => `<button class="opt${j === q.a ? " is-right" : ""}" type="button" disabled><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`).join("");
+      return `<article class="q ia-ex">${corpoQuestao(q, op)}</article><ol class="ia-passos">${ep.passos.map(x => `<li>${x}</li>`).join("")}</ol>`; }
+    if (k === "confira") return (r.confira || []).length ? `<ul class="ia-check">${r.confira.map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+    if (k === "meus") { const es = (st().errosHab || {})[r.h] || []; if (!es.length) return "";
+      return `<ul>${es.slice(-4).reverse().map(e => { const it = M.itens[e.id], q = it && it.q; return q && q.e && q.e[e.v] ? `<li>Você marcou ${L[e.v]}: ${q.e[e.v]}</li>` : ""; }).join("")}</ul>`; }
     if (k === "exemplo") { const it = r.exemplo && M.itens[r.exemplo.id]; if (!it) return "";
       const q = it.q, op = q.o.map((o, j) => `<button class="opt${j === q.a ? " is-right" : ""}" type="button" disabled><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`).join("");
       return `<article class="q ia-ex">${corpoQuestao(q, op)}</article><p><b>Resposta: ${L[q.a]}.</b> ${r.exemplo.comentario}</p>`; }
@@ -334,7 +346,7 @@
   }
   function telaResumo() {
     const { h, completo, foco } = resumoAberto, r = BIB[h], e = estadoDe(h), mostra = completo ? PROF.introducao : (PROF[e] || PROF.introducao).concat(foco && !(PROF[e] || []).includes(foco) ? [foco] : []);
-    const corpo = SECOES.filter(([k]) => mostra.includes(k)).map(([k, t]) => { const c = secaoHTML(r, k); return c ? `<section class="ia-sec" id="ia-sec-${k}"><h3>${t}</h3>${c}</section>` : ""; }).join("");
+    const corpo = SECOES.filter(([k]) => mostra.includes(k) && !(k === "passos" && (r.passosDetalhados || []).length && mostra.includes("detalhado"))).map(([k, t]) => { const c = secaoHTML(r, k); return c ? `<section class="ia-sec" id="ia-sec-${k}"><h3>${t}</h3>${c}</section>` : ""; }).join("");
     return `<div class="ia-resumo">
       ${r.aprovado ? "" : `<p class="ia-rasc">Rascunho em revisão pelo professor · só aparece no site de teste</p>`}
       <p class="note">${esc(h)} · ${esc(HAB[h].nome)} · ${esc(r.serie || "")}</p>
@@ -647,6 +659,10 @@
   .ia-rasc{display:inline-block;margin:0 0 6px;padding:3px 10px;border-radius:99px;background:var(--mark-soft);color:var(--mark);font-size:12px;font-weight:700}
   .ia-busca{width:100%;box-sizing:border-box;margin-top:8px;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;font:15px var(--f-ui);background:var(--sheet);color:var(--ink)}
   .ia-ex{margin:6px 0}
+  .ia-base{display:grid;gap:10px}.ia-bloco{border:1px solid var(--rule);border-radius:8px;padding:10px 14px}.ia-bloco h4{margin:0 0 4px;font-size:15px}.ia-bloco p{margin:4px 0}
+  .ia-exm{background:var(--pen-soft);border-radius:6px;padding:6px 10px;margin:6px 0 0;font-size:14px}
+  .ia-passos{padding-left:22px}.ia-passos li{margin:0 0 10px;line-height:1.55}
+  .ia-check{list-style:none;padding-left:0}.ia-check li{padding-left:26px;position:relative;margin:4px 0}.ia-check li::before{content:"☐";position:absolute;left:4px;color:var(--pen)}
   @media print{body.ia-imprimir *{visibility:hidden}body.ia-imprimir .ia-resumo,body.ia-imprimir .ia-resumo *{visibility:visible}
     body.ia-imprimir .ia-resumo{position:absolute;left:0;top:0;width:100%;border:0}body.ia-imprimir .ia-noprint{display:none}}
   .ia-motivo{color:var(--ink-2);font-weight:400}

@@ -9,9 +9,18 @@
       "aprovado": false,
       "ideia": "Duas grandezas são <b>diretamente proporcionais</b> quando, ao multiplicar uma delas por um número, a outra fica multiplicada pelo mesmo número: a razão entre elas é constante. São <b>inversamente proporcionais</b> quando, ao multiplicar uma, a outra fica dividida pelo mesmo número: o produto é constante. Serve para receitas, consumo, velocidade e tempo, trabalho em equipe e divisão de valores.",
       "formulas": [
-        { "f": "<math><mfrac><mi>y</mi><mi>x</mi></mfrac><mo>=</mo><mi>k</mi></math>", "sig": "Direta: a razão entre as grandezas y e x é sempre a mesma constante k (por exemplo, preço por quilo)." },
-        { "f": "<math><mi>x</mi><mo>·</mo><mi>y</mi><mo>=</mo><mi>k</mi></math>", "sig": "Inversa: o produto é sempre o mesmo (por exemplo, velocidade × tempo = distância fixa)." },
-        { "f": "<math><mfrac><mi>a</mi><mi>b</mi></mfrac><mo>=</mo><mfrac><mi>c</mi><mi>x</mi></mfrac><mo>⇒</mo><mi>x</mi><mo>=</mo><mfrac><mrow><mi>b</mi><mo>·</mo><mi>c</mi></mrow><mi>a</mi></mfrac></math>", "sig": "Regra de três direta: a e c são valores da mesma grandeza; b e x, da outra, na mesma unidade." }
+        {
+          "f": "<math><mfrac><mi>y</mi><mi>x</mi></mfrac><mo>=</mo><mi>k</mi></math>",
+          "sig": "Direta: a razão entre as grandezas y e x é sempre a mesma constante k (por exemplo, preço por quilo)."
+        },
+        {
+          "f": "<math><mi>x</mi><mo>·</mo><mi>y</mi><mo>=</mo><mi>k</mi></math>",
+          "sig": "Inversa: o produto é sempre o mesmo (por exemplo, velocidade × tempo = distância fixa)."
+        },
+        {
+          "f": "<math><mfrac><mi>a</mi><mi>b</mi></mfrac><mo>=</mo><mfrac><mi>c</mi><mi>x</mi></mfrac><mo>⇒</mo><mi>x</mi><mo>=</mo><mfrac><mrow><mi>b</mi><mo>·</mo><mi>c</mi></mrow><mi>a</mi></mfrac></math>",
+          "sig": "Regra de três direta: a e c são valores da mesma grandeza; b e x, da outra, na mesma unidade."
+        }
       ],
       "porque": "Se y = k·x, dobrar x dobra y e triplicar x triplica y: é por isso que a razão y/x não muda. Na inversa, y = k/x: dobrar x divide y por 2. Na regra de três inversa, antes de multiplicar em cruz, inverta uma das razões, porque o que se mantém é o produto, e não a razão.",
       "passos": [
@@ -38,6 +47,76 @@
         "Na inversa, inverta uma razão antes de multiplicar em cruz.",
         "Na composta, cada grandeza é comparada só com a incógnita.",
         "Confira se o resultado faz sentido na situação."
+      ],
+      "base": [
+        {
+          "t": "O que é uma razão",
+          "txt": "Razão é a comparação de duas quantidades por divisão. Ela responde perguntas como “quanto de uma coisa para cada uma da outra”.",
+          "ex": "Uma receita usa 600 g de farinha para 15 pães: 600 ÷ 15 = 40 g de farinha por pão."
+        },
+        {
+          "t": "Como reconhecer a proporção direta",
+          "txt": "Monte uma pequena tabela. Se, ao dobrar uma grandeza, a outra também dobra, a proporção é direta. A divisão entre elas dá sempre o mesmo número.",
+          "ex": "1 kg custa R$ 8; 2 kg, R$ 16; 3 kg, R$ 24. Preço ÷ quilos = 8 em todas as linhas."
+        },
+        {
+          "t": "Como reconhecer a proporção inversa",
+          "txt": "Se, ao dobrar uma grandeza, a outra cai pela metade, a proporção é inversa. A multiplicação entre elas dá sempre o mesmo número.",
+          "ex": "A 60 km/h, uma viagem leva 4 h; a 120 km/h, leva 2 h. Velocidade × tempo = 240 nas duas linhas."
+        },
+        {
+          "t": "Atalho: o valor de uma unidade",
+          "txt": "Quando a conta parecer confusa, descubra quanto vale 1 e depois multiplique pelo que o problema pede.",
+          "ex": "5 cadernos custam R$ 40, então 1 caderno custa R$ 8. Logo, 7 cadernos custam 7 · 8 = R$ 56."
+        }
+      ],
+      "passosDetalhados": [
+        {
+          "passo": "Organize os dados em duas colunas",
+          "como": "Uma coluna para cada grandeza. Os valores que andam juntos ficam na mesma linha, e o valor procurado vira x.",
+          "ex": "cadernos | preço (R$)<br>5 | 40<br>7 | x"
+        },
+        {
+          "passo": "Deixe cada coluna na mesma unidade",
+          "como": "Se uma linha está em quilogramas e a outra em gramas, converta antes de qualquer conta.",
+          "ex": "2 kg e 500 g viram 2 000 g e 500 g (1 kg = 1 000 g)."
+        },
+        {
+          "passo": "Decida se é direta ou inversa",
+          "como": "Pergunte em voz alta: “se uma grandeza aumenta, a outra aumenta ou diminui?”. Aumenta junto: direta. Uma aumenta e a outra diminui: inversa.",
+          "ex": "Mais cadernos, preço maior: direta. Mais pedreiros, menos dias: inversa."
+        },
+        {
+          "passo": "Monte a proporção",
+          "como": "Direta: escreva as duas razões na mesma ordem das colunas. Inversa: inverta uma das colunas antes.",
+          "ex": "Direta: 5/7 = 40/x. Inversa (4 pedreiros em 6 dias; com 8 pedreiros, x dias): 4/8 = x/6."
+        },
+        {
+          "passo": "Multiplique em cruz e isole o x",
+          "como": "Multiplique o numerador de uma fração pelo denominador da outra, nos dois sentidos, e depois divida para deixar o x sozinho.",
+          "ex": "5 · x = 7 · 40 → 5x = 280 → x = 280 ÷ 5 = 56."
+        },
+        {
+          "passo": "Responda exatamente o que foi pedido",
+          "como": "Releia o comando: qual unidade? Precisa arredondar? Pede o total, a diferença ou o valor de cada um?",
+          "ex": "7 cadernos custam R$ 56,00."
+        }
+      ],
+      "exemploPasso": {
+        "id": "q~6s78vp",
+        "passos": [
+          "Entenda a pergunta: quantos sacos de 5 kg, no mínimo, para fazer 240 pães.",
+          "Quantas receitas? Cada receita rende 15 pães: 240 ÷ 15 = 16 receitas.",
+          "Quanta farinha? 16 receitas · 600 g = 9 600 g, que é o mesmo que 9,6 kg.",
+          "Quantos sacos? 9,6 ÷ 5 = 1,92 saco.",
+          "Arredonde para cima: com 1 saco (5 kg) falta farinha, então são necessários 2 sacos. Resposta: B."
+        ]
+      },
+      "confira": [
+        "A unidade da minha resposta é a que o comando pede?",
+        "O resultado faz sentido? Mais pães devem pedir mais farinha; mais pedreiros, menos dias.",
+        "Era preciso arredondar? Para cima (comprar o suficiente) ou para baixo (o que cabe)?",
+        "Respondi a pergunta certa: total, diferença ou valor de cada um?"
       ]
     },
     {
@@ -47,10 +126,22 @@
       "aprovado": false,
       "ideia": "A <b>escala</b> compara uma medida no desenho com a medida real correspondente, na mesma unidade. Na escala 1 : 50 000, cada 1 cm no mapa representa 50 000 cm na realidade. Aparece em mapas, plantas baixas, maquetes, miniaturas e ampliações.",
       "formulas": [
-        { "f": "<math><mi>E</mi><mo>=</mo><mfrac><mi>d</mi><mi>D</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac></math>", "sig": "d é a medida no desenho e D a medida real, na mesma unidade; n é o denominador da escala." },
-        { "f": "<math><mi>D</mi><mo>=</mo><mi>d</mi><mo>·</mo><mi>n</mi></math>", "sig": "Medida real: multiplique a medida do desenho pelo denominador. O resultado sai na unidade do desenho." },
-        { "f": "<math><msub><mi>A</mi><mtext>real</mtext></msub><mo>=</mo><msub><mi>A</mi><mtext>desenho</mtext></msub><mo>·</mo><msup><mi>n</mi><mn>2</mn></msup></math>", "sig": "Áreas: o fator é o quadrado do denominador. Para volumes, o cubo." },
-        { "f": "<math><mn>1</mn><mspace width=\"0.2em\"></mspace><mtext>km</mtext><mo>=</mo><mn>100 000</mn><mspace width=\"0.2em\"></mspace><mtext>cm</mtext><mspace width=\"1.5em\"></mspace><mn>1</mn><mspace width=\"0.2em\"></mspace><msup><mtext>m</mtext><mn>2</mn></msup><mo>=</mo><mn>10 000</mn><mspace width=\"0.2em\"></mspace><msup><mtext>cm</mtext><mn>2</mn></msup></math>", "sig": "As conversões que mais aparecem com escalas." }
+        {
+          "f": "<math><mi>E</mi><mo>=</mo><mfrac><mi>d</mi><mi>D</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac></math>",
+          "sig": "d é a medida no desenho e D a medida real, na mesma unidade; n é o denominador da escala."
+        },
+        {
+          "f": "<math><mi>D</mi><mo>=</mo><mi>d</mi><mo>·</mo><mi>n</mi></math>",
+          "sig": "Medida real: multiplique a medida do desenho pelo denominador. O resultado sai na unidade do desenho."
+        },
+        {
+          "f": "<math><msub><mi>A</mi><mtext>real</mtext></msub><mo>=</mo><msub><mi>A</mi><mtext>desenho</mtext></msub><mo>·</mo><msup><mi>n</mi><mn>2</mn></msup></math>",
+          "sig": "Áreas: o fator é o quadrado do denominador. Para volumes, o cubo."
+        },
+        {
+          "f": "<math><mn>1</mn><mspace width=\"0.2em\"></mspace><mtext>km</mtext><mo>=</mo><mn>100 000</mn><mspace width=\"0.2em\"></mspace><mtext>cm</mtext><mspace width=\"1.5em\"></mspace><mn>1</mn><mspace width=\"0.2em\"></mspace><msup><mtext>m</mtext><mn>2</mn></msup><mo>=</mo><mn>10 000</mn><mspace width=\"0.2em\"></mspace><msup><mtext>cm</mtext><mn>2</mn></msup></math>",
+          "sig": "As conversões que mais aparecem com escalas."
+        }
       ],
       "porque": "Uma escala é uma semelhança: todas as medidas de comprimento ficam multiplicadas pelo mesmo número n. Uma área tem duas dimensões (comprimento × largura), então fica multiplicada por n · n = n². Um volume tem três dimensões e fica multiplicado por n³.",
       "passos": [
@@ -76,6 +167,76 @@
         "Área: fator ao quadrado. Volume: fator ao cubo.",
         "1 km = 100 000 cm e 1 m² = 10 000 cm².",
         "Converta a unidade só no fim."
+      ],
+      "base": [
+        {
+          "t": "O que a escala diz",
+          "txt": "A escala 1 : n quer dizer que 1 unidade no desenho vale n unidades iguais na realidade.",
+          "ex": "Na planta 1 : 100, 1 cm no papel vale 100 cm, ou seja, 1 m na casa."
+        },
+        {
+          "t": "Do desenho para o real: multiplique",
+          "txt": "Para achar a medida real, multiplique a medida do desenho pelo número da escala. O resultado sai na mesma unidade do desenho.",
+          "ex": "Escala 1 : 50 000 e 3 cm no mapa: 3 · 50 000 = 150 000 cm."
+        },
+        {
+          "t": "Do real para o desenho: divida",
+          "txt": "Para saber quanto algo real ocupa no desenho, divida a medida real (na mesma unidade) pelo número da escala.",
+          "ex": "Uma rua de 2 km = 200 000 cm. Na escala 1 : 50 000: 200 000 ÷ 50 000 = 4 cm no mapa."
+        },
+        {
+          "t": "Convertendo unidades sem errar",
+          "txt": "Na sequência km, hm, dam, m, dm, cm, mm, cada passo para a direita multiplica por 10. Para voltar, divida.",
+          "ex": "cm → m: ÷ 100. m → km: ÷ 1 000. cm → km: ÷ 100 000. Assim, 150 000 cm = 1 500 m = 1,5 km."
+        },
+        {
+          "t": "Áreas: os dois lados crescem",
+          "txt": "Numa área, comprimento e largura são multiplicados pela escala, então a área é multiplicada pela escala duas vezes.",
+          "ex": "Um quadrado de 1 cm × 1 cm na escala 1 : 100 vira 100 cm × 100 cm = 10 000 cm² = 1 m². A área cresceu 100 · 100 = 10 000 vezes, não 100."
+        }
+      ],
+      "passosDetalhados": [
+        {
+          "passo": "Leia a escala como 1 : n",
+          "como": "Identifique o número n, que diz quantas vezes o real é maior que o desenho.",
+          "ex": "1 : 250 000 → n = 250 000."
+        },
+        {
+          "passo": "Multiplique a medida do desenho por n",
+          "como": "O resultado fica na mesma unidade do desenho, quase sempre em centímetros.",
+          "ex": "6 cm · 250 000 = 1 500 000 cm."
+        },
+        {
+          "passo": "Converta para a unidade do comando",
+          "como": "Faça a conversão só no fim, um passo de cada vez se precisar.",
+          "ex": "1 500 000 cm ÷ 100 = 15 000 m; 15 000 m ÷ 1 000 = 15 km."
+        },
+        {
+          "passo": "Se for área, converta os lados primeiro",
+          "como": "Transforme cada lado em medida real e só depois multiplique para achar a área.",
+          "ex": "8 cm e 5 cm na escala 1 : 200 → 16 m e 10 m → área de 160 m²."
+        },
+        {
+          "passo": "Confira se o tamanho é possível",
+          "como": "Pense na situação real: a distância entre cidades, o tamanho de uma sala, o comprimento de um carro.",
+          "ex": "15 km entre duas cidades é razoável; 15 000 km não seria."
+        }
+      ],
+      "exemploPasso": {
+        "id": "q~jkizuk",
+        "passos": [
+          "Identifique os dados: escala 1 : 250 000, 6 cm no mapa, e a pergunta pede quilômetros.",
+          "Multiplique: 6 · 250 000 = 1 500 000 cm.",
+          "Converta centímetros em metros: 1 500 000 ÷ 100 = 15 000 m.",
+          "Converta metros em quilômetros: 15 000 ÷ 1 000 = 15 km. Resposta: B.",
+          "Confira as armadilhas: 15 000 (E) é a resposta em metros, e 1,5 (A) vem de dividir por 1 000 000 em vez de 100 000."
+        ]
+      },
+      "confira": [
+        "Fui na direção certa: multipliquei (desenho → real) ou dividi (real → desenho)?",
+        "Converti para a unidade que o comando pede?",
+        "Se a pergunta é sobre área, usei a escala duas vezes (ao quadrado)?",
+        "O tamanho real que encontrei é possível na situação?"
       ]
     }
   ]
