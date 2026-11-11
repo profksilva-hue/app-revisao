@@ -181,6 +181,8 @@ h1 .geo { color: var(--mark); }
 @media (max-width: 560px) { .q-h .ofc { order: 3; flex-basis: 100%; width: fit-content; max-width: 100%; } }
 img.ofi { display: block; max-width: 100%; height: auto; margin: 10px auto; background: #fff; border-radius: 6px; }
 img.ofi.pdf { width: 100%; max-width: 720px; border: 1px solid var(--rule); padding: 6px; box-sizing: border-box; }
+img.ofi.inl { display: inline-block; margin: 0 3px; vertical-align: middle; max-height: 2.4em; width: auto; border-radius: 0; }
+img.ofi.inl.load, img.ofi.inl.miss { min-height: 1.4em; min-width: 2.4em; }
 img.ofi.alt { display: inline-block; margin: 0; max-height: 140px; width: auto; vertical-align: middle; }
 img.ofi.load { min-height: 120px; background: linear-gradient(90deg, var(--pen-soft), var(--sheet), var(--pen-soft)); background-size: 200% 100%; animation: ofl 1.2s linear infinite; }
 img.ofi.miss { min-height: 60px; }
@@ -561,6 +563,15 @@ table.evt .dn { color: var(--bad); font-weight: 700; }
 <script>
 (function () {
   const D = JSON.parse(document.getElementById("data").textContent);
+  // Enunciados oficiais: símbolos e frações vêm como imagem no meio da frase ("Use 3 como aproximação para [π]").
+  // Essas imagens ficam na linha do texto (classe inl), e um parágrafo final que repete o comando é retirado.
+  (D.aulas || []).forEach(a => ["q", "bank", "of"].forEach(k => (a[k] || []).forEach(q => {
+    if (!q || !Array.isArray(q.t)) return;
+    q.t = q.t.map(p => typeof p !== "string" ? p : p.replace(/([^>\s][^<]*?)\s*<img class="ofi"/g, (m, txt) => m.replace('class="ofi"', 'class="ofi inl"')));
+    const tira = x => String(x || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().replace(/[:.]$/, "");
+    const ult = q.t.length > 1 ? tira(q.t[q.t.length - 1]) : "";
+    if (ult && q.c && tira(q.c) === ult) q.t = q.t.slice(0, -1);
+  })));
   const L = "ABCDE";
   const LKEY = "enem26-rev-v1";
   const NA = D.aulas.length;

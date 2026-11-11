@@ -21,13 +21,14 @@
     adiantar: { alvo: [0.75, 0.85], naoSei: true, relogio: false, min: 10 },
     livre: { alvo: null, naoSei: true, relogio: false, min: 20 }   // conteúdo escolhido pelo aluno: a chance segue o estado de cada habilidade
   };
+  let AREA_URL = null;
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
   let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
   let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null, ADAPT = {}, SSO = null;
   // ---------- área adaptada (proposta de 11/11) ----------
   // Quem está no grupo da escola abre o mesmo app com apoios. Até o login Microsoft existir,
   // o site de teste simula o grupo (?area=adaptada / ?area=padrao ou o botão no relatório).
-  const AMB_TESTE = /teste|localhost|127\.0\.0\.1/.test(location.hostname);
+  const AMB_TESTE = /teste|-lab\b|localhost|127\.0\.0\.1/.test(location.hostname);
   const adaptada = () => !!(SR.S.ia && SR.S.ia.adaptada);
   const ehTexto = q => !q.pdf && !/class="ofi pdf"/.test((q.t || []).join(" "));
   const versao = it => (adaptada() && ADAPT[it.id]) || it.q;   // versão adaptada aprovada, se houver
@@ -74,7 +75,7 @@
         const r = await fetch("/api/eu", { cache: "no-store", credentials: "same-origin" });
         if (r.ok) { const u = await r.json(); if (u && u.sso && u.email) { SSO = u; if (SR.email() !== u.email) SR.entrarSSO(u.email); if (u.adaptada) st().adaptada = true; else delete st().adaptada; salvar(); } }
       } catch (e) { /* sem login configurado: segue pelo e-mail digitado */ }
-      if (!SSO && AMB_TESTE && SR.logado()) { const a = new URLSearchParams(location.search).get("area"); if (a === "adaptada") st().adaptada = true; if (a === "padrao") delete st().adaptada; }
+      if (!SSO && AMB_TESTE) AREA_URL = new URLSearchParams(location.search).get("area");   // aplicada quando o aluno estiver logado (ver render)
       // a tela Hoje é a porta de entrada do app: ao abrir, o aluno cai nela (etapa 5)
       if (SR.logado() && SR.S.tab !== "prof") SR.S.tab = "ia";
     } catch (e) { erro = "Não foi possível carregar a IA agora. Verifique a conexão e recarregue a página."; }
@@ -775,6 +776,7 @@
     const v = document.getElementById("view-ia"); if (!v) return;
     if (erro) { v.innerHTML = `<div class="ia-card"><p>${esc(erro)}</p></div>`; return; }
     if (!pronto) { v.innerHTML = `<div class="ia-card"><p>Carregando a IA…</p></div>`; return; }
+    if (AREA_URL && SR.logado()) { if (AREA_URL === "adaptada") st().adaptada = true; if (AREA_URL === "padrao") delete st().adaptada; AREA_URL = null; salvar(); }
     const s = st();
     let html;
     if (!s.serie) html = telaSerie();
@@ -787,7 +789,8 @@
     }
     else if (s.diag && s.diag.atual && s.diag.emCurso) html = telaDiag();
     else html = telaConvite();
-    v.innerHTML = `<div class="ia-wrap${adaptada() ? " ia-adapt" : ""}">${html}</div>`;
+    const teste = AMB_TESTE && !SSO ? `<p class="note ia-noprint ia-teste">Ambiente de teste · você está na <b>${adaptada() ? "área adaptada" : "área padrão"}</b> <button class="ia-mini" type="button" data-iar="simular">${adaptada() ? "Voltar para a área padrão" : "Simular a área adaptada"}</button></p>` : "";
+    v.innerHTML = `<div class="ia-wrap${adaptada() ? " ia-adapt" : ""}">${teste}${html}</div>`;
     if (window.speechSynthesis) speechSynthesis.cancel();
     const at = resumoAberto ? (BIB[resumoAberto.h] && BIB[resumoAberto.h].exemplo) : (s.sessao && !s.sessao.fim && s.sessao.atual) || (s.diag && !s.diag.fim && s.diag.emCurso && s.diag.atual);
     if (at && M.itens[at.id]) preencherOficiais(M.itens[at.id].aula);
@@ -801,7 +804,7 @@
     if (bp) { const h = bp.dataset.iaPraticar || bp.dataset.iaLer; SR.S.tab = "ia"; telaConteudos = false; telaBiblio = false; verMapa = false;
       if (bp.dataset.iaPraticar) { resumoAberto = null; comecarSessao("livre", false, [h], h + " · " + HAB[h].curto); } else resumoAberto = { h, completo: false, foco: "" };
       SR.renderAll(); window.scrollTo({ top: 0 }); return; }
-    const br = ev.target.closest("#view-id button[data-iar]");
+    const br = ev.target.closest("#view-id button[data-iar], #view-ia button[data-iar=\"simular\"]");
     if (br) { const s = st();
       if (br.dataset.iar === "meta") { const v = +((document.getElementById("ia-meta") || {}).value || 0); s.meta = v >= 400 && v <= 950 ? Math.round(v) : null; salvar(); SR.renderAll(); }
       if (br.dataset.iar === "simular" && AMB_TESTE && !SSO) { if (s.adaptada) delete s.adaptada; else s.adaptada = true; salvar(); SR.renderAll(); return; }
