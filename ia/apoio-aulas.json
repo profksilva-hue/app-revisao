@@ -1,0 +1,978 @@
+{
+ "versao": 1,
+ "observacao": "Apoios visuais dos resumos das aulas, só na área adaptada. aprovado=false: aparecem apenas no ambiente de teste.",
+ "aulas": {
+  "1": {
+   "esquema": [
+    {
+     "ic": "📋",
+     "t": "Organize",
+     "txt": "Duas colunas, uma para cada grandeza. O que você procura vira x."
+    },
+    {
+     "ic": "📏",
+     "t": "Mesma unidade",
+     "txt": "Cada coluna com uma unidade só (tudo em kg, ou tudo em g)."
+    },
+    {
+     "ic": "↕️",
+     "t": "Desenhe as setas",
+     "txt": "Uma aumenta e a outra também? Direta. Uma aumenta e a outra diminui? Inversa."
+    },
+    {
+     "ic": "✖️",
+     "t": "Calcule",
+     "txt": "Direta: multiplique em cruz. Inversa: inverta uma coluna e depois multiplique em cruz."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "O resultado faz sentido? Mais pedreiros devem levar menos dias."
+    }
+   ],
+   "legenda": "Na direta, as duas grandezas mudam juntas (×2 e ×2). Na inversa, uma sobe e a outra desce (×2 e ÷2).",
+   "decisao": {
+    "pergunta": "Se uma grandeza AUMENTA, o que acontece com a outra?",
+    "sim": {
+     "t": "Também aumenta",
+     "r": "DIRETA: a divisão (razão) fica igual."
+    },
+    "nao": {
+     "t": "Diminui",
+     "r": "INVERSA: a multiplicação (produto) fica igual."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "grandeza",
+     "sig": "Tudo o que pode ser medido ou contado: preço, tempo, quantidade."
+    },
+    {
+     "termo": "razão",
+     "sig": "Uma divisão que compara duas quantidades: “quanto para cada um”."
+    },
+    {
+     "termo": "constante",
+     "sig": "Que não muda."
+    },
+    {
+     "termo": "incógnita (x)",
+     "sig": "O valor que a questão pede."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“a cada”, “por quilo”, “por pessoa”",
+     "indica": "geralmente proporção direta"
+    },
+    {
+     "frase": "“mais operários”, “mais torneiras”, “mais rápido”",
+     "indica": "geralmente inversa com o tempo"
+    },
+    {
+     "frase": "“no mínimo”, “quantos sacos”",
+     "indica": "arredonde para cima"
+    }
+   ],
+   "cartao": [
+    "Mesmo lado = DIRETA → multiplico em cruz.",
+    "Lados opostos = INVERSA → inverto, depois multiplico em cruz.",
+    "Mesma unidade em cada coluna.",
+    "No fim: faz sentido?"
+   ],
+   "figura": "<svg viewBox=\"0 0 640 250\" role=\"img\" class=\"ia-svg\"><title>Proporção direta e inversa</title><rect class=\"sv-cx\" x=\"8\" y=\"8\" width=\"300\" height=\"234\" rx=\"10\"/><rect class=\"sv-cx\" x=\"332\" y=\"8\" width=\"300\" height=\"234\" rx=\"10\"/><text class=\"sv-tt\" x=\"158\" y=\"38\" text-anchor=\"middle\">DIRETA</text><text class=\"sv-tt\" x=\"482\" y=\"38\" text-anchor=\"middle\">INVERSA</text><text class=\"sv-lb\" x=\"88\" y=\"70\" text-anchor=\"middle\">receitas</text><text class=\"sv-lb\" x=\"228\" y=\"70\" text-anchor=\"middle\">pães</text><text class=\"sv-n\" x=\"88\" y=\"104\" text-anchor=\"middle\">1</text><text class=\"sv-n\" x=\"228\" y=\"104\" text-anchor=\"middle\">15</text><text class=\"sv-n\" x=\"88\" y=\"178\" text-anchor=\"middle\">2</text><text class=\"sv-n\" x=\"228\" y=\"178\" text-anchor=\"middle\">30</text><path class=\"sv-up\" d=\"M88 160 V118\"/><path class=\"sv-up\" d=\"M228 160 V118\"/><polygon class=\"sv-upf\" points=\"80,124 88,112 96,124\"/><polygon class=\"sv-upf\" points=\"220,124 228,112 236,124\"/><text class=\"sv-op\" x=\"74\" y=\"145\" text-anchor=\"end\">×2</text><text class=\"sv-op\" x=\"242\" y=\"145\" text-anchor=\"start\">×2</text><text class=\"sv-rg\" x=\"158\" y=\"222\" text-anchor=\"middle\">as setas vão para o MESMO lado</text><text class=\"sv-lb\" x=\"412\" y=\"70\" text-anchor=\"middle\">pedreiros</text><text class=\"sv-lb\" x=\"552\" y=\"70\" text-anchor=\"middle\">dias</text><text class=\"sv-n\" x=\"412\" y=\"104\" text-anchor=\"middle\">4</text><text class=\"sv-n\" x=\"552\" y=\"104\" text-anchor=\"middle\">10</text><text class=\"sv-n\" x=\"412\" y=\"178\" text-anchor=\"middle\">8</text><text class=\"sv-n\" x=\"552\" y=\"178\" text-anchor=\"middle\">5</text><path class=\"sv-up\" d=\"M412 160 V118\"/><polygon class=\"sv-upf\" points=\"404,124 412,112 420,124\"/><path class=\"sv-dn\" d=\"M552 116 V158\"/><polygon class=\"sv-dnf\" points=\"544,152 552,164 560,152\"/><text class=\"sv-op\" x=\"398\" y=\"145\" text-anchor=\"end\">×2</text><text class=\"sv-op sv-opd\" x=\"566\" y=\"145\" text-anchor=\"start\">÷2</text><text class=\"sv-rg\" x=\"482\" y=\"222\" text-anchor=\"middle\">as setas vão para lados OPOSTOS</text></svg>",
+   "aprovado": false
+  },
+  "2": {
+   "esquema": [
+    {
+     "ic": "🔎",
+     "t": "Ache o valor de partida",
+     "txt": "Ele é o 100% da situação."
+    },
+    {
+     "ic": "➕",
+     "t": "Aumento ou desconto?",
+     "txt": "Aumento: fator maior que 1. Desconto: fator menor que 1."
+    },
+    {
+     "ic": "🔢",
+     "t": "Monte o fator",
+     "txt": "+20% → 1,20 · −15% → 0,85 · +5% → 1,05."
+    },
+    {
+     "ic": "✖️",
+     "t": "Multiplique",
+     "txt": "Valor × fator. Várias mudanças seguidas: multiplique todos os fatores."
+    },
+    {
+     "ic": "✅",
+     "t": "Responda o que pedem",
+     "txt": "Valor final, diferença em reais ou porcentagem?"
+    }
+   ],
+   "legenda": "Subir 20% e depois descer 10% não dá +10%: 1,20 × 0,90 = 1,08, ou seja, +8%.",
+   "decisao": {
+    "pergunta": "O valor vai AUMENTAR?",
+    "sim": {
+     "t": "Sim, aumenta",
+     "r": "Fator = 1 + taxa. Ex.: +12% → × 1,12."
+    },
+    "nao": {
+     "t": "Não, diminui",
+     "r": "Fator = 1 − taxa. Ex.: −12% → × 0,88."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "porcentagem",
+     "sig": "Uma parte de cada 100. 30% = 30 ÷ 100 = 0,30."
+    },
+    {
+     "termo": "fator",
+     "sig": "Número que multiplica o valor para fazer o aumento ou o desconto."
+    },
+    {
+     "termo": "juros compostos",
+     "sig": "Juros sobre juros: o fator se repete a cada período."
+    },
+    {
+     "termo": "à vista / a prazo",
+     "sig": "Pagar tudo agora / pagar em parcelas."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“sobre o preço anterior”, “sucessivos”",
+     "indica": "multiplique os fatores, não some as taxas"
+    },
+    {
+     "frase": "“quanto por cento”",
+     "indica": "divida a diferença pelo valor inicial"
+    },
+    {
+     "frase": "“melhor proposta”",
+     "indica": "calcule o total de cada uma e compare"
+    }
+   ],
+   "cartao": [
+    "Aumento: × (1 + taxa).",
+    "Desconto: × (1 − taxa).",
+    "Seguidos: multiplico os fatores.",
+    "% de variação = diferença ÷ inicial."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 205\" role=\"img\" class=\"ia-svg\"><title>Fator multiplicador de porcentagem</title><text class=\"sv-tt\" x=\"320\" y=\"30\" text-anchor=\"middle\">Porcentagem vira um FATOR que multiplica</text><rect class=\"sv-cx\" x=\"20\" y=\"60\" width=\"140\" height=\"60\" rx=\"10\"/><text class=\"sv-n\" x=\"90\" y=\"98\" text-anchor=\"middle\">R$ 100</text><rect class=\"sv-cx\" x=\"250\" y=\"60\" width=\"140\" height=\"60\" rx=\"10\"/><text class=\"sv-n\" x=\"320\" y=\"98\" text-anchor=\"middle\">R$ 120</text><rect class=\"sv-cx\" x=\"480\" y=\"60\" width=\"140\" height=\"60\" rx=\"10\"/><text class=\"sv-n\" x=\"550\" y=\"98\" text-anchor=\"middle\">R$ 108</text><path class=\"sv-up\" d=\"M165 90 H235\"/><polygon class=\"sv-upf\" points=\"233,82 245,90 233,98\"/><text class=\"sv-op\" x=\"205\" y=\"78\" text-anchor=\"middle\">+20%</text><text class=\"sv-op\" x=\"205\" y=\"116\" text-anchor=\"middle\">× 1,20</text><path class=\"sv-dn\" d=\"M395 90 H465\"/><polygon class=\"sv-dnf\" points=\"463,82 475,90 463,98\"/><text class=\"sv-op sv-opd\" x=\"435\" y=\"78\" text-anchor=\"middle\">−10%</text><text class=\"sv-op sv-opd\" x=\"435\" y=\"116\" text-anchor=\"middle\">× 0,90</text><text class=\"sv-rg\" x=\"320\" y=\"160\" text-anchor=\"middle\">Aumento de p%: multiplique por (1 + p/100). Desconto de p%: por (1 − p/100).</text><text class=\"sv-rg\" x=\"320\" y=\"188\" text-anchor=\"middle\">Seguidos: multiplique os fatores. 1,20 × 0,90 = 1,08 → subiu 8% (e não 10%).</text></svg>",
+   "aprovado": false
+  },
+  "3": {
+   "esquema": [
+    {
+     "ic": "🔎",
+     "t": "Leia a escala",
+     "txt": "1 : 50 000 quer dizer: 1 no desenho vale 50 000 no real, na mesma unidade."
+    },
+    {
+     "ic": "🧭",
+     "t": "Para onde eu vou?",
+     "txt": "Do desenho para o real: multiplique. Do real para o desenho: divida."
+    },
+    {
+     "ic": "✖️",
+     "t": "Calcule",
+     "txt": "Faça a conta com a medida em cm, como a escala está."
+    },
+    {
+     "ic": "🪜",
+     "t": "Converta no fim",
+     "txt": "Use a escada das unidades para chegar à unidade que o comando pede."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "O tamanho é possível? Uma rua não tem 3 cm, nem uma mesa 5 km."
+    }
+   ],
+   "legenda": "Em cima: 1 cm no mapa vira 500 m no real. Embaixo: para descer um degrau (km → hm → … → mm), multiplique por 10.",
+   "decisao": {
+    "pergunta": "Tenho a medida do DESENHO e quero a REAL?",
+    "sim": {
+     "t": "Sim",
+     "r": "MULTIPLIQUE pelo número da escala."
+    },
+    "nao": {
+     "t": "Não, tenho a real e quero a do desenho",
+     "r": "DIVIDA pelo número da escala."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "escala",
+     "sig": "Comparação entre o tamanho no desenho e o tamanho real."
+    },
+    {
+     "termo": "planta baixa",
+     "sig": "Desenho de uma casa vista de cima, reduzido."
+    },
+    {
+     "termo": "maquete",
+     "sig": "Modelo em miniatura."
+    },
+    {
+     "termo": "grandeza",
+     "sig": "Algo que se mede: comprimento, massa, tempo, volume."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“1 : 200”, “na escala de”",
+     "indica": "o primeiro número é o desenho; o segundo, o real"
+    },
+    {
+     "frase": "“área”, “m²”, “terreno”",
+     "indica": "a área muda com o fator ao quadrado"
+    },
+    {
+     "frase": "“em quilômetros”, “em metros”",
+     "indica": "converta a unidade só no fim"
+    }
+   ],
+   "cartao": [
+    "Desenho → real: MULTIPLICO.",
+    "Real → desenho: DIVIDO.",
+    "Faço a conta em cm e converto no fim.",
+    "1 km = 100 000 cm."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 320\" role=\"img\" class=\"ia-svg\"><title>Escala e escada de unidades</title><rect class=\"sv-cx\" x=\"8\" y=\"8\" width=\"624\" height=\"120\" rx=\"10\"/><text class=\"sv-lb\" x=\"24\" y=\"36\" text-anchor=\"start\">no MAPA (escala 1 : 50 000)</text><text class=\"sv-lb\" x=\"380\" y=\"36\" text-anchor=\"start\">no MUNDO REAL</text><line class=\"sv-rg-l\" x1=\"40\" y1=\"80\" x2=\"140\" y2=\"80\"/><line class=\"sv-rg-l\" x1=\"40\" y1=\"70\" x2=\"40\" y2=\"90\"/><line class=\"sv-rg-l\" x1=\"140\" y1=\"70\" x2=\"140\" y2=\"90\"/><text class=\"sv-n\" x=\"90\" y=\"112\" text-anchor=\"middle\">1 cm</text><path class=\"sv-up\" d=\"M170 80 H328\"/><polygon class=\"sv-upf\" points=\"326,72 338,80 326,88\"/><text class=\"sv-op\" x=\"250\" y=\"70\" text-anchor=\"middle\">× 50 000</text><text class=\"sv-n\" x=\"380\" y=\"88\" text-anchor=\"start\">50 000 cm = 500 m</text><text class=\"sv-rg\" x=\"250\" y=\"112\" text-anchor=\"middle\">volta (real → mapa): ÷ 50 000</text><text class=\"sv-lb\" x=\"24\" y=\"158\" text-anchor=\"start\">Escada das unidades: cada degrau para BAIXO, × 10; para CIMA, ÷ 10</text><g class=\"sv-esc\"><rect x=\"24\" y=\"170\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"63\" y=\"191\" text-anchor=\"middle\">km</text><rect x=\"110\" y=\"188\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"149\" y=\"209\" text-anchor=\"middle\">hm</text><rect x=\"196\" y=\"206\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"235\" y=\"227\" text-anchor=\"middle\">dam</text><rect x=\"282\" y=\"224\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"321\" y=\"245\" text-anchor=\"middle\">m</text><rect x=\"368\" y=\"242\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"407\" y=\"263\" text-anchor=\"middle\">dm</text><rect x=\"454\" y=\"260\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"493\" y=\"281\" text-anchor=\"middle\">cm</text><rect x=\"540\" y=\"278\" width=\"78\" height=\"30\" rx=\"6\"/><text x=\"579\" y=\"299\" text-anchor=\"middle\">mm</text></g></svg>",
+   "aprovado": false
+  },
+  "4": {
+   "esquema": [
+    {
+     "ic": "🏷️",
+     "t": "Leia o título",
+     "txt": "Ele diz do que o gráfico fala."
+    },
+    {
+     "ic": "📐",
+     "t": "Leia os eixos",
+     "txt": "Qual grandeza está em cada eixo e em que unidade (mil? %?)."
+    },
+    {
+     "ic": "🎨",
+     "t": "Leia a legenda",
+     "txt": "Cada cor ou linha é uma categoria diferente."
+    },
+    {
+     "ic": "🎯",
+     "t": "Ache o ponto pedido",
+     "txt": "Localize o ano, o mês ou a categoria do comando."
+    },
+    {
+     "ic": "✅",
+     "t": "Calcule e confira a unidade",
+     "txt": "Diferença, total ou porcentagem, com a unidade certa."
+    }
+   ],
+   "legenda": "Os números mostram onde olhar primeiro. Atenção: “mil unidades” muda a resposta.",
+   "decisao": {
+    "pergunta": "A pergunta é sobre UM valor ou sobre uma MUDANÇA?",
+    "sim": {
+     "t": "Um valor",
+     "r": "Leia direto no gráfico, com a unidade do eixo."
+    },
+    "nao": {
+     "t": "Uma mudança (aumento, queda)",
+     "r": "Faça final − inicial. Para %: diferença ÷ inicial."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "eixo",
+     "sig": "A linha com os valores (vertical) ou as categorias (horizontal)."
+    },
+    {
+     "termo": "legenda",
+     "sig": "Explica o que cada cor ou símbolo representa."
+    },
+    {
+     "termo": "variação",
+     "sig": "Quanto mudou: valor final − valor inicial."
+    },
+    {
+     "termo": "tendência",
+     "sig": "Para onde os dados caminham: subindo, caindo ou estáveis."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“maior crescimento”",
+     "indica": "compare as diferenças, não os valores"
+    },
+    {
+     "frase": "“em milhares”, “em %”",
+     "indica": "a unidade está no eixo ou no título"
+    },
+    {
+     "frase": "“no período”",
+     "indica": "use o primeiro e o último ponto do período"
+    }
+   ],
+   "cartao": [
+    "Título → eixos → legenda → ponto pedido.",
+    "Olho a unidade do eixo.",
+    "Mudança = final − inicial.",
+    "% = diferença ÷ inicial."
+   ],
+   "figura": "<svg viewBox=\"0 0 700 280\" role=\"img\" class=\"ia-svg\"><title>Como ler um gráfico</title><line class=\"sv-ax\" x1=\"90\" y1=\"40\" x2=\"90\" y2=\"220\"/><line class=\"sv-ax\" x1=\"90\" y1=\"220\" x2=\"420\" y2=\"220\"/><rect class=\"sv-bar\" x=\"130\" y=\"160\" width=\"60\" height=\"60\" rx=\"4\"/><text class=\"sv-lb\" x=\"160\" y=\"240\" text-anchor=\"middle\">2022</text><rect class=\"sv-bar\" x=\"230\" y=\"110\" width=\"60\" height=\"110\" rx=\"4\"/><text class=\"sv-lb\" x=\"260\" y=\"240\" text-anchor=\"middle\">2023</text><rect class=\"sv-bar\" x=\"330\" y=\"70\" width=\"60\" height=\"150\" rx=\"4\"/><text class=\"sv-lb\" x=\"360\" y=\"240\" text-anchor=\"middle\">2024</text><text class=\"sv-lb\" x=\"80\" y=\"225\" text-anchor=\"end\">0</text><line class=\"sv-gr\" x1=\"90\" y1=\"220\" x2=\"420\" y2=\"220\"/><text class=\"sv-lb\" x=\"80\" y=\"175\" text-anchor=\"end\">50</text><line class=\"sv-gr\" x1=\"90\" y1=\"170\" x2=\"420\" y2=\"170\"/><text class=\"sv-lb\" x=\"80\" y=\"125\" text-anchor=\"end\">100</text><line class=\"sv-gr\" x1=\"90\" y1=\"120\" x2=\"420\" y2=\"120\"/><text class=\"sv-lb\" x=\"80\" y=\"75\" text-anchor=\"end\">150</text><line class=\"sv-gr\" x1=\"90\" y1=\"70\" x2=\"420\" y2=\"70\"/><text class=\"sv-n\" x=\"255\" y=\"26\" text-anchor=\"middle\">Vendas de bicicletas (mil unidades)</text><circle class=\"sv-ci\" cx=\"30\" cy=\"20\" r=\"13\"/><text class=\"sv-cn\" x=\"30\" y=\"26\" text-anchor=\"middle\">1</text><text class=\"sv-rg\" x=\"0\" y=\"0\" text-anchor=\"start\"></text><circle class=\"sv-ci\" cx=\"40\" cy=\"130\" r=\"13\"/><text class=\"sv-cn\" x=\"40\" y=\"136\" text-anchor=\"middle\">2</text><text class=\"sv-rg\" x=\"0\" y=\"0\" text-anchor=\"start\"></text><circle class=\"sv-ci\" cx=\"255\" cy=\"262\" r=\"13\"/><text class=\"sv-cn\" x=\"255\" y=\"268\" text-anchor=\"middle\">3</text><text class=\"sv-rg\" x=\"0\" y=\"0\" text-anchor=\"start\"></text><circle class=\"sv-ci\" cx=\"470\" cy=\"40\" r=\"13\"/><text class=\"sv-cn\" x=\"470\" y=\"46\" text-anchor=\"middle\">4</text><text class=\"sv-rg\" x=\"0\" y=\"0\" text-anchor=\"start\"></text><text class=\"sv-rg\" x=\"470\" y=\"80\" text-anchor=\"start\">1  Título: do que é o gráfico</text><text class=\"sv-rg\" x=\"470\" y=\"105\" text-anchor=\"start\">2  Eixo: valores e unidade (mil!)</text><text class=\"sv-rg\" x=\"470\" y=\"130\" text-anchor=\"start\">3  Eixo: categorias (anos)</text><text class=\"sv-rg\" x=\"470\" y=\"155\" text-anchor=\"start\">4  Escala do eixo começa no 0?</text></svg>",
+   "aprovado": false
+  },
+  "5": {
+   "esquema": [
+    {
+     "ic": "🔢",
+     "t": "Coloque em ordem",
+     "txt": "Do menor para o maior. Isso ajuda em todas as medidas."
+    },
+    {
+     "ic": "➕",
+     "t": "Média",
+     "txt": "Some todos e divida pela quantidade de valores."
+    },
+    {
+     "ic": "🎯",
+     "t": "Mediana",
+     "txt": "O valor do meio. Se forem dois no meio, faça a média deles."
+    },
+    {
+     "ic": "🔁",
+     "t": "Moda",
+     "txt": "O valor que mais aparece."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "A média e a mediana ficam entre o menor e o maior valor."
+    }
+   ],
+   "legenda": "Com os dados 2, 3, 3, 5, 7: média 4, mediana 3 e moda 3.",
+   "decisao": {
+    "pergunta": "Há valores muito diferentes dos outros (extremos)?",
+    "sim": {
+     "t": "Sim",
+     "r": "A MEDIANA representa melhor o grupo."
+    },
+    "nao": {
+     "t": "Não",
+     "r": "A MÉDIA funciona bem."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "média",
+     "sig": "Soma dos valores dividida pela quantidade."
+    },
+    {
+     "termo": "mediana",
+     "sig": "Valor central dos dados em ordem."
+    },
+    {
+     "termo": "moda",
+     "sig": "Valor que mais se repete."
+    },
+    {
+     "termo": "desvio padrão",
+     "sig": "Mostra se os dados estão espalhados (grande) ou juntos (pequeno)."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“mais regular”, “mais constante”",
+     "indica": "menor desvio padrão"
+    },
+    {
+     "frase": "“valor típico”, “salário central”",
+     "indica": "pense na mediana"
+    },
+    {
+     "frase": "tabela com frequência",
+     "indica": "multiplique cada valor pela sua frequência antes de somar"
+    }
+   ],
+   "cartao": [
+    "Primeiro, coloco em ordem.",
+    "Média = soma ÷ quantidade.",
+    "Mediana = o do meio.",
+    "Moda = o que mais se repete."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 260\" role=\"img\" class=\"ia-svg\"><title>Média, mediana e moda</title><text class=\"sv-tt\" x=\"320\" y=\"28\" text-anchor=\"middle\">Dados: 2, 3, 3, 5, 7</text><line class=\"sv-ax\" x1=\"40\" y1=\"120\" x2=\"600\" y2=\"120\"/><line class=\"sv-ax\" x1=\"75\" y1=\"114\" x2=\"75\" y2=\"126\"/><text class=\"sv-lb\" x=\"75\" y=\"146\" text-anchor=\"middle\">1</text><line class=\"sv-ax\" x1=\"145\" y1=\"114\" x2=\"145\" y2=\"126\"/><text class=\"sv-lb\" x=\"145\" y=\"146\" text-anchor=\"middle\">2</text><line class=\"sv-ax\" x1=\"215\" y1=\"114\" x2=\"215\" y2=\"126\"/><text class=\"sv-lb\" x=\"215\" y=\"146\" text-anchor=\"middle\">3</text><line class=\"sv-ax\" x1=\"285\" y1=\"114\" x2=\"285\" y2=\"126\"/><text class=\"sv-lb\" x=\"285\" y=\"146\" text-anchor=\"middle\">4</text><line class=\"sv-ax\" x1=\"355\" y1=\"114\" x2=\"355\" y2=\"126\"/><text class=\"sv-lb\" x=\"355\" y=\"146\" text-anchor=\"middle\">5</text><line class=\"sv-ax\" x1=\"425\" y1=\"114\" x2=\"425\" y2=\"126\"/><text class=\"sv-lb\" x=\"425\" y=\"146\" text-anchor=\"middle\">6</text><line class=\"sv-ax\" x1=\"495\" y1=\"114\" x2=\"495\" y2=\"126\"/><text class=\"sv-lb\" x=\"495\" y=\"146\" text-anchor=\"middle\">7</text><line class=\"sv-ax\" x1=\"565\" y1=\"114\" x2=\"565\" y2=\"126\"/><text class=\"sv-lb\" x=\"565\" y=\"146\" text-anchor=\"middle\">8</text><circle class=\"sv-dot\" cx=\"145\" cy=\"100\" r=\"10\"/><circle class=\"sv-dot\" cx=\"215\" cy=\"100\" r=\"10\"/><circle class=\"sv-dot\" cx=\"215\" cy=\"76\" r=\"10\"/><circle class=\"sv-dot\" cx=\"355\" cy=\"100\" r=\"10\"/><circle class=\"sv-dot\" cx=\"495\" cy=\"100\" r=\"10\"/><rect class=\"sv-cx\" x=\"20\" y=\"170\" width=\"190\" height=\"78\" rx=\"10\"/><text class=\"sv-n\" x=\"115\" y=\"196\" text-anchor=\"middle\">MÉDIA = 4</text><text class=\"sv-rg\" x=\"115\" y=\"222\" text-anchor=\"middle\">soma ÷ quantidade</text><text class=\"sv-rg\" x=\"115\" y=\"240\" text-anchor=\"middle\">20 ÷ 5 = 4</text><rect class=\"sv-cx\" x=\"225\" y=\"170\" width=\"190\" height=\"78\" rx=\"10\"/><text class=\"sv-n\" x=\"320\" y=\"196\" text-anchor=\"middle\">MEDIANA = 3</text><text class=\"sv-rg\" x=\"320\" y=\"222\" text-anchor=\"middle\">o valor do MEIO</text><text class=\"sv-rg\" x=\"320\" y=\"240\" text-anchor=\"middle\">(dados em ordem)</text><rect class=\"sv-cx\" x=\"430\" y=\"170\" width=\"190\" height=\"78\" rx=\"10\"/><text class=\"sv-n\" x=\"525\" y=\"196\" text-anchor=\"middle\">MODA = 3</text><text class=\"sv-rg\" x=\"525\" y=\"222\" text-anchor=\"middle\">o que mais</text><text class=\"sv-rg\" x=\"525\" y=\"240\" text-anchor=\"middle\">se repete</text></svg>",
+   "aprovado": false
+  },
+  "6": {
+   "esquema": [
+    {
+     "ic": "🔎",
+     "t": "Ache o que muda e o que é fixo",
+     "txt": "O fixo é o b (taxa fixa); o que muda por unidade é o a."
+    },
+    {
+     "ic": "✍️",
+     "t": "Escreva a lei",
+     "txt": "Afim: y = a·x + b. Quadrática: y = a·x² + b·x + c."
+    },
+    {
+     "ic": "🔁",
+     "t": "Substitua",
+     "txt": "Troque x pelo valor do enunciado e calcule y."
+    },
+    {
+     "ic": "📈",
+     "t": "Leia o gráfico",
+     "txt": "Reta subindo: a > 0. Parábola: vértice é o máximo ou o mínimo."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "Teste a resposta na lei ou no gráfico."
+    }
+   ],
+   "legenda": "Na reta, o b é onde ela corta o eixo y. Na parábola, o vértice é o ponto mais baixo (ou mais alto).",
+   "decisao": {
+    "pergunta": "A cada unidade, o valor muda sempre o MESMO tanto?",
+    "sim": {
+     "t": "Sim",
+     "r": "Função AFIM (reta): y = a·x + b."
+    },
+    "nao": {
+     "t": "Não, tem máximo ou mínimo",
+     "r": "Função QUADRÁTICA (parábola): procure o vértice."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "função",
+     "sig": "Regra que liga cada x a um único y."
+    },
+    {
+     "termo": "coeficiente",
+     "sig": "Número que acompanha a letra (o a em a·x)."
+    },
+    {
+     "termo": "vértice",
+     "sig": "Ponto de virada da parábola: máximo ou mínimo."
+    },
+    {
+     "termo": "raiz",
+     "sig": "Valor de x em que y = 0 (o gráfico toca o eixo x)."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“taxa fixa mais R$ … por km”",
+     "indica": "função afim: b é a taxa fixa"
+    },
+    {
+     "frase": "“lucro máximo”, “altura máxima”",
+     "indica": "vértice da parábola"
+    },
+    {
+     "frase": "“a partir de quanto compensa”",
+     "indica": "iguale as duas funções"
+    }
+   ],
+   "cartao": [
+    "Fixo = b; por unidade = a.",
+    "Reta: y = a·x + b.",
+    "Máximo/mínimo = vértice.",
+    "Substituo e confiro."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 262\" role=\"img\" class=\"ia-svg\"><title>Reta e parábola</title><rect class=\"sv-cx\" x=\"8\" y=\"8\" width=\"300\" height=\"250\" rx=\"10\"/><rect class=\"sv-cx\" x=\"332\" y=\"8\" width=\"300\" height=\"250\" rx=\"10\"/><text class=\"sv-tt\" x=\"158\" y=\"36\" text-anchor=\"middle\">AFIM: reta</text><text class=\"sv-tt\" x=\"482\" y=\"36\" text-anchor=\"middle\">QUADRÁTICA: parábola</text><line class=\"sv-ax\" x1=\"40\" y1=\"200\" x2=\"290\" y2=\"200\"/><line class=\"sv-ax\" x1=\"80\" y1=\"60\" x2=\"80\" y2=\"240\"/><path class=\"sv-up\" d=\"M40 220 L280 70\"/><circle class=\"sv-dot\" cx=\"80\" cy=\"195\" r=\"7\"/><text class=\"sv-rg\" x=\"92\" y=\"226\" text-anchor=\"start\">b: onde corta o eixo y</text><text class=\"sv-op\" x=\"200\" y=\"138\" text-anchor=\"start\">a &gt; 0: sobe</text><text class=\"sv-n\" x=\"158\" y=\"250\" text-anchor=\"middle\">y = a·x + b</text><line class=\"sv-ax\" x1=\"352\" y1=\"200\" x2=\"612\" y2=\"200\"/><line class=\"sv-ax\" x1=\"482\" y1=\"60\" x2=\"482\" y2=\"240\"/><path class=\"sv-up\" d=\"M397 80 Q482 290 567 80\"/><circle class=\"sv-dot\" cx=\"482\" cy=\"185\" r=\"7\"/><text class=\"sv-rg\" x=\"494\" y=\"224\" text-anchor=\"start\">vértice: mínimo</text><text class=\"sv-op\" x=\"482\" y=\"58\" text-anchor=\"middle\">a &gt; 0: boca para cima</text><text class=\"sv-n\" x=\"482\" y=\"250\" text-anchor=\"middle\">y = a·x² + b·x + c</text></svg>",
+   "aprovado": false
+  },
+  "7": {
+   "esquema": [
+    {
+     "ic": "🔎",
+     "t": "Veja o padrão",
+     "txt": "Multiplica sempre pelo mesmo número? É exponencial. Repete em ciclos? É trigonométrica."
+    },
+    {
+     "ic": "✍️",
+     "t": "Escreva a lei",
+     "txt": "Exponencial: valor = início × fatorᵗ."
+    },
+    {
+     "ic": "🔁",
+     "t": "Substitua o tempo",
+     "txt": "Troque t pelo número de períodos."
+    },
+    {
+     "ic": "🔑",
+     "t": "Precisa do expoente?",
+     "txt": "Use o logaritmo: ele responde “elevado a quanto?”."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "O resultado cresce ou cai como o enunciado descreve?"
+    }
+   ],
+   "legenda": "Dobrar a cada período: 1, 2, 4, 8. O logaritmo faz o caminho contrário: 2 elevado a quanto dá 8? Resposta: 3.",
+   "decisao": {
+    "pergunta": "A quantidade é MULTIPLICADA pelo mesmo número a cada período?",
+    "sim": {
+     "t": "Sim",
+     "r": "EXPONENCIAL. Se pedirem o tempo, use logaritmo."
+    },
+    "nao": {
+     "t": "Não, ela sobe e desce em ciclos",
+     "r": "TRIGONOMÉTRICA (seno, cosseno): marés, roda-gigante."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "expoente",
+     "sig": "O número pequeno em cima: quantas vezes multiplicar."
+    },
+    {
+     "termo": "logaritmo",
+     "sig": "O expoente procurado: log₂ 8 = 3, porque 2³ = 8."
+    },
+    {
+     "termo": "meia-vida",
+     "sig": "Tempo para a quantidade cair pela metade."
+    },
+    {
+     "termo": "período",
+     "sig": "Tempo de um ciclo completo."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“dobra a cada”, “cresce 10% ao ano”",
+     "indica": "exponencial"
+    },
+    {
+     "frase": "“meia-vida”, “cai pela metade”",
+     "indica": "exponencial com fator 1/2"
+    },
+    {
+     "frase": "“maré”, “roda-gigante”, “ciclo”",
+     "indica": "seno ou cosseno"
+    }
+   ],
+   "cartao": [
+    "Multiplica sempre igual → exponencial.",
+    "Valor = início × fatorᵗ.",
+    "Log = descobrir o expoente.",
+    "Ciclos → seno/cosseno."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 285\" role=\"img\" class=\"ia-svg\"><title>Exponencial e logaritmo</title><line class=\"sv-ax\" x1=\"60\" y1=\"230\" x2=\"360\" y2=\"230\"/><line class=\"sv-ax\" x1=\"60\" y1=\"30\" x2=\"60\" y2=\"230\"/><path class=\"sv-up\" d=\"M60 208 L150 186 L240 142 L330 54\"/><circle class=\"sv-dot\" cx=\"60\" cy=\"208\" r=\"7\"/><text class=\"sv-n\" x=\"74\" y=\"194\" text-anchor=\"middle\">1</text><text class=\"sv-lb\" x=\"60\" y=\"252\" text-anchor=\"middle\">0</text><circle class=\"sv-dot\" cx=\"150\" cy=\"186\" r=\"7\"/><text class=\"sv-n\" x=\"150\" y=\"172\" text-anchor=\"middle\">2</text><text class=\"sv-lb\" x=\"150\" y=\"252\" text-anchor=\"middle\">1</text><circle class=\"sv-dot\" cx=\"240\" cy=\"142\" r=\"7\"/><text class=\"sv-n\" x=\"240\" y=\"128\" text-anchor=\"middle\">4</text><text class=\"sv-lb\" x=\"240\" y=\"252\" text-anchor=\"middle\">2</text><circle class=\"sv-dot\" cx=\"330\" cy=\"54\" r=\"7\"/><text class=\"sv-n\" x=\"330\" y=\"40\" text-anchor=\"middle\">8</text><text class=\"sv-lb\" x=\"330\" y=\"252\" text-anchor=\"middle\">3</text><text class=\"sv-lb\" x=\"210\" y=\"272\" text-anchor=\"middle\">tempo (períodos)</text><text class=\"sv-op\" x=\"140\" y=\"60\" text-anchor=\"middle\">cada período: ×2</text><rect class=\"sv-cx\" x=\"390\" y=\"30\" width=\"240\" height=\"90\" rx=\"10\"/><text class=\"sv-tt\" x=\"510\" y=\"62\" text-anchor=\"middle\">EXPONENCIAL</text><text class=\"sv-rg\" x=\"510\" y=\"90\" text-anchor=\"middle\">valor = início × fatorᵗ</text><text class=\"sv-rg\" x=\"510\" y=\"110\" text-anchor=\"middle\">1 × 2³ = 8</text><rect class=\"sv-cx\" x=\"390\" y=\"140\" width=\"240\" height=\"100\" rx=\"10\"/><text class=\"sv-tt\" x=\"510\" y=\"172\" text-anchor=\"middle\">LOGARITMO</text><text class=\"sv-rg\" x=\"510\" y=\"200\" text-anchor=\"middle\">pergunta o expoente:</text><text class=\"sv-rg\" x=\"510\" y=\"222\" text-anchor=\"middle\">2 elevado a quanto dá 8? → 3</text></svg>",
+   "aprovado": false
+  },
+  "8": {
+   "esquema": [
+    {
+     "ic": "✏️",
+     "t": "Desenhe e marque",
+     "txt": "Copie a figura e escreva as medidas que o enunciado dá."
+    },
+    {
+     "ic": "🧩",
+     "t": "Divida",
+     "txt": "Figura difícil vira retângulos, triângulos e círculos."
+    },
+    {
+     "ic": "📐",
+     "t": "Use a fórmula",
+     "txt": "Calcule a área de cada parte."
+    },
+    {
+     "ic": "➕",
+     "t": "Some ou subtraia",
+     "txt": "Junte as partes ou tire o buraco."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira a unidade",
+     "txt": "Área em m², cm²…"
+    }
+   ],
+   "legenda": "Se a figura for ampliada k vezes, os lados ficam k vezes maiores e a área fica k² vezes maior.",
+   "decisao": {
+    "pergunta": "A figura cresceu na mesma proporção (semelhança)?",
+    "sim": {
+     "t": "Sim",
+     "r": "Lados × k, área × k²."
+    },
+    "nao": {
+     "t": "Não",
+     "r": "Divida em figuras conhecidas e some as áreas."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "área",
+     "sig": "Quanto de superfície a figura cobre, em unidades ao quadrado."
+    },
+    {
+     "termo": "perímetro",
+     "sig": "A medida do contorno."
+    },
+    {
+     "termo": "semelhança",
+     "sig": "Mesma forma, tamanho diferente."
+    },
+    {
+     "termo": "plano cartesiano",
+     "sig": "Malha com eixo x e eixo y para localizar pontos."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“cercar”, “contorno”, “rodapé”",
+     "indica": "perímetro"
+    },
+    {
+     "frase": "“pintar”, “cobrir”, “piso”",
+     "indica": "área"
+    },
+    {
+     "frase": "“ampliada”, “reduzida”, “semelhante”",
+     "indica": "use o fator k"
+    }
+   ],
+   "cartao": [
+    "Retângulo: b · h.",
+    "Triângulo: b · h ÷ 2.",
+    "Círculo: π · r².",
+    "Ampliou k → área × k²."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 265\" role=\"img\" class=\"ia-svg\"><title>Áreas das figuras planas</title><rect class=\"sv-sh\" x=\"20\" y=\"60\" width=\"160\" height=\"100\"/><text class=\"sv-lb\" x=\"100\" y=\"185\" text-anchor=\"middle\">retângulo</text><text class=\"sv-n\" x=\"100\" y=\"210\" text-anchor=\"middle\">A = b · h</text><polygon class=\"sv-sh\" points=\"230,160 390,160 330,60\"/><line class=\"sv-gr\" x1=\"330\" y1=\"60\" x2=\"330\" y2=\"160\"/><text class=\"sv-op\" x=\"342\" y=\"118\" text-anchor=\"start\">h</text><text class=\"sv-lb\" x=\"310\" y=\"185\" text-anchor=\"middle\">triângulo</text><text class=\"sv-n\" x=\"310\" y=\"210\" text-anchor=\"middle\">A = b · h ÷ 2</text><circle class=\"sv-sh\" cx=\"520\" cy=\"110\" r=\"55\"/><line class=\"sv-rg-l\" x1=\"520\" y1=\"110\" x2=\"575\" y2=\"110\"/><text class=\"sv-op\" x=\"548\" y=\"102\" text-anchor=\"middle\">r</text><text class=\"sv-lb\" x=\"520\" y=\"185\" text-anchor=\"middle\">círculo</text><text class=\"sv-n\" x=\"520\" y=\"210\" text-anchor=\"middle\">A = π · r²</text><text class=\"sv-tt\" x=\"320\" y=\"250\" text-anchor=\"middle\">Figura ampliada k vezes: lados × k, ÁREA × k²</text></svg>",
+   "aprovado": false
+  },
+  "9": {
+   "esquema": [
+    {
+     "ic": "🧊",
+     "t": "Reconheça o sólido",
+     "txt": "Prisma, cilindro, pirâmide, cone ou esfera."
+    },
+    {
+     "ic": "⬛",
+     "t": "Ache a área da base",
+     "txt": "Use a fórmula da figura plana da base."
+    },
+    {
+     "ic": "📏",
+     "t": "Multiplique pela altura",
+     "txt": "Prisma e cilindro: base × altura. Pirâmide e cone: ÷ 3."
+    },
+    {
+     "ic": "🔄",
+     "t": "Converta para litros se pedirem",
+     "txt": "1 dm³ = 1 L e 1 m³ = 1 000 L."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "O volume é possível para o objeto?"
+    }
+   ],
+   "legenda": "Volume é a base empilhada em camadas até a altura.",
+   "decisao": {
+    "pergunta": "A questão fala em ENCHER, caber ou capacidade?",
+    "sim": {
+     "t": "Sim",
+     "r": "VOLUME: área da base × altura (em litros, se pedirem)."
+    },
+    "nao": {
+     "t": "Não, fala em cobrir, pintar, embalar",
+     "r": "ÁREA da superfície: some as faces (planificação)."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "prisma",
+     "sig": "Sólido com duas bases iguais e paralelas."
+    },
+    {
+     "termo": "planificação",
+     "sig": "O sólido aberto e esticado no papel."
+    },
+    {
+     "termo": "capacidade",
+     "sig": "Quanto cabe dentro, em litros."
+    },
+    {
+     "termo": "vista",
+     "sig": "Como o sólido aparece olhando de frente, de cima ou de lado."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“litros”, “encher”, “reservatório”",
+     "indica": "volume, com 1 dm³ = 1 L"
+    },
+    {
+     "frase": "“embalagem”, “papel para cobrir”",
+     "indica": "área da superfície"
+    },
+    {
+     "frase": "“vista de cima”",
+     "indica": "imagine o objeto olhado do alto"
+    }
+   ],
+   "cartao": [
+    "Volume = base × altura.",
+    "Pirâmide e cone: ÷ 3.",
+    "1 dm³ = 1 L.",
+    "Cobrir = área; encher = volume."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 275\" role=\"img\" class=\"ia-svg\"><title>Volume dos sólidos</title><polygon class=\"sv-sh\" points=\"60,170 220,170 260,146 100,146\"/><polygon class=\"sv-sh\" points=\"60,140 220,140 260,116 100,116\"/><polygon class=\"sv-sh\" points=\"60,110 220,110 260,86 100,86\"/><polygon class=\"sv-sh\" points=\"60,80 220,80 260,56 100,56\"/><text class=\"sv-lb\" x=\"160\" y=\"200\" text-anchor=\"middle\">camadas de base empilhadas</text><path class=\"sv-up\" d=\"M290 170 V68\"/><polygon class=\"sv-upf\" points=\"282,74 290,62 298,74\"/><text class=\"sv-op\" x=\"304\" y=\"120\" text-anchor=\"start\">altura</text><text class=\"sv-n\" x=\"180\" y=\"232\" text-anchor=\"middle\">VOLUME = área da base × altura</text><ellipse class=\"sv-sh\" cx=\"500\" cy=\"170\" rx=\"70\" ry=\"18\"/><rect class=\"sv-sh2\" x=\"430\" y=\"70\" width=\"140\" height=\"100\"/><ellipse class=\"sv-sh\" cx=\"500\" cy=\"70\" rx=\"70\" ry=\"18\"/><text class=\"sv-n\" x=\"500\" y=\"215\" text-anchor=\"middle\">cilindro: π · r² · h</text><text class=\"sv-tt\" x=\"320\" y=\"262\" text-anchor=\"middle\">1 dm³ = 1 litro   ·   1 m³ = 1 000 litros</text></svg>",
+   "aprovado": false
+  },
+  "10": {
+   "esquema": [
+    {
+     "ic": "🧩",
+     "t": "Separe as etapas",
+     "txt": "Cada escolha é uma etapa: camisa, calça, sapato."
+    },
+    {
+     "ic": "🔢",
+     "t": "Conte cada etapa",
+     "txt": "Quantas opções existem em cada uma."
+    },
+    {
+     "ic": "✖️",
+     "t": "Multiplique",
+     "txt": "Etapas que acontecem juntas (e) se multiplicam."
+    },
+    {
+     "ic": "🔀",
+     "t": "A ordem importa?",
+     "txt": "Se não importa, divida pelas repetições (combinação)."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira com um caso pequeno",
+     "txt": "Faça a árvore com poucos itens para testar."
+    }
+   ],
+   "legenda": "2 camisas e 3 calças: cada camisa combina com cada calça, 2 × 3 = 6 looks.",
+   "decisao": {
+    "pergunta": "Trocar a ordem dos escolhidos muda o resultado?",
+    "sim": {
+     "t": "Sim (fila, senha, pódio)",
+     "r": "ARRANJO ou PERMUTAÇÃO: só multiplique."
+    },
+    "nao": {
+     "t": "Não (grupo, comissão)",
+     "r": "COMBINAÇÃO: multiplique e divida pelas repetições."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "permutação",
+     "sig": "Organizar todos os itens em ordem: n!."
+    },
+    {
+     "termo": "fatorial (n!)",
+     "sig": "n × (n − 1) × … × 1. Ex.: 4! = 24."
+    },
+    {
+     "termo": "arranjo",
+     "sig": "Escolher alguns itens quando a ordem importa."
+    },
+    {
+     "termo": "combinação",
+     "sig": "Escolher alguns itens quando a ordem não importa."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“senha”, “placa”, “fila”",
+     "indica": "a ordem importa"
+    },
+    {
+     "frase": "“comissão”, “grupo”, “sabores”",
+     "indica": "a ordem não importa"
+    },
+    {
+     "frase": "“anagramas”",
+     "indica": "permutação das letras"
+    }
+   ],
+   "cartao": [
+    "Etapas juntas: multiplico.",
+    "Ordem importa: arranjo.",
+    "Ordem não importa: combinação.",
+    "Testo com um caso pequeno."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 290\" role=\"img\" class=\"ia-svg\"><title>Árvore de possibilidades</title><rect class=\"sv-cx\" x=\"20\" y=\"105\" width=\"90\" height=\"40\" rx=\"10\"/><text class=\"sv-n\" x=\"65\" y=\"131\" text-anchor=\"middle\">início</text><path class=\"sv-gr2\" d=\"M110 125 L200 90\"/><rect class=\"sv-cx\" x=\"200\" y=\"70\" width=\"100\" height=\"40\" rx=\"10\"/><text class=\"sv-n\" x=\"250\" y=\"96\" text-anchor=\"middle\">azul</text><path class=\"sv-gr2\" d=\"M300 90 L390 55\"/><rect class=\"sv-cx\" x=\"390\" y=\"40\" width=\"90\" height=\"30\" rx=\"6\"/><text class=\"sv-lb\" x=\"435\" y=\"61\" text-anchor=\"middle\">jeans</text><path class=\"sv-gr2\" d=\"M300 90 L390 95\"/><rect class=\"sv-cx\" x=\"390\" y=\"80\" width=\"90\" height=\"30\" rx=\"6\"/><text class=\"sv-lb\" x=\"435\" y=\"101\" text-anchor=\"middle\">preta</text><path class=\"sv-gr2\" d=\"M300 90 L390 135\"/><rect class=\"sv-cx\" x=\"390\" y=\"120\" width=\"90\" height=\"30\" rx=\"6\"/><text class=\"sv-lb\" x=\"435\" y=\"141\" text-anchor=\"middle\">bege</text><path class=\"sv-gr2\" d=\"M110 125 L200 220\"/><rect class=\"sv-cx\" x=\"200\" y=\"200\" width=\"100\" height=\"40\" rx=\"10\"/><text class=\"sv-n\" x=\"250\" y=\"226\" text-anchor=\"middle\">verde</text><path class=\"sv-gr2\" d=\"M300 220 L390 185\"/><rect class=\"sv-cx\" x=\"390\" y=\"170\" width=\"90\" height=\"30\" rx=\"6\"/><text class=\"sv-lb\" x=\"435\" y=\"191\" text-anchor=\"middle\">jeans</text><path class=\"sv-gr2\" d=\"M300 220 L390 225\"/><rect class=\"sv-cx\" x=\"390\" y=\"210\" width=\"90\" height=\"30\" rx=\"6\"/><text class=\"sv-lb\" x=\"435\" y=\"231\" text-anchor=\"middle\">preta</text><path class=\"sv-gr2\" d=\"M300 220 L390 265\"/><rect class=\"sv-cx\" x=\"390\" y=\"250\" width=\"90\" height=\"30\" rx=\"6\"/><text class=\"sv-lb\" x=\"435\" y=\"271\" text-anchor=\"middle\">bege</text><text class=\"sv-tt\" x=\"250\" y=\"30\" text-anchor=\"middle\">camisa</text><text class=\"sv-tt\" x=\"435\" y=\"22\" text-anchor=\"middle\">calça</text><text class=\"sv-n\" x=\"560\" y=\"120\" text-anchor=\"middle\">2 × 3</text><text class=\"sv-n\" x=\"560\" y=\"150\" text-anchor=\"middle\">= 6 looks</text></svg>",
+   "aprovado": false
+  },
+  "11": {
+   "esquema": [
+    {
+     "ic": "🎲",
+     "t": "Liste o que pode acontecer",
+     "txt": "Esse é o total de casos possíveis."
+    },
+    {
+     "ic": "🎯",
+     "t": "Marque o que serve",
+     "txt": "Esses são os casos favoráveis."
+    },
+    {
+     "ic": "➗",
+     "t": "Divida",
+     "txt": "P = favoráveis ÷ possíveis."
+    },
+    {
+     "ic": "🔗",
+     "t": "Mais de um evento?",
+     "txt": "Juntos (e): multiplique. Um ou outro (ou): some."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "A probabilidade fica entre 0 e 1 (0% e 100%)."
+    }
+   ],
+   "legenda": "No dado, 3 das 6 faces são pares: P = 3/6 = 1/2 = 50%.",
+   "decisao": {
+    "pergunta": "Os eventos precisam acontecer JUNTOS (e)?",
+    "sim": {
+     "t": "Sim",
+     "r": "MULTIPLIQUE as probabilidades."
+    },
+    "nao": {
+     "t": "Não, basta um OU outro",
+     "r": "SOME as probabilidades (sem contar duas vezes)."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "espaço amostral",
+     "sig": "Todos os resultados possíveis."
+    },
+    {
+     "termo": "evento",
+     "sig": "O resultado que interessa."
+    },
+    {
+     "termo": "sem reposição",
+     "sig": "O que saiu não volta: o total diminui."
+    },
+    {
+     "termo": "complementar",
+     "sig": "A chance de NÃO acontecer: 1 − P."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“pelo menos um”",
+     "indica": "calcule 1 − P(nenhum)"
+    },
+    {
+     "frase": "“sem reposição”",
+     "indica": "o total diminui a cada retirada"
+    },
+    {
+     "frase": "“dado que”, “sabendo que”",
+     "indica": "o total passa a ser só os casos da condição"
+    }
+   ],
+   "cartao": [
+    "P = favoráveis ÷ possíveis.",
+    "E: multiplico. OU: somo.",
+    "Pelo menos um: 1 − nenhum.",
+    "Fica entre 0 e 1."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 230\" role=\"img\" class=\"ia-svg\"><title>Probabilidade com dado</title><text class=\"sv-tt\" x=\"320\" y=\"30\" text-anchor=\"middle\">Lançar um dado: sair número PAR</text><rect class=\"sv-cx\" x=\"40\" y=\"55\" width=\"75\" height=\"75\" rx=\"12\"/><text class=\"sv-n\" x=\"77\" y=\"103\" text-anchor=\"middle\">1</text><rect class=\"sv-fav\" x=\"135\" y=\"55\" width=\"75\" height=\"75\" rx=\"12\"/><text class=\"sv-n\" x=\"172\" y=\"103\" text-anchor=\"middle\">2</text><rect class=\"sv-cx\" x=\"230\" y=\"55\" width=\"75\" height=\"75\" rx=\"12\"/><text class=\"sv-n\" x=\"267\" y=\"103\" text-anchor=\"middle\">3</text><rect class=\"sv-fav\" x=\"325\" y=\"55\" width=\"75\" height=\"75\" rx=\"12\"/><text class=\"sv-n\" x=\"362\" y=\"103\" text-anchor=\"middle\">4</text><rect class=\"sv-cx\" x=\"420\" y=\"55\" width=\"75\" height=\"75\" rx=\"12\"/><text class=\"sv-n\" x=\"457\" y=\"103\" text-anchor=\"middle\">5</text><rect class=\"sv-fav\" x=\"515\" y=\"55\" width=\"75\" height=\"75\" rx=\"12\"/><text class=\"sv-n\" x=\"552\" y=\"103\" text-anchor=\"middle\">6</text><text class=\"sv-rg\" x=\"320\" y=\"170\" text-anchor=\"middle\">favoráveis (pintados): 3   ·   possíveis: 6</text><text class=\"sv-tt\" x=\"320\" y=\"210\" text-anchor=\"middle\">P = favoráveis ÷ possíveis = 3 ÷ 6 = 1/2 = 50%</text></svg>",
+   "aprovado": false
+  },
+  "12": {
+   "esquema": [
+    {
+     "ic": "🔎",
+     "t": "Escreva os primeiros termos",
+     "txt": "Veja como se passa de um termo para o próximo."
+    },
+    {
+     "ic": "➕",
+     "t": "Soma ou multiplica?",
+     "txt": "Soma sempre o mesmo: PA. Multiplica sempre o mesmo: PG."
+    },
+    {
+     "ic": "✍️",
+     "t": "Use o termo geral",
+     "txt": "PA: aₙ = a₁ + (n − 1)·r. PG: aₙ = a₁ · qⁿ⁻¹."
+    },
+    {
+     "ic": "🔁",
+     "t": "Sequência que repete?",
+     "txt": "Ache o tamanho do bloco e use o resto da divisão."
+    },
+    {
+     "ic": "✅",
+     "t": "Confira",
+     "txt": "Calcule um termo pequeno com a fórmula e compare."
+    }
+   ],
+   "legenda": "PA: 2, 5, 8, 11 (soma 3). PG: 2, 6, 18, 54 (multiplica por 3).",
+   "decisao": {
+    "pergunta": "De um termo para o próximo, SOMA sempre o mesmo número?",
+    "sim": {
+     "t": "Sim",
+     "r": "PA, com razão r somada."
+    },
+    "nao": {
+     "t": "Não, multiplica sempre o mesmo",
+     "r": "PG, com razão q multiplicada."
+    }
+   },
+   "palavras": [
+    {
+     "termo": "termo",
+     "sig": "Cada número da sequência."
+    },
+    {
+     "termo": "razão",
+     "sig": "O que se soma (PA) ou multiplica (PG) para ir ao próximo."
+    },
+    {
+     "termo": "termo geral",
+     "sig": "Fórmula para achar o termo de qualquer posição."
+    },
+    {
+     "termo": "resto",
+     "sig": "O que sobra numa divisão; indica a posição dentro do bloco."
+    }
+   ],
+   "pistas": [
+    {
+     "frase": "“a cada mês aumenta R$ 50”",
+     "indica": "PA"
+    },
+    {
+     "frase": "“dobra a cada”, “triplica”",
+     "indica": "PG"
+    },
+    {
+     "frase": "“o 2 015º item”, “se repete”",
+     "indica": "bloco periódico: use o resto"
+    }
+   ],
+   "cartao": [
+    "Soma igual: PA.",
+    "Multiplica igual: PG.",
+    "PA: a₁ + (n − 1)·r.",
+    "Repete: resto da divisão."
+   ],
+   "figura": "<svg viewBox=\"0 0 640 290\" role=\"img\" class=\"ia-svg\"><title>PA e PG</title><text class=\"sv-tt\" x=\"20\" y=\"34\" text-anchor=\"start\">PA: SOMA sempre o mesmo número</text><rect class=\"sv-cx\" x=\"40\" y=\"80\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"75\" y=\"113\" text-anchor=\"middle\">2</text><path class=\"sv-up\" d=\"M110 92 Q150 52 190 92\"/><text class=\"sv-op\" x=\"150\" y=\"64\" text-anchor=\"middle\">+3</text><rect class=\"sv-cx\" x=\"190\" y=\"80\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"225\" y=\"113\" text-anchor=\"middle\">5</text><path class=\"sv-up\" d=\"M260 92 Q300 52 340 92\"/><text class=\"sv-op\" x=\"300\" y=\"64\" text-anchor=\"middle\">+3</text><rect class=\"sv-cx\" x=\"340\" y=\"80\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"375\" y=\"113\" text-anchor=\"middle\">8</text><path class=\"sv-up\" d=\"M410 92 Q450 52 490 92\"/><text class=\"sv-op\" x=\"450\" y=\"64\" text-anchor=\"middle\">+3</text><rect class=\"sv-cx\" x=\"490\" y=\"80\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"525\" y=\"113\" text-anchor=\"middle\">11</text><text class=\"sv-tt\" x=\"20\" y=\"180\" text-anchor=\"start\">PG: MULTIPLICA sempre pelo mesmo número</text><rect class=\"sv-cx\" x=\"40\" y=\"226\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"75\" y=\"259\" text-anchor=\"middle\">2</text><path class=\"sv-dn\" d=\"M110 238 Q150 198 190 238\"/><text class=\"sv-op sv-opd\" x=\"150\" y=\"210\" text-anchor=\"middle\">×3</text><rect class=\"sv-cx\" x=\"190\" y=\"226\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"225\" y=\"259\" text-anchor=\"middle\">6</text><path class=\"sv-dn\" d=\"M260 238 Q300 198 340 238\"/><text class=\"sv-op sv-opd\" x=\"300\" y=\"210\" text-anchor=\"middle\">×3</text><rect class=\"sv-cx\" x=\"340\" y=\"226\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"375\" y=\"259\" text-anchor=\"middle\">18</text><path class=\"sv-dn\" d=\"M410 238 Q450 198 490 238\"/><text class=\"sv-op sv-opd\" x=\"450\" y=\"210\" text-anchor=\"middle\">×3</text><rect class=\"sv-cx\" x=\"490\" y=\"226\" width=\"70\" height=\"50\" rx=\"10\"/><text class=\"sv-n\" x=\"525\" y=\"259\" text-anchor=\"middle\">54</text></svg>",
+   "aprovado": false
+  }
+ }
+}

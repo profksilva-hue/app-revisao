@@ -21,7 +21,7 @@
     adiantar: { alvo: [0.75, 0.85], naoSei: true, relogio: false, min: 10 },
     livre: { alvo: null, naoSei: true, relogio: false, min: 20 }   // conteúdo escolhido pelo aluno: a chance segue o estado de cada habilidade
   };
-  let AREA_URL = null;
+  let AREA_URL = null, APOIO = {};
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
   let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
   let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null, ADAPT = {}, SSO = null;
@@ -46,8 +46,9 @@
         fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null),
         fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null),
         fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/adaptadas.json").then(r => r.ok ? r.json() : null).catch(() => null)
-      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; ADAPT = {}; Object.entries((x[4] && x[4].versoes) || {}).forEach(([id, v]) => { if (v && (v.aprovado || AMB_TESTE)) ADAPT[id] = v; /* no site oficial, só versões aprovadas */ }); return x; });
+        fetch("../ia/adaptadas.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("../ia/apoio-aulas.json").then(r => r.ok ? r.json() : null).catch(() => null)
+      ]).then(x => { APOIO = {}; Object.entries((x[5] && x[5].aulas) || {}).forEach(([n, v]) => { if (v && (v.aprovado || AMB_TESTE)) APOIO[n] = v; }); (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; ADAPT = {}; Object.entries((x[4] && x[4].versoes) || {}).forEach(([id, v]) => { if (v && (v.aprovado || AMB_TESTE)) ADAPT[id] = v; /* no site oficial, só versões aprovadas */ }); return x; });
       H = h; H.habilidades.forEach(x => { HAB[x.id] = x; });
       const itens = Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
       M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
@@ -553,16 +554,18 @@
     return "";
   }
   // Área adaptada: apoios visuais do resumo (esquema do caminho, figura, decisão, vocabulário, pistas e cartão de bolso).
-  function apoioAdaptado(r) {
-    const a = r.adaptado; if (!adaptada() || !a) return { antes: "", depois: "" };
+  function apoioAdaptado(r) { return apoioHTML(r.adaptado, r.h); }
+  function apoioAula(n) { return apoioHTML(APOIO[n], "Aula " + String(n).padStart(2, "0")); }
+  function apoioHTML(a, rot) {
+    if (!adaptada() || !a) return { antes: "", depois: "" };
     const sec = (id, t, c) => c ? `<section class="ia-sec ia-apoio" id="ia-sec-${id}"><h3>${t}</h3>${c}</section>` : "";
     const esquema = (a.esquema || []).length ? `<ol class="ia-fluxo">${a.esquema.map((p, i) => `<li><span class="ia-fluxo-ic" aria-hidden="true">${p.ic}</span><div><b>${i + 1}. ${p.t}</b><p>${p.txt}</p></div></li>`).join("")}</ol>` : "";
     const figura = a.figura ? `<figure class="ia-fig"><div class="ia-fig-rola" tabindex="0" aria-label="Figura (role para o lado)">${a.figura}</div><p class="ia-fig-dica">↔ Arraste a figura para o lado para ver tudo.</p>${a.legenda ? `<figcaption>${a.legenda}</figcaption>` : ""}</figure>` : "";
     const d = a.decisao, decisao = d ? `<div class="ia-dec"><p class="ia-dec-q">${d.pergunta}</p><div class="ia-dec-r"><div><b>${d.sim.t}</b><p>${d.sim.r}</p></div><div><b>${d.nao.t}</b><p>${d.nao.r}</p></div></div></div>` : "";
     const palavras = (a.palavras || []).length ? `<dl class="ia-gloss">${a.palavras.map(w => `<div><dt>${w.termo}</dt><dd>${w.sig}</dd></div>`).join("")}</dl>` : "";
     const pistas = (a.pistas || []).length ? `<ul class="ia-pistas">${a.pistas.map(x => `<li><span>${x.frase}</span><span aria-hidden="true">→</span><span>${x.indica}</span></li>`).join("")}</ul>` : "";
-    const cartao = (a.cartao || []).length ? `<div class="ia-cartao"><b>Cartão de bolso · ${esc(r.h)}</b><ul>${a.cartao.map(x => `<li>${x}</li>`).join("")}</ul></div>` : "";
-    return { antes: sec("caminho", "O caminho em 5 passos", esquema) + sec("figura", "Veja a ideia", figura) + sec("decidir", "Como decidir", decisao) + sec("palavras", "Palavras importantes", palavras),
+    const cartao = (a.cartao || []).length ? `<div class="ia-cartao"><b>Cartão de bolso · ${esc(rot)}</b><ul>${a.cartao.map(x => `<li>${x}</li>`).join("")}</ul></div>` : "";
+    return { antes: (a.aprovado !== false ? "" : `<p class="ia-rasc">Apoios da área adaptada em revisão pelo professor · só aparecem no site de teste</p>`) + sec("caminho", `O caminho em ${(a.esquema || []).length} passos`, esquema) + sec("figura", "Veja a ideia", figura) + sec("decidir", "Como decidir", decisao) + sec("palavras", "Palavras importantes", palavras),
       depois: sec("pistas", "Pistas no enunciado", pistas) + sec("cartao", "Para levar com você", cartao) };
   }
   function telaResumo() {
@@ -953,7 +956,10 @@
   .ia-fluxo{list-style:none;padding:0;margin:0;display:grid;gap:0}.ia-fluxo li{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--rule);border-radius:10px;padding:10px 14px;background:var(--sheet);position:relative;margin-bottom:22px}
   .ia-fluxo li:not(:last-child)::after{content:"↓";position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);color:var(--pen);font-size:18px;line-height:22px}
   .ia-fluxo-ic{font-size:26px;line-height:1;flex:none;width:34px;text-align:center}.ia-fluxo p{margin:2px 0 0}
-  .ia-fig{margin:0}.ia-fig figcaption{font-size:15px;color:var(--ink-2);margin-top:6px}.ia-resumo .ia-fluxo{padding-left:0;margin-left:0}
+  .ia-fig{margin:0}.ia-fig figcaption{font-size:15px;color:var(--ink-2);margin-top:6px}.ia-resumo .ia-fluxo{padding-left:0;margin-left:0}.resumo .ia-fluxo{padding-left:0;margin-left:0}.resumo .ia-apoio h3{font-size:17px}
+  .ia-svg .sv-ax{stroke:var(--ink-2);stroke-width:2}.ia-svg .sv-gr{stroke:var(--rule);stroke-width:1.5;stroke-dasharray:4 4}.ia-svg .sv-gr2{stroke:var(--ink-2);stroke-width:2;fill:none}
+  .ia-svg .sv-bar{fill:var(--pen)}.ia-svg .sv-ci{fill:var(--mark)}.ia-svg .sv-cn{fill:#fff;font-weight:700;font-size:15px}.ia-svg .sv-dot{fill:var(--pen)}
+  .ia-svg .sv-sh{fill:var(--pen-soft);stroke:var(--pen);stroke-width:2.5}.ia-svg .sv-sh2{fill:var(--pen-soft);stroke:none}.ia-svg .sv-fav{fill:var(--ok-soft);stroke:var(--ok);stroke-width:3}
   .ia-fig-rola{overflow-x:auto;-webkit-overflow-scrolling:touch}.ia-fig-dica{display:none;font-size:13px;color:var(--ink-2);margin:4px 0 0}
   @media (max-width:640px){.ia-fig-rola .ia-svg{min-width:560px}.ia-fig-dica{display:block}}
   .ia-svg{width:100%;height:auto;display:block;font-family:var(--f-ui)}.ia-svg .sv-cx{fill:var(--pen-soft);stroke:var(--rule)}.ia-svg .sv-tt{fill:var(--pen);font-weight:700;font-size:20px}
@@ -985,6 +991,6 @@
   @media (prefers-reduced-motion:reduce){.ia-sobe{animation:none}}`;
   document.head.appendChild(css);
 
-  window.IA = { render, renderArvore, convite, nivelar, rotuloLista, registrarLista, relatorioHTML };
+  window.IA = { apoioAula, render, renderArvore, convite, nivelar, rotuloLista, registrarLista, relatorioHTML };
   carregar();
 })();

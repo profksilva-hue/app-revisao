@@ -1192,12 +1192,12 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
   const varChip = q => q.var ? `<span class="ofc var" title="Versão nova criada a partir de uma questão do ENEM">Adaptada · ${esc(q.var.src)}</span>` : q.emp ? `<span class="ofc" title="Questão de outra aula, escolhida pela habilidade">${q.of ? esc(q.of.src) : "Banco"} · outra aula</span>` : "";
 
   function resumoHTML(a) {
-    const r = a.res;
-    return `<article class="resumo">
+    const r = a.res, ap = window.IA && IA.apoioAula ? IA.apoioAula(a.n) : { antes: "", depois: "" };   // área adaptada: apoios visuais
+    return `<article class="resumo${ap.antes ? " ia-adapt" : ""}">${ap.antes}
       <div class="r-con">${r.c.map(([tt, x]) => `<section><h3>${esc(tt)}</h3><p>${x}</p></section>`).join("")}</div>
       <div class="r-form"><h3>Fórmulas-chave</h3><ul>${r.f.map(f => `<li>${f}</li>`).join("")}</ul></div>
       <div class="r-ex"><h3>Exemplo resolvido</h3><p>${r.ex[0]}</p><p class="sol"><b>Resolução:</b> ${r.ex[1]}</p></div>
-      <div class="r-at"><h3>Atenção</h3><ul>${r.at.map(x => `<li>${x}</li>`).join("")}</ul></div>
+      <div class="r-at"><h3>Atenção</h3><ul>${r.at.map(x => `<li>${x}</li>`).join("")}</ul></div>${ap.depois}
       <div><button class="btn" type="button" data-mode="lista">Ir para a lista de exercícios</button></div>
     </article>`;
   }
