@@ -46,7 +46,7 @@
         fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null),
         fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null),
         fetch("../ia/adaptadas.json").then(r => r.ok ? r.json() : null).catch(() => null)
-      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; ADAPT = (x[4] && x[4].versoes) || {}; return x; });
+      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; ADAPT = {}; Object.entries((x[4] && x[4].versoes) || {}).forEach(([id, v]) => { if (v && (v.aprovado || AMB_TESTE)) ADAPT[id] = v; /* no site oficial, só versões aprovadas */ }); return x; });
       H = h; H.habilidades.forEach(x => { HAB[x.id] = x; });
       const itens = Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
       M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
@@ -113,8 +113,8 @@
       const ordem = ordemIntercalada(alvoDiag().hs).filter(x => !sem.includes(x));
       const h = ordem.find(x => !cont[x]) || ordem.find(x => (cont[x] || 0) < 2);
       if (!h) return null;
-      const cs = MD.escolher(s.aluno, h, ALVO_DIAG, adaptada() ? 8 : 1, Date.now(), usadas);
-      const e = adaptada() ? (cs.find(c => ehTexto(M.itens[c.id].q)) || cs[0]) : cs[0];
+      const cs = MD.escolher(s.aluno, h, ALVO_DIAG, adaptada() ? 30 : 1, Date.now(), usadas);
+      const e = adaptada() ? (cs.find(c => ADAPT[c.id] && c.chance >= 0.25 && c.chance <= 0.8) || cs.slice(0, 8).find(c => ehTexto(M.itens[c.id].q)) || cs[0]) : cs[0];
       if (e) return { h, id: e.id };
       sem.push(h); d.semQuestao = sem;
     }
@@ -223,9 +223,9 @@
   function escolherDoSlot(se, sl) {
     const usadas = new Set(se.resp.map(r => r.id).concat(se.atual ? [se.atual.id] : []));
     const tentar = h => {
-      let c = M.escolher(st().aluno, h, alvoDoSlot(Object.assign({}, sl, { h }), se.trilha), sl.tipo === "facil" || adaptada() ? 25 : 1, Date.now(), usadas);
+      let c = M.escolher(st().aluno, h, alvoDoSlot(Object.assign({}, sl, { h }), se.trilha), sl.tipo === "facil" || adaptada() ? 40 : 1, Date.now(), usadas);
       if (sl.tipo === "facil") c = c.filter(e => (M.itens[e.id].nv || 3) <= 2).concat(c);
-      if (adaptada()) c = c.slice(0, 8).filter(e => ehTexto(M.itens[e.id].q)).concat(c);   // prefere questões em texto (leitura em voz alta)
+      if (adaptada()) { const al = alvoDoSlot(Object.assign({}, sl, { h }), se.trilha); c = c.filter(e => ADAPT[e.id] && e.chance >= al[0] - 0.15 && e.chance <= al[1] + 0.15).concat(c.slice(0, 8).filter(e => ehTexto(M.itens[e.id].q)), c); }   // prefere versões adaptadas (perto da faixa), depois questões em texto
       c = c.slice(0, 1);
       return c[0] ? Object.assign({ h }, c[0]) : null;
     };
@@ -575,7 +575,8 @@
       ${itens}<div class="ia-row"><button class="btn ghost" type="button" data-ia="hoje">Voltar para Hoje</button></div>`;
   }
   // Apoio de leitura (área adaptada): parágrafos sem marcação viram partes numeradas e os números ficam em destaque.
-  const destaca = t => t.replace(/(\d[\d.,]*(?:\s?%)?)/g, "<b>$1</b>");
+  // número inteiro (com separador de milhar por espaço ou ponto), decimal com vírgula e % ficam juntos, sem quebrar a linha
+  const destaca = t => t.replace(/\d{1,3}(?:[ \u00a0.]\d{3})+(?:,\d+)?(?:\s?%)?|\d+(?:,\d+)?(?:\s?%)?/g, m => "<b>" + m.replace(/ /g, "\u00a0") + "</b>");
   function segmenta(ps) {
     const partes = []; ps.forEach(p => { if (/[<>]/.test(p)) { partes.push(p); return; } p.split(/(?<=[.!?;:])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9“"(])/).forEach(x => { if (x.trim()) partes.push(destaca(x.trim())); }); });
     return partes.length > 1 ? `<ol class="ia-partes">${partes.map(x => `<li>${x}</li>`).join("")}</ol>` : partes.map(x => `<p>${x}</p>`).join("");
@@ -584,7 +585,8 @@
     if (adaptada() && ehTexto(q)) {
       const tb = q.tb ? `<div class="tbl"><table><thead><tr>${q.tb[0].map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${q.tb.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
       const fig = q.f && SR.D.figs && SR.D.figs[q.f] ? `<div class="fig"><img src="${SR.D.figs[q.f]}" alt="Figura da questão"></div>` : "";
-      return `<div class="txt">${segmenta(q.t || [])}</div>${tb}${fig}${q.c ? `<div class="ia-pede"><b>O que a questão pede:</b> ${q.c}</div>` : ""}<div class="opts">${opts}</div>`;
+      const dados = Array.isArray(q.dados) && q.dados.length ? `<div class="ia-dados"><b>Dados da questão</b><ul>${q.dados.map(d => `<li>${destaca(esc(d))}</li>`).join("")}</ul></div>` : "";
+      return `<div class="txt">${segmenta(q.t || [])}</div>${dados}${tb}${fig}${q.c ? `<div class="ia-pede"><b>O que a questão pede:</b> ${q.c}</div>` : ""}<div class="opts">${opts}</div>`;
     }
     const tb = q.tb ? `<div class="tbl"><table><thead><tr>${q.tb[0].map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${q.tb.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
     const fig = q.f && SR.D.figs && SR.D.figs[q.f] ? `<div class="fig"><img src="${SR.D.figs[q.f]}" alt="Figura da questão"></div>` : "";
@@ -720,7 +722,8 @@
     const antes = k === 1 && !resp ? (se.trilha === "recuperacao" || se.trilha === "adiantar" ? `<div class="ia-antes"><b>Antes de começar:</b> se quiser, leia o resumo da teoria. ${btnTeoria(at.h)}</div>`
       : se.trilha === "fixacao" && BIB[at.h] ? `<div class="ia-antes"><b>Ficha rápida (opcional):</b> ${btnTeoria(at.h)}</div>`
       : se.trilha === "fixacao" && aula && aula.dica ? `<details class="ia-antes"><summary>Ficha rápida (opcional)</summary><p>${aula.dica}</p></details>` : "") : "";
-    const dica = (at.tipo === "guiada" || adaptada()) && !resp && aula && aula.dica ? (dicaAberta ? `<div class="ia-dica"><b>Dica:</b> ${aula.dica}</div>` : `<button class="btn ghost" type="button" data-ia="dica">Ver uma dica</button>`) : "";
+    const textoDica = q.dica ? esc(q.dica) : aula && aula.dica;
+    const dica = (at.tipo === "guiada" || adaptada()) && !resp && textoDica ? (dicaAberta ? `<div class="ia-dica"><b>Dica:</b> ${textoDica}</div>` : `<button class="btn ghost" type="button" data-ia="dica">Ver uma dica</button>`) : "";
     let fb = "";
     if (resp) {
       const certo = resp.r === 1, ns = resp.r === "ns";
@@ -931,6 +934,7 @@
   .ia-adapt{font-size:17px;line-height:1.75}.ia-adapt .txt p,.ia-adapt .ia-partes li{font-size:17px;line-height:1.75}
   .ia-adapt .opt{min-height:52px}.ia-adapt .ia-card,.ia-adapt .q{padding:22px}
   .ia-partes{padding-left:26px;margin:4px 0}.ia-partes li{margin:0 0 10px}
+  .ia-dados{border:1px dashed var(--pen);border-radius:8px;padding:8px 14px;margin:10px 0}.ia-dados ul{margin:4px 0;padding-left:20px}
   .ia-pede{background:var(--pen-soft);border-left:4px solid var(--pen);border-radius:6px;padding:10px 14px;margin:12px 0}
   .ia-aviso{background:var(--mark-soft);border-radius:6px;padding:8px 12px}
   .ia-motivo{color:var(--ink-2);font-weight:400}

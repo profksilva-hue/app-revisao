@@ -1,5 +1,222 @@
 {
   "versao": 1,
   "observacao": "Versões adaptadas das questões para a área adaptada (enunciado em partes, linguagem literal). Cada versão é produzida com o Claude e aprovada pelo professor; a chave é o identificador da questão original e o gabarito precisa ser o mesmo.",
-  "versoes": {}
+  "versoes": {
+    "E2012-150": {
+      "t": [
+        "Um jogo de cartas usa 52 cartas.",
+        "As cartas são separadas em 7 colunas.",
+        "A 1ª coluna tem 1 carta, a 2ª coluna tem 2 cartas, a 3ª coluna tem 3 cartas, e assim por diante.",
+        "A 7ª coluna tem 7 cartas.",
+        "As cartas que sobram, fora das colunas, formam o monte."
+      ],
+      "dados": [
+        "Total de cartas: 52",
+        "Cartas nas colunas: 1, 2, 3, 4, 5, 6 e 7"
+      ],
+      "c": "Quantas cartas ficam no monte?",
+      "dica": "Primeiro descubra quantas cartas estão nas colunas. Depois veja quantas sobram.",
+      "sol": "1) Some as cartas das colunas: 1 + 2 + 3 + 4 + 5 + 6 + 7 = 28. 2) Tire do total: 52 − 28 = 24. Resposta: 24.",
+      "o": [
+        "21.",
+        "24.",
+        "26.",
+        "28.",
+        "31."
+      ],
+      "a": 1,
+      "e": [
+        "Somou só até a 6ª coluna e errou a subtração.",
+        "",
+        "Errou a soma das colunas.",
+        "Esse é o total nas colunas, não o monte.",
+        "Somou só até a 6ª coluna (21) e subtraiu de 52."
+      ],
+      "h": "H3",
+      "f": null,
+      "tb": null,
+      "lote": "A1",
+      "aprovado": false
+    },
+    "E2022-154": {
+      "t": [
+        "Em janeiro de 2013, houve 1 794 272 admissões e 1 765 372 desligamentos no Brasil.",
+        "Assim, foram criadas 28 900 vagas de emprego em janeiro de 2013.",
+        "Esse número de vagas criadas foi 75% menor do que o de janeiro de 2012."
+      ],
+      "dados": [
+        "Vagas criadas em janeiro de 2013: 28 900",
+        "Queda em relação a janeiro de 2012: 75%"
+      ],
+      "c": "Quantas vagas de emprego foram criadas em janeiro de 2012?",
+      "dica": "Uma queda de 75% quer dizer que sobrou 25% do valor de 2012.",
+      "sol": "1) Se caiu 75%, as 28 900 vagas de 2013 são 25% das vagas de 2012. 2) 25% é 1/4, então as vagas de 2012 são 28 900 × 4 = 115 600. Resposta: 115 600.",
+      "o": [
+        "16 514.",
+        "86 700.",
+        "115 600.",
+        "441 343.",
+        "448 568."
+      ],
+      "a": 2,
+      "e": [
+        "Calculou 28 900 − 75% de algo.",
+        "Dividiu por 1/3.",
+        "",
+        "Somou as admissões de forma errada.",
+        "Usou as admissões, não as vagas criadas."
+      ],
+      "h": "H3",
+      "f": null,
+      "tb": null,
+      "lote": "A1",
+      "aprovado": false
+    },
+    "E2011-160": {
+      "t": [
+        "Uma pessoa aplicou um valor em ações.",
+        "No 1º mês, ela perdeu 30% do valor aplicado.",
+        "No 2º mês, ela recuperou 20% do que tinha perdido.",
+        "No fim do 2º mês, ela tinha R$ 3 800,00 e retirou esse valor."
+      ],
+      "dados": [
+        "Perda no 1º mês: 30% do valor inicial",
+        "Recuperação no 2º mês: 20% do que foi perdido",
+        "Valor no fim: R$ 3 800,00"
+      ],
+      "c": "Qual foi o valor que a pessoa aplicou no começo?",
+      "dica": "Chame o valor inicial de x. Calcule quanto sobra depois do 1º mês e quanto volta no 2º mês.",
+      "sol": "1) Depois de perder 30%, sobram 0,70x. 2) A perda foi 0,30x; 20% dela é 0,06x. 3) No fim: 0,70x + 0,06x = 0,76x. 4) 0,76x = 3 800, então x = 3 800 ÷ 0,76 = 5 000. Resposta: R$ 5 000,00.",
+      "o": [
+        "R$ 4 222,22.",
+        "R$ 4 523,80.",
+        "R$ 5 000,00.",
+        "D R$ 13 300,00.",
+        "R$ 17 100,00."
+      ],
+      "a": 2,
+      "e": [
+        "Supôs perda final de 10% (3 800/0,9).",
+        "Errou o percentual final restante.",
+        "",
+        "Dividiu 3 800 pelo percentual recuperado de forma errada.",
+        "Inverteu as operações (dividiu por um fator menor que 1 de forma incorreta)."
+      ],
+      "h": "H3",
+      "f": null,
+      "tb": null,
+      "lote": "A1",
+      "aprovado": false
+    },
+    "E2010-176": {
+      "t": [
+        "Os planetas têm volumes muito diferentes.",
+        "Dentro de Marte cabem 3 Mercúrios.",
+        "Dentro da Terra cabem 7 Martes.",
+        "Dentro de Netuno cabem 58 Terras.",
+        "Dentro de Júpiter cabem 23 Netunos."
+      ],
+      "c": "Quantas Terras cabem dentro de Júpiter?",
+      "dica": "Comece por Júpiter e veja quais planetas você precisa usar para chegar até a Terra.",
+      "sol": "1) Júpiter = 23 Netunos. 2) Cada Netuno = 58 Terras. 3) 23 × 58 = 1 334 Terras. Mercúrio e Marte não entram na conta. Resposta: 1 334.",
+      "o": [
+        "406",
+        "1 334",
+        "4 002",
+        "9 338",
+        "28 014"
+      ],
+      "a": 1,
+      "e": [
+        "Multiplicou 58 por 7 (Martes por Terra), que não entra na conta.",
+        "",
+        "Multiplicou ainda por 3 (Mercúrios por Marte).",
+        "Multiplicou ainda por 7 (Martes por Terra).",
+        "Multiplicou por todos os fatores do texto."
+      ],
+      "h": "H16",
+      "f": null,
+      "tb": null,
+      "lote": "A1",
+      "aprovado": false
+    },
+    "E2019-152": {
+      "t": [
+        "Uma prefeitura vai contratar 3 máquinas, uma de cada empresa.",
+        "O valor total para as 3 máquinas é de R$ 31 000,00.",
+        "Cada empresa recebe um valor inversamente proporcional à idade da sua máquina: a máquina mais velha recebe menos.",
+        "As máquinas têm 2, 3 e 5 anos de uso."
+      ],
+      "dados": [
+        "Valor total: R$ 31 000,00",
+        "Idades das máquinas: 2, 3 e 5 anos"
+      ],
+      "c": "Quanto vai receber a empresa da máquina mais velha (5 anos)?",
+      "dica": "Inversamente proporcional a 2, 3 e 5 quer dizer proporcional a 1/2, 1/3 e 1/5.",
+      "sol": "1) As partes são proporcionais a 1/2, 1/3 e 1/5. 2) Com denominador 30: 15/30, 10/30 e 6/30, que somam 31 partes. 3) Cada parte vale 31 000 ÷ 31 = 1 000. 4) A máquina de 5 anos recebe 6 partes: 6 × 1 000 = R$ 6 000,00.",
+      "o": [
+        "R$ 3.100,00",
+        "R$ 6.000,00",
+        "R$ 6.200,00",
+        "R$ 15.000,00",
+        "R$ 15.500,00"
+      ],
+      "a": 1,
+      "e": [
+        "Dividiu 31 000 por 10.",
+        "",
+        "Dividiu 31 000 diretamente por 5.",
+        "Esse é o valor da máquina de 2 anos.",
+        "Dividiu o total por 2."
+      ],
+      "h": "H16",
+      "f": null,
+      "tb": null,
+      "lote": "A1",
+      "aprovado": false
+    },
+    "E2021-159": {
+      "t": [
+        "Na troca de pneus de um carro de corrida, cada pneu é trocado por um grupo de 3 pessoas.",
+        "Os 4 grupos começam juntos e trabalham na mesma velocidade.",
+        "Com os 4 grupos completos, a troca leva 4 segundos.",
+        "O tempo de um grupo é inversamente proporcional ao número de pessoas: menos pessoas, mais tempo.",
+        "Em uma parada, um trabalhador faltou e um dos grupos ficou com 2 pessoas."
+      ],
+      "c": "Nessa parada, quanto tempo, em segundos, levou a troca dos 4 pneus?",
+      "dica": "A troca só termina quando o grupo mais lento terminar.",
+      "sol": "1) Um grupo de 3 pessoas leva 4 segundos. 2) Com 2 pessoas, o tempo aumenta na razão 3/2: 4 × 3 ÷ 2 = 6 segundos. 3) Os outros grupos terminam em 4 segundos, mas a troca só acaba com o último grupo: 6 segundos. Resposta: 6,0.",
+      "o": [
+        "6,0",
+        "5,7",
+        "5,0",
+        "4,5",
+        "4,4"
+      ],
+      "a": 0,
+      "e": [
+        "",
+        "Calculou uma média entre os grupos.",
+        "Somou 1 segundo ao tempo original.",
+        "Errou a proporção inversa.",
+        "Fez uma média ponderada dos tempos."
+      ],
+      "h": "H16",
+      "f": null,
+      "tb": null,
+      "lote": "A1",
+      "aprovado": false
+    }
+  },
+  "lotes": [
+    {
+      "lote": "A1",
+      "data": "2026-11-11",
+      "habilidades": [
+        "H3",
+        "H16"
+      ],
+      "status": "aguardando aprovação"
+    }
+  ]
 }
