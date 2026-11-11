@@ -45,6 +45,11 @@ ok("/api/eu: e-mail e área padrão", e1.email === "ana.souza@escola.edu.br" && 
 const B = await login({ roles: ["AreaAdaptada"], preferred_username: "Bruno.Lima@Escola.edu.br" });
 const e2 = await (await eu({ request: req("/api/eu", B.sessao, "*/*"), env })).json();
 ok("/api/eu: papel AreaAdaptada liga a área adaptada", e2.adaptada === true && e2.email === "bruno.lima@escola.edu.br", JSON.stringify(e2));
+ok("/api/eu: AreaAdaptada é apoio 1", e2.apoio === 1, JSON.stringify(e2));
+const C2 = await login({ roles: ["ApoioAmpliado"], preferred_username: "carla.dias@escola.edu.br" });
+const e3 = await (await eu({ request: req("/api/eu", C2.sessao, "*/*"), env })).json();
+ok("/api/eu: papel ApoioAmpliado liga a área adaptada com apoio 2", e3.adaptada === true && e3.apoio === 2, JSON.stringify(e3));
+ok("/api/eu: área padrão é apoio 0", e1.apoio === 0, JSON.stringify(e1));
 // 5. recusas
 ok("Conta de fora da escola é recusada", (await login({ preferred_username: "ana@gmail.com" })).r2.status === 403);
 ok("Token de outro locatário é recusado", (await login({ tid: "outra-escola" })).r2.status === 400);

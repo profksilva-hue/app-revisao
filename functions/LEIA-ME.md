@@ -13,7 +13,7 @@ ferramenta `wrangler`. No envio por arquivo zip elas não funcionam, e o site se
 | `SESSION_SECRET` | Texto aleatório com 32 caracteres ou mais, só do site | **segredo** |
 | `DOMINIO` | Domínio dos e-mails da escola (ex.: `escola.edu.br`) | texto |
 | `SITE_URL` | Endereço do site (ex.: `https://santa-revisao-teste.pages.dev`) | texto |
-| `PAPEL_ADAPTADA` | Valor da função do aplicativo para a área adaptada (padrão: `AreaAdaptada`) | texto |
+| `PAPEL_ADAPTADA (padrão AreaAdaptada) e PAPEL_AMPLIADO (padrão ApoioAmpliado; o nível 2 inclui o 1)` | Valor da função do aplicativo para a área adaptada (padrão: `AreaAdaptada`) | texto |
 
 Sem `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, `SESSION_SECRET` e `DOMINIO`, nada muda no site.
 

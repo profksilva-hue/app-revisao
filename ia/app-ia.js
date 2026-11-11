@@ -30,8 +30,13 @@
   // o site de teste simula o grupo (?area=adaptada / ?area=padrao ou o botão no relatório).
   const AMB_TESTE = /teste|-lab\b|localhost|127\.0\.0\.1/.test(location.hostname);
   const adaptada = () => !!(SR.S.ia && SR.S.ia.adaptada);
+  // Apoio ampliado (nível 2 da área adaptada): uma coisa por tela, sessões de 4 questões com pausas, menos texto e menos estímulo.
+  const ampliado = () => adaptada() && SR.S.ia.apoio === 2;
+  const AREA_NOME = () => ampliado() ? "área adaptada · apoio ampliado" : adaptada() ? "área adaptada" : "área padrão";
+  function defineArea(a) { const x = st(); if (a === "ampliada") { x.adaptada = true; x.apoio = 2; } else if (a === "adaptada") { x.adaptada = true; delete x.apoio; } else { delete x.adaptada; delete x.apoio; } }
   const ehTexto = q => !q.pdf && !/class="ofi pdf"/.test((q.t || []).join(" "));
   const versao = it => (adaptada() && ADAPT[it.id]) || it.q;   // versão adaptada aprovada, se houver
+  let riscadas = new Set(), modoRiscar = false;
   let marcada = null, inicioQ = 0, qAtualId = null, verMapa = false, dicaAberta = false, tique = null;
 
   const st = () => { const S = SR.S; if (!S.ia) S.ia = { v: 1, serie: null, aluno: {}, naoVistas: [], diag: null }; return S.ia; };
@@ -74,7 +79,7 @@
       // e a área adaptada vem do papel atribuído pela escola (nunca do aparelho).
       try {
         const r = await fetch("/api/eu", { cache: "no-store", credentials: "same-origin" });
-        if (r.ok) { const u = await r.json(); if (u && u.sso && u.email) { SSO = u; if (SR.email() !== u.email) SR.entrarSSO(u.email); if (u.adaptada) st().adaptada = true; else delete st().adaptada; salvar(); } }
+        if (r.ok) { const u = await r.json(); if (u && u.sso && u.email) { SSO = u; if (SR.email() !== u.email) SR.entrarSSO(u.email); defineArea(u.apoio === 2 ? "ampliada" : u.adaptada ? "adaptada" : "padrao"); salvar(); } }
       } catch (e) { /* sem login configurado: segue pelo e-mail digitado */ }
       if (!SSO && AMB_TESTE) AREA_URL = new URLSearchParams(location.search).get("area");   // aplicada quando o aluno estiver logado (ver render)
       // a tela Hoje é a porta de entrada do app: ao abrir, o aluno cai nela (etapa 5)
@@ -511,7 +516,7 @@
       ${sec(9, "Mapa das 30 habilidades", mapa)}
       ${prof}
       ${SSO ? `<p class="note ia-noprint">Conectado com a conta da escola (${esc(SSO.email)}). <a href="/auth/sair">Sair da conta</a></p>` : ""}
-      ${AMB_TESTE && !SSO ? `<p class="note ia-noprint">Ambiente de teste: <button class="ia-mini" type="button" data-iar="simular">${adaptada() ? "Voltar para a área padrão" : "Simular a área adaptada"}</button> (no site oficial, isso virá do grupo da escola no login Microsoft).</p>` : ""}
+      ${AMB_TESTE && !SSO ? `<p class="note ia-noprint">Ambiente de teste: <button class="ia-mini" type="button" data-iar="simular">${ampliado() ? "Voltar para a área padrão" : adaptada() ? "Simular o apoio ampliado" : "Simular a área adaptada"}</button> (no site oficial, isso virá do grupo da escola no login Microsoft).</p>` : ""}
       <div class="ia-row ia-noprint"><button class="btn ghost" type="button" data-iar="imprimir">Baixar em PDF / imprimir</button><button class="btn ghost" type="button" data-tab="ia">Ir para Hoje</button></div></div>`;
   }
 
@@ -555,7 +560,38 @@
   }
   // Área adaptada: apoios visuais do resumo (esquema do caminho, figura, decisão, vocabulário, pistas e cartão de bolso).
   function apoioAdaptado(r) { return apoioHTML(r.adaptado, r.h); }
-  function apoioAula(n) { return apoioHTML(APOIO[n], "Aula " + String(n).padStart(2, "0")); }
+  // Apoio ampliado: o resumo da aula vira uma sequência de partes curtas, uma por tela, com ouvir, voltar e avançar.
+  let passoAula = { n: null, i: 0, teoria: false, sol: false };
+  function apoioAula(n) {
+    const ap = apoioHTML(APOIO[n], "Aula " + String(n).padStart(2, "0"));
+    if (!ampliado() || !ap.partes) return ap;
+    if (passoAula.n !== n) passoAula = { n, i: 0, teoria: false, sol: false };
+    if (passoAula.teoria) return { antes: `<div class="ia-row ia-noprint"><button class="btn" type="button" data-iaap="voltarPartes">Voltar para as partes</button></div>`, depois: "" };
+    const res = (SR.aula(n) || {}).res || {}, P = ap.partes;
+    const passos = res.ex ? String(res.ex[1]).split(/(?<=[.;])\s+(?=[A-ZÁÉÍÓÚ0-9])/).filter(Boolean) : [];
+    const exemplo = res.ex ? `<p>${res.ex[0]}</p>${passoAula.sol ? `<ol class="ia-passos">${passos.map(x => `<li>${x}</li>`).join("")}</ol>` : `<button class="btn ghost" type="button" data-iaap="sol">Mostrar a resolução, passo a passo</button>`}` : "";
+    const cards = [
+      ["Plano desta aula", `<p>Você vai ver <b>6 partes</b>, uma de cada vez. Pode ouvir cada parte, voltar e ir com calma.</p><ol class="ia-agenda"><li>Palavras importantes</li><li>Veja a ideia</li><li>O caminho</li><li>Como decidir</li><li>Exemplo resolvido</li><li>Cartão de bolso</li></ol>`],
+      ["Palavras importantes", P.palavras], ["Veja a ideia", P.figura], ["O caminho", P.esquema], ["Como decidir", P.decisao], ["Exemplo resolvido", exemplo],
+      ["Cartão de bolso", P.cartao + `<p class="ia-fim">Pronto! Agora você pode praticar.</p><div class="ia-row"><button class="btn" type="button" data-mode="lista">Ir para as questões</button></div>`]
+    ].filter(c => c[1]);
+    const i = Math.max(0, Math.min(passoAula.i, cards.length - 1)), [t, c] = cards[i];
+    return { inteiro: `${APOIO[n].aprovado === false ? `<p class="ia-rasc">Apoios da área adaptada em revisão pelo professor · só aparecem no site de teste</p>` : ""}
+      <div class="ia-pontos" aria-hidden="true">${cards.map((_, k) => `<span class="${k === i ? "on" : k < i ? "ok" : ""}"></span>`).join("")}</div>
+      <p class="note">Parte ${i + 1} de ${cards.length}</p>
+      <section class="ia-parte" aria-live="polite"><h3>${t}</h3>${c}</section>
+      <div class="ia-row ia-noprint ia-parte-nav">${i > 0 ? `<button class="btn ghost" type="button" data-iaap="ant">← Voltar</button>` : ""}
+        <button class="ia-mini" type="button" data-iaap="ouvir">🔊 Ouvir esta parte</button>
+        ${i < cards.length - 1 ? `<button class="btn" type="button" data-iaap="prox">Próxima →</button>` : ""}</div>
+      <p class="ia-noprint"><button class="ia-mini" type="button" data-iaap="teoria">Ver a teoria completa</button></p>` };
+  }
+  function falar(texto, bt, rotulo) {
+    if (!window.speechSynthesis) return;
+    const volta = () => { if (bt) { bt.textContent = rotulo; bt.setAttribute("aria-pressed", "false"); } };
+    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); volta(); return; }
+    const u = new SpeechSynthesisUtterance(texto); u.lang = "pt-BR"; u.rate = 0.9; u.onend = u.onerror = volta; speechSynthesis.speak(u);
+    if (bt) { bt.textContent = "⏹ Parar a leitura"; bt.setAttribute("aria-pressed", "true"); }
+  }
   function apoioHTML(a, rot) {
     if (!adaptada() || !a) return { antes: "", depois: "" };
     const sec = (id, t, c) => c ? `<section class="ia-sec ia-apoio" id="ia-sec-${id}"><h3>${t}</h3>${c}</section>` : "";
@@ -565,7 +601,8 @@
     const palavras = (a.palavras || []).length ? `<dl class="ia-gloss">${a.palavras.map(w => `<div><dt>${w.termo}</dt><dd>${w.sig}</dd></div>`).join("")}</dl>` : "";
     const pistas = (a.pistas || []).length ? `<ul class="ia-pistas">${a.pistas.map(x => `<li><span>${x.frase}</span><span aria-hidden="true">→</span><span>${x.indica}</span></li>`).join("")}</ul>` : "";
     const cartao = (a.cartao || []).length ? `<div class="ia-cartao"><b>Cartão de bolso · ${esc(rot)}</b><ul>${a.cartao.map(x => `<li>${x}</li>`).join("")}</ul></div>` : "";
-    return { antes: (a.aprovado !== false ? "" : `<p class="ia-rasc">Apoios da área adaptada em revisão pelo professor · só aparecem no site de teste</p>`) + sec("caminho", `O caminho em ${(a.esquema || []).length} passos`, esquema) + sec("figura", "Veja a ideia", figura) + sec("decidir", "Como decidir", decisao) + sec("palavras", "Palavras importantes", palavras),
+    const partes = { esquema, figura, decisao, palavras, pistas, cartao };
+    return { partes, antes: (a.aprovado !== false ? "" : `<p class="ia-rasc">Apoios da área adaptada em revisão pelo professor · só aparecem no site de teste</p>`) + sec("caminho", `O caminho em ${(a.esquema || []).length} passos`, esquema) + sec("figura", "Veja a ideia", figura) + sec("decidir", "Como decidir", decisao) + sec("palavras", "Palavras importantes", palavras),
       depois: sec("pistas", "Pistas no enunciado", pistas) + sec("cartao", "Para levar com você", cartao) };
   }
   function telaResumo() {
@@ -611,10 +648,11 @@
   }
   const ouvir = `<button class="ia-mini" type="button" data-ia="ouvir">🔊 Ouvir a questão</button>`;
   const opcoes = (q, resp) => q.o.map((o, j) => {
-    let c = ""; if (resp) { if (j === q.a) c = " is-right"; else if (j === resp.valor) c = " is-wrong"; }
+    let c = riscadas.has(j) && !resp ? " is-riscada" : ""; if (resp) { if (j === q.a) c = " is-right"; else if (j === resp.valor) c = " is-wrong"; }
     return `<button class="opt${c}" type="button" data-iao="${j}" aria-pressed="${(resp ? resp.valor : marcada) === j}" ${resp ? "disabled" : ""}><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`;
   }).join("");
-  const marcaTempo = id => { if (qAtualId !== id) { qAtualId = id; inicioQ = Date.now(); if (!st().sessao || !st().sessao.respondida) marcada = null; } };
+  const marcaTempo = id => { if (qAtualId !== id) { qAtualId = id; inicioQ = Date.now(); riscadas = new Set(); modoRiscar = false; if (!st().sessao || !st().sessao.respondida) marcada = null; } };
+  const riscarBtn = () => `<button class="ia-mini" type="button" data-ia="riscar" aria-pressed="${modoRiscar}">${modoRiscar ? "✂ Riscando: toque nas que descartou · terminar" : "✂ Riscar alternativas"}</button>`;
 
   function telaSerie() {
     return `<div class="ia-card"><h2>Hoje</h2>
@@ -639,11 +677,12 @@
   function telaDiag() {
     const s = st(), d = s.diag, at = d.atual, q = versao(M.itens[at.id]), k = respondidas(d) + 1, n = limite();
     marcaTempo(at.id);
-    if (adaptada() && respondidas(d) === Math.floor(n / 2) && !d.pausaVista) return `<div class="ia-card"><h2>Metade feita!</h2>
+    const marcos = ampliado() ? [Math.round(n / 3), Math.round(2 * n / 3)] : [Math.floor(n / 2)], rd = respondidas(d);
+    if (adaptada() && marcos.includes(rd) && !(d.pausas || []).includes(rd) && !(rd === Math.floor(n / 2) && d.pausaVista && !ampliado())) return `<div class="ia-card"><h2>${ampliado() ? "Hora da pausa" : "Metade feita!"}</h2>
       <p>Você já respondeu ${respondidas(d)} de ${n} questões. Faça uma pausa: beba água, levante um pouco. Quando quiser, continue de onde parou.</p>
       <div class="ia-row"><button class="btn" type="button" data-ia="pausaOk">Continuar agora</button><button class="btn ghost" type="button" data-ia="pausaDepois">Continuar depois</button></div></div>`;
     return `<div class="ia-prog"><span>Diagnose · questão <b>${Math.min(k, n)}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span></div>
-      <article class="q"><div class="q-h"><b>${esc(at.h)} · ${esc(HAB[at.h].curto)}</b>${adaptada() && ehTexto(q) ? `<span class="q-r">${ouvir}</span>` : ""}</div>${corpoQuestao(q, opcoes(q, null))}</article>
+      <article class="q"><div class="q-h"><b>${esc(at.h)} · ${esc(HAB[at.h].curto)}</b>${adaptada() ? `<span class="q-r">${ehTexto(q) ? ouvir : ""}${riscarBtn()}</span>` : ""}</div>${corpoQuestao(q, opcoes(q, null))}</article>
       <div class="ia-row ia-nav"><button class="btn" type="button" data-ia="confirmar" ${marcada == null ? "disabled" : ""}>Confirmar e seguir</button>
         ${s.serie !== "3" ? `<button class="btn ghost" type="button" data-ia="naoVi">Ainda não estudei este conteúdo</button>` : ""}</div>
       <p class="note">Sua resposta fica salva ao confirmar. Você pode fechar e continuar depois.</p>`;
@@ -694,7 +733,7 @@
         ${sel ? `<p class="ia-selo">Sugerida hoje</p><p class="note">${esc(sug.motivo)}</p>` : ""}
         <h4>${NOME[t]}</h4>
         ${on ? `<ul>${nomes}</ul><p class="note">${n} questões · cerca de ${TR[t].min} min${hs.length > 3 ? ` · +${hs.length - 3} ${hs.length - 3 === 1 ? "habilidade" : "habilidades"} na fila` : ""}</p>
-          <div class="ia-row">${adaptada() ? `<button class="btn" type="button" data-ia-trilha="${t}" data-ia-curta="1">Começar (${n / 2} questões)</button><button class="btn ghost" type="button" data-ia-trilha="${t}">Sessão completa (${n})</button>` : `<button class="btn" type="button" data-ia-trilha="${t}">Começar</button><button class="btn ghost" type="button" data-ia-trilha="${t}" data-ia-curta="1">Tenho pouco tempo (${n / 2})</button>`}</div>`
+          <div class="ia-row">${ampliado() ? `<button class="btn" type="button" data-ia-trilha="${t}" data-ia-curta="1">Começar (${n / 2} questões)</button>` : adaptada() ? `<button class="btn" type="button" data-ia-trilha="${t}" data-ia-curta="1">Começar (${n / 2} questões)</button><button class="btn ghost" type="button" data-ia-trilha="${t}">Sessão completa (${n})</button>` : `<button class="btn" type="button" data-ia-trilha="${t}">Começar</button><button class="btn ghost" type="button" data-ia-trilha="${t}" data-ia-curta="1">Tenho pouco tempo (${n / 2})</button>`}</div>`
           : `<p class="note">${t === "adiantar" ? "" : "Nenhuma habilidade aqui por enquanto."}</p>`}</div>`;
     };
     const temIntro = habsDaTrilha("adiantar").length > 0;
@@ -709,7 +748,8 @@
   function telaEscolha() {
     const pillsDe = hs => hs.map(h => `<span class="ia-hab">${esc(h)} ${pill(estadoDe(h))}</span>`).join("");
     const botoes = (hs, rot) => { const v = esc(hs.slice(0, 3).join(",")), r = esc(rot);
-      return `<button class="btn" type="button" data-ia-livre="${v}" data-ia-rot="${r}">Praticar (8)</button><button class="btn ghost" type="button" data-ia-livre="${v}" data-ia-rot="${r}" data-ia-curta="1">4 questões</button>`; };
+      return ampliado() ? `<button class="btn" type="button" data-ia-livre="${v}" data-ia-rot="${r}" data-ia-curta="1">Praticar (4 questões)</button>`
+        : `<button class="btn" type="button" data-ia-livre="${v}" data-ia-rot="${r}">Praticar (8)</button><button class="btn ghost" type="button" data-ia-livre="${v}" data-ia-rot="${r}" data-ia-curta="1">4 questões</button>`; };
     let lista;
     if (modoConteudos === "tema") {
       lista = SR.D.aulas.filter(a => (AULAHABS[a.n] || []).length).map(a => {
@@ -753,11 +793,14 @@
         ${adaptada() && k < n && se.slots[se.i + 1] && se.slots[se.i + 1].h !== at.h ? `<p class="ia-aviso">Próxima questão: outra habilidade, <b>${esc(se.slots[se.i + 1].h)} · ${esc(HAB[se.slots[se.i + 1].h].curto)}</b>.</p>` : ""}
         <div class="ia-row">${!certo ? btnTeoria(at.h, "erros") : ""}<button class="btn" type="button" data-ia="proxima">${k < n ? "Próxima questão" : "Ver como foi"}</button></div></div>`;
     }
+    if (ampliado() && !resp && se.i > 0 && se.i % 2 === 0 && !(se.pausas || []).includes(se.i)) return `<div class="ia-card"><h2>Pausa</h2>
+      <p>Você fez ${se.i} de ${n} questões. Respire, beba água. Quando quiser, continue.</p>
+      <div class="ia-row"><button class="btn" type="button" data-ia="pausaSessao">Continuar</button><button class="ia-mini" type="button" data-ia="sair">Parar por hoje</button></div></div>`;
     const relogio = se.relogio ? `<span class="ia-relogio" id="ia-relogio">0:00</span>` : "";
     return `<div class="ia-prog"><span>${esc(se.rotulo || NOME[se.trilha])} · questão <b>${k}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span>${relogio}
-        <button class="ia-mini" type="button" data-ia="relogio">${se.relogio ? "Desligar" : "Ligar"} cronômetro</button></div>
+        ${adaptada() ? "" : `<button class="ia-mini" type="button" data-ia="relogio">${se.relogio ? "Desligar" : "Ligar"} cronômetro</button>`}</div>
       ${antes}
-      <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r">${adaptada() && ehTexto(q) ? ouvir : ""}<small class="ia-motivo">${esc(at.motivo || "")}</small></span></div>
+      <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r">${adaptada() && ehTexto(q) ? ouvir : ""}${adaptada() && !resp ? riscarBtn() : ""}${ampliado() ? "" : `<small class="ia-motivo">${esc(at.motivo || "")}</small>`}</span></div>
         ${corpoQuestao(q, opcoes(q, resp))}${dica}${fb}</article>
       ${resp ? "" : `<div class="ia-row ia-nav"><button class="btn" type="button" data-ia="responder" ${marcada == null ? "disabled" : ""}>Responder</button>
         ${TR[se.trilha].naoSei ? `<button class="btn ghost" type="button" data-ia="naoSei">Não sei</button>` : ""}
@@ -792,7 +835,7 @@
     const v = document.getElementById("view-ia"); if (!v) return;
     if (erro) { v.innerHTML = `<div class="ia-card"><p>${esc(erro)}</p></div>`; return; }
     if (!pronto) { v.innerHTML = `<div class="ia-card"><p>Carregando a IA…</p></div>`; return; }
-    if (AREA_URL && SR.logado()) { if (AREA_URL === "adaptada") st().adaptada = true; if (AREA_URL === "padrao") delete st().adaptada; AREA_URL = null; salvar(); }
+    if (AREA_URL && SR.logado()) { if (["adaptada", "ampliada", "padrao"].includes(AREA_URL)) defineArea(AREA_URL); AREA_URL = null; salvar(); }
     const s = st();
     let html;
     if (!s.serie) html = telaSerie();
@@ -805,8 +848,8 @@
     }
     else if (s.diag && s.diag.atual && s.diag.emCurso) html = telaDiag();
     else html = telaConvite();
-    const teste = AMB_TESTE && !SSO ? `<p class="note ia-noprint ia-teste">Ambiente de teste · você está na <b>${adaptada() ? "área adaptada" : "área padrão"}</b> <button class="ia-mini" type="button" data-iar="simular">${adaptada() ? "Voltar para a área padrão" : "Simular a área adaptada"}</button></p>` : "";
-    v.innerHTML = `<div class="ia-wrap${adaptada() ? " ia-adapt" : ""}">${teste}${html}</div>`;
+    const teste = AMB_TESTE && !SSO ? `<p class="note ia-noprint ia-teste">Ambiente de teste · você está na <b>${AREA_NOME()}</b> · simular: ${[["padrao", "padrão"], ["adaptada", "adaptada"], ["ampliada", "apoio ampliado"]].map(([k, t]) => `<button class="ia-mini" type="button" data-iar="simular" data-area="${k}" aria-pressed="${(k === "ampliada" ? ampliado() : k === "adaptada" ? adaptada() && !ampliado() : !adaptada())}">${t}</button>`).join(" ")}</p>` : "";
+    v.innerHTML = `<div class="ia-wrap${adaptada() ? " ia-adapt" : ""}${ampliado() ? " ia-amp" : ""}">${teste}${html}</div>`;
     if (window.speechSynthesis) speechSynthesis.cancel();
     const at = resumoAberto ? (BIB[resumoAberto.h] && BIB[resumoAberto.h].exemplo) : (s.sessao && !s.sessao.fim && s.sessao.atual) || (s.diag && !s.diag.fim && s.diag.emCurso && s.diag.atual);
     if (at && M.itens[at.id]) preencherOficiais(M.itens[at.id].aula);
@@ -820,10 +863,17 @@
     if (bp) { const h = bp.dataset.iaPraticar || bp.dataset.iaLer; SR.S.tab = "ia"; telaConteudos = false; telaBiblio = false; verMapa = false;
       if (bp.dataset.iaPraticar) { resumoAberto = null; comecarSessao("livre", false, [h], h + " · " + HAB[h].curto); } else resumoAberto = { h, completo: false, foco: "" };
       SR.renderAll(); window.scrollTo({ top: 0 }); return; }
+    const pa = ev.target.closest("button[data-iaap]");
+    if (pa) { const k = pa.dataset.iaap;
+      if (k === "ouvir") { const el = document.querySelector(".ia-parte"); if (el) falar(el.innerText.replace(/\n+/g, ". "), pa, "🔊 Ouvir esta parte"); return; }
+      if (window.speechSynthesis) speechSynthesis.cancel();
+      if (k === "prox") { passoAula.i++; passoAula.sol = false; } if (k === "ant") { passoAula.i = Math.max(0, passoAula.i - 1); passoAula.sol = false; }
+      if (k === "sol") passoAula.sol = true; if (k === "teoria") passoAula.teoria = true; if (k === "voltarPartes") passoAula.teoria = false;
+      SR.renderAll(); if (k !== "sol") { const r = document.querySelector("article.resumo"); if (r) r.scrollIntoView({ block: "start" }); } return; }
     const br = ev.target.closest("#view-id button[data-iar], #view-ia button[data-iar=\"simular\"]");
     if (br) { const s = st();
       if (br.dataset.iar === "meta") { const v = +((document.getElementById("ia-meta") || {}).value || 0); s.meta = v >= 400 && v <= 950 ? Math.round(v) : null; salvar(); SR.renderAll(); }
-      if (br.dataset.iar === "simular" && AMB_TESTE && !SSO) { if (s.adaptada) delete s.adaptada; else s.adaptada = true; salvar(); SR.renderAll(); return; }
+      if (br.dataset.iar === "simular" && AMB_TESTE && !SSO) { defineArea(br.dataset.area || (ampliado() ? "padrao" : adaptada() ? "ampliada" : "adaptada")); salvar(); SR.renderAll(); return; }
       if (br.dataset.iar === "imprimir") { document.body.classList.add("ia-imprimir-rel"); window.print(); setTimeout(() => document.body.classList.remove("ia-imprimir-rel"), 500); }
       return; }
     const bl = ev.target.closest("button[data-ia-lista]");
@@ -834,7 +884,8 @@
     const b = ev.target.closest("#view-ia button"); if (!b || b.disabled) return;
     const s = st(); const topo = () => window.scrollTo({ top: 0 });
     if (b.dataset.iaSerie) { s.serie = b.dataset.iaSerie; salvar(); SR.renderAll(); return; }
-    if (b.dataset.iao != null) { if (!(s.sessao && s.sessao.respondida && !s.sessao.fim)) { marcada = +b.dataset.iao; render(); } return; }
+    if (b.dataset.iao != null) { if (!(s.sessao && s.sessao.respondida && !s.sessao.fim)) { const j = +b.dataset.iao;
+      if (modoRiscar) { if (riscadas.has(j)) riscadas.delete(j); else { riscadas.add(j); if (marcada === j) marcada = null; } } else marcada = j; render(); } return; }
     if (b.dataset.iaLivre) { telaConteudos = false; verMapa = false; s.diag.mapaVisto = true; comecarSessao("livre", !!b.dataset.iaCurta, b.dataset.iaLivre.split(","), b.dataset.iaRot); render(); topo(); return; }
     if (b.dataset.iaResumo) { resumoAberto = { h: b.dataset.iaResumo, completo: false, foco: b.dataset.iaFoco || "" }; render(); if (!resumoAberto.foco) topo(); return; }
     if (b.dataset.iaModo) { modoConteudos = b.dataset.iaModo; render(); return; }
@@ -861,8 +912,10 @@
       const partes = [...q.querySelectorAll(".txt, .tbl, .ia-pede, .cmd")].map(e => e.innerText).concat([...q.querySelectorAll(".opts .opt")].map((o, j) => "Alternativa " + L[j] + ": " + o.innerText.replace(/^[A-E]\s*/, "")));
       speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(partes.join(". ")); u.lang = "pt-BR"; u.rate = 0.95; u.onend = u.onerror = volta; speechSynthesis.speak(u);
       if (bt) { bt.textContent = "⏹ Parar a leitura"; bt.setAttribute("aria-pressed", "true"); } }
-    else if (a === "pausaOk") { s.diag.pausaVista = true; salvar(); render(); topo(); }
-    else if (a === "pausaDepois") { s.diag.pausaVista = true; s.diag.emCurso = false; salvar(); SR.renderAll(); topo(); }
+    else if (a === "pausaOk") { s.diag.pausaVista = true; s.diag.pausas = (s.diag.pausas || []).concat(respondidas(s.diag)); salvar(); render(); topo(); }
+    else if (a === "pausaSessao") { s.sessao.pausas = (s.sessao.pausas || []).concat(s.sessao.i); salvar(); render(); topo(); }
+    else if (a === "riscar") { modoRiscar = !modoRiscar; render(); }
+    else if (a === "pausaDepois") { s.diag.pausaVista = true; s.diag.pausas = (s.diag.pausas || []).concat(respondidas(s.diag)); s.diag.emCurso = false; salvar(); SR.renderAll(); topo(); }
     else if (a === "resumoCompleto") { resumoAberto.completo = true; render(); }
     else if (a === "fecharResumo") { resumoAberto = null; render(); topo(); }
     else if (a === "biblioteca") { telaBiblio = true; telaConteudos = false; verMapa = false; render(); topo(); }
@@ -970,6 +1023,11 @@
   .ia-dec-r>div{border-radius:10px;padding:10px;background:var(--ok-soft)}.ia-dec-r>div+div{background:var(--mark-soft)}.ia-dec-r p{margin:4px 0 0}
   .ia-gloss{margin:0;display:grid;gap:8px}.ia-gloss div{border-left:4px solid var(--mark);padding:2px 10px}.ia-gloss dt{font-weight:700}.ia-gloss dd{margin:0}
   .ia-pistas{list-style:none;padding:0;margin:0;display:grid;gap:8px}.ia-pistas li{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;border:1px solid var(--rule);border-radius:8px;padding:8px 10px}.ia-pistas li span:first-child{font-weight:700}
+  .ia-pontos{display:flex;gap:8px;margin:4px 0}.ia-pontos span{width:12px;height:12px;border-radius:50%;background:var(--rule)}.ia-pontos .ok{background:var(--pen-soft);outline:2px solid var(--pen)}.ia-pontos .on{background:var(--pen)}
+  .ia-parte{border:2px solid var(--pen);border-radius:14px;padding:18px;background:var(--sheet)}.ia-parte h3{font-size:20px!important;margin:0 0 10px}.ia-parte-nav{justify-content:space-between;align-items:center}
+  .ia-agenda{font-size:18px;line-height:1.9}.ia-fim{font-weight:700;margin-top:12px}
+  .ia-amp *,.resumo.ia-amp *{animation:none!important;transition:none!important}.ia-amp .btn,.resumo.ia-amp .btn{min-height:52px;font-size:17px}
+  .opt.is-riscada{opacity:.5}.opt.is-riscada span:last-child{text-decoration:line-through}
   .ia-cartao{border:2px dashed var(--pen);border-radius:12px;padding:12px 16px;background:var(--pen-soft)}.ia-cartao ul{margin:6px 0 0;padding-left:20px}
   @media (max-width:520px){.ia-dec-r{grid-template-columns:1fr}.ia-pistas li{grid-template-columns:1fr}.ia-pistas li span[aria-hidden]{display:none}}
   .ia-adapt{font-size:17px;line-height:1.75}.ia-adapt .txt p,.ia-adapt .ia-partes li{font-size:17px;line-height:1.75}

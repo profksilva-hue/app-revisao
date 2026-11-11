@@ -24,9 +24,10 @@ export async function onRequestGet({ request, env }) {
   const email = String(id.email || id.preferred_username || "").trim().toLowerCase();
   if (!email.endsWith("@" + String(env.DOMINIO).toLowerCase())) return pagina("Use a conta da escola", "Este site é só para contas da escola. Entre com o seu e-mail institucional.", 403);
   // Área adaptada: papel do aplicativo atribuído pela escola ao grupo (Entra ID → Aplicativos empresariais → Usuários e grupos).
-  const papel = env.PAPEL_ADAPTADA || "AreaAdaptada";
-  const adaptada = Array.isArray(id.roles) && id.roles.includes(papel);
-  const sessao = await assinar({ email, ad: adaptada ? 1 : 0, exp: Math.floor(agora) + DURACAO }, env);
+  // Dois níveis: AreaAdaptada (apoio 1) e ApoioAmpliado (apoio 2, inclui o 1). Só o nível vai para a sessão, nunca o motivo.
+  const papeis = Array.isArray(id.roles) ? id.roles : [];
+  const ad = papeis.includes(env.PAPEL_AMPLIADO || "ApoioAmpliado") ? 2 : papeis.includes(env.PAPEL_ADAPTADA || "AreaAdaptada") ? 1 : 0;
+  const sessao = await assinar({ email, ad, exp: Math.floor(agora) + DURACAO }, env);
   const h = new Headers({ Location: fluxo.volta, "Cache-Control": "no-store" });
   h.append("Set-Cookie", cookie(SESSAO, sessao, DURACAO));
   h.append("Set-Cookie", cookie(FLUXO, "", 0, "/auth"));

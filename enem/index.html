@@ -1193,6 +1193,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
 
   function resumoHTML(a) {
     const r = a.res, ap = window.IA && IA.apoioAula ? IA.apoioAula(a.n) : { antes: "", depois: "" };   // área adaptada: apoios visuais
+    if (ap.inteiro) return `<article class="resumo ia-adapt ia-amp">${ap.inteiro}</article>`;   // apoio ampliado: uma parte por tela
     return `<article class="resumo${ap.antes ? " ia-adapt" : ""}">${ap.antes}
       <div class="r-con">${r.c.map(([tt, x]) => `<section><h3>${esc(tt)}</h3><p>${x}</p></section>`).join("")}</div>
       <div class="r-form"><h3>Fórmulas-chave</h3><ul>${r.f.map(f => `<li>${f}</li>`).join("")}</ul></div>
