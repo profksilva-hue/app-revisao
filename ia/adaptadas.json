@@ -36,7 +36,7 @@
       "f": null,
       "tb": null,
       "lote": "A1",
-      "aprovado": false
+      "aprovado": true
     },
     "E2022-154": {
       "t": [
@@ -70,7 +70,7 @@
       "f": null,
       "tb": null,
       "lote": "A1",
-      "aprovado": false
+      "aprovado": true
     },
     "E2011-160": {
       "t": [
@@ -91,7 +91,7 @@
         "R$ 4 222,22.",
         "R$ 4 523,80.",
         "R$ 5 000,00.",
-        "D R$ 13 300,00.",
+        "R$ 13 300,00.",
         "R$ 17 100,00."
       ],
       "a": 2,
@@ -106,7 +106,7 @@
       "f": null,
       "tb": null,
       "lote": "A1",
-      "aprovado": false
+      "aprovado": true
     },
     "E2010-176": {
       "t": [
@@ -138,7 +138,7 @@
       "f": null,
       "tb": null,
       "lote": "A1",
-      "aprovado": false
+      "aprovado": true
     },
     "E2019-152": {
       "t": [
@@ -173,7 +173,7 @@
       "f": null,
       "tb": null,
       "lote": "A1",
-      "aprovado": false
+      "aprovado": true
     },
     "E2021-159": {
       "t": [
@@ -205,7 +205,7 @@
       "f": null,
       "tb": null,
       "lote": "A1",
-      "aprovado": false
+      "aprovado": true
     }
   },
   "lotes": [
@@ -216,7 +216,11 @@
         "H3",
         "H16"
       ],
-      "status": "aguardando aprovação"
+      "status": "aprovado em 2026-11-11"
     }
-  ]
+  ],
+  "criterios": {
+    "termos_tecnicos": "explicados no próprio enunciado (decisão de 11/11)",
+    "deducoes_do_original": "tornadas explícitas no enunciado (decisão de 11/11)"
+  }
 }
