@@ -22,7 +22,8 @@
     repeticao: { dias: 30, diasSeErrou: 3 },
     naoCalibrada: { a: 1.5, c: 0.2, peso: 0.5 }, // questões do ENEM só com nível de 1 a 5
     pontos: { base: 500, escala: 100 },         // conversão aproximada para a escala do ENEM
-    recencia: { fator: 0.9, minimo: 0.5 }      // respostas antigas pesam menos: o aluno aprende
+    recencia: { fator: 0.9, minimo: 0.5 },
+    adaptada: { peso: 0.5 }      // respostas antigas pesam menos: o aluno aprende
   };
 
   const DIA = 864e5;
@@ -151,6 +152,7 @@
       const h = it.h; const ts = resposta.ts || Date.now();
       let w = 1;
       if (resposta.r !== "ns" && resposta.longa && resposta.ms != null && resposta.ms < cfg.chute.ms) w *= cfg.chute.peso; // possível chute
+      if (resposta.adaptada) w *= cfg.adaptada.peso;   // versão adaptada (não calibrada): conta menos no domínio
       if (resposta.r === "ns" && resposta.sessao && resposta.sessao.total >= 3 && resposta.sessao.ns / resposta.sessao.total > cfg.naoSei.limiteSessao) w *= cfg.naoSei.pesoSeAbuso;
       (aluno.resp[h] = aluno.resp[h] || []).push([resposta.id, resposta.r === "ns" ? "ns" : resposta.r ? 1 : 0, resposta.ms == null ? null : Math.round(resposta.ms), ts, w].concat(Number.isInteger(resposta.v) ? [resposta.v] : []));   // v = alternativa marcada (relatório)
       const r = resumo(aluno, h, ts, true);

@@ -1,0 +1,5 @@
+{
+  "versao": 1,
+  "observacao": "Versões adaptadas das questões para a área adaptada (enunciado em partes, linguagem literal). Cada versão é produzida com o Claude e aprovada pelo professor; a chave é o identificador da questão original e o gabarito precisa ser o mesmo.",
+  "versoes": {}
+}

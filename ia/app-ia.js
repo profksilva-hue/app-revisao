@@ -23,7 +23,14 @@
   };
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
   let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
-  let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null;
+  let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null, ADAPT = {};
+  // ---------- área adaptada (proposta de 11/11) ----------
+  // Quem está no grupo da escola abre o mesmo app com apoios. Até o login Microsoft existir,
+  // o site de teste simula o grupo (?area=adaptada / ?area=padrao ou o botão no relatório).
+  const AMB_TESTE = /teste|localhost|127\.0\.0\.1/.test(location.hostname);
+  const adaptada = () => !!(SR.S.ia && SR.S.ia.adaptada);
+  const ehTexto = q => !q.pdf && !/class="ofi pdf"/.test((q.t || []).join(" "));
+  const versao = it => (adaptada() && ADAPT[it.id]) || it.q;   // versão adaptada aprovada, se houver
   let marcada = null, inicioQ = 0, qAtualId = null, verMapa = false, dicaAberta = false, tique = null;
 
   const st = () => { const S = SR.S; if (!S.ia) S.ia = { v: 1, serie: null, aluno: {}, naoVistas: [], diag: null }; return S.ia; };
@@ -37,8 +44,9 @@
         fetch("../ia/habilidades.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
         fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null),
         fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null)
-      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; return x; });
+        fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch("../ia/adaptadas.json").then(r => r.ok ? r.json() : null).catch(() => null)
+      ]).then(x => { (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; ADAPT = (x[4] && x[4].versoes) || {}; return x; });
       H = h; H.habilidades.forEach(x => { HAB[x.id] = x; });
       const itens = Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
       M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
@@ -60,6 +68,7 @@
       });
       MD = Motor.criar({ itens: diag, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
       pronto = true;
+      if (AMB_TESTE && SR.logado()) { const a = new URLSearchParams(location.search).get("area"); if (a === "adaptada") st().adaptada = true; if (a === "padrao") delete st().adaptada; }
       // a tela Hoje é a porta de entrada do app: ao abrir, o aluno cai nela (etapa 5)
       if (SR.logado() && SR.S.tab !== "prof") SR.S.tab = "ia";
     } catch (e) { erro = "Não foi possível carregar a IA agora. Verifique a conexão e recarregue a página."; }
@@ -98,7 +107,8 @@
       const ordem = ordemIntercalada(alvoDiag().hs).filter(x => !sem.includes(x));
       const h = ordem.find(x => !cont[x]) || ordem.find(x => (cont[x] || 0) < 2);
       if (!h) return null;
-      const e = MD.escolher(s.aluno, h, ALVO_DIAG, 1, Date.now(), usadas)[0];
+      const cs = MD.escolher(s.aluno, h, ALVO_DIAG, adaptada() ? 8 : 1, Date.now(), usadas);
+      const e = adaptada() ? (cs.find(c => ehTexto(M.itens[c.id].q)) || cs[0]) : cs[0];
       if (e) return { h, id: e.id };
       sem.push(h); d.semQuestao = sem;
     }
@@ -127,8 +137,8 @@
       if (!s.naoVistas.includes(at.h)) s.naoVistas.push(at.h);
       d.feitas.push({ h: at.h, id: at.id, r: "nv" });
     } else {
-      const r = valor === it.q.a ? 1 : 0;
-      M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa, v: valor });
+      const r = valor === versao(it).a ? 1 : 0;
+      M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: adaptada() ? false : it.longa, v: valor, adaptada: adaptada() && !!ADAPT[at.id] });
       d.feitas.push({ h: at.h, id: at.id, r, ms: ms == null ? null : Math.round(ms) });
     }
     d.usadas.push(at.id);
@@ -207,8 +217,10 @@
   function escolherDoSlot(se, sl) {
     const usadas = new Set(se.resp.map(r => r.id).concat(se.atual ? [se.atual.id] : []));
     const tentar = h => {
-      let c = M.escolher(st().aluno, h, alvoDoSlot(Object.assign({}, sl, { h }), se.trilha), sl.tipo === "facil" ? 25 : 1, Date.now(), usadas);
-      if (sl.tipo === "facil") c = c.filter(e => (M.itens[e.id].nv || 3) <= 2).concat(c).slice(0, 1);
+      let c = M.escolher(st().aluno, h, alvoDoSlot(Object.assign({}, sl, { h }), se.trilha), sl.tipo === "facil" || adaptada() ? 25 : 1, Date.now(), usadas);
+      if (sl.tipo === "facil") c = c.filter(e => (M.itens[e.id].nv || 3) <= 2).concat(c);
+      if (adaptada()) c = c.slice(0, 8).filter(e => ehTexto(M.itens[e.id].q)).concat(c);   // prefere questões em texto (leitura em voz alta)
+      c = c.slice(0, 1);
       return c[0] ? Object.assign({ h }, c[0]) : null;
     };
     return tentar(sl.h) || se.slots.map(x => x.h).filter(h => h !== sl.h).map(tentar).find(Boolean) || null;
@@ -216,7 +228,7 @@
   function comecarSessao(t, curta, escolhidas, rotulo) {
     const s = st(), slots = montarSlots(t, curta, escolhidas); if (!slots.length) return;
     const antes = {}; [...new Set(slots.map(x => x.h))].forEach(h => { antes[h] = estadoDe(h); });
-    s.sessao = { trilha: t, curta: !!curta, inicio: Date.now(), slots, i: 0, resp: [], ns: 0, antes, atual: null, respondida: null, relogio: TR[t].relogio, fim: null, rotulo: rotulo || null };
+    s.sessao = { trilha: t, curta: !!curta, inicio: Date.now(), slots, i: 0, resp: [], ns: 0, antes, atual: null, respondida: null, relogio: adaptada() ? false : TR[t].relogio, fim: null, rotulo: rotulo || null };
     avancar();
   }
   function avancar() {
@@ -231,11 +243,11 @@
   function responderSessao(valor) {
     const s = st(), se = s.sessao, at = se.atual, it = M.itens[at.id];
     const ms = inicioQ ? Date.now() - inicioQ : null;
-    const r = valor === "ns" ? "ns" : (valor === it.q.a ? 1 : 0);
+    const r = valor === "ns" ? "ns" : (valor === versao(it).a ? 1 : 0);
     if (r === "ns") se.ns++;
     if (r === 0 && typeof valor === "number") { s.errosHab = s.errosHab || {}; (s.errosHab[at.h] = s.errosHab[at.h] || []).push({ id: at.id, v: valor }); s.errosHab[at.h] = s.errosHab[at.h].slice(-6); }
     const total = se.resp.length + 1;
-    const out = M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: it.longa, sessao: { ns: se.ns, total }, v: typeof valor === "number" ? valor : undefined });
+    const out = M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: adaptada() ? false : it.longa, sessao: { ns: se.ns, total }, v: typeof valor === "number" ? valor : undefined, adaptada: adaptada() && !!ADAPT[at.id] });
     se.resp.push({ h: at.h, id: at.id, r, tipo: at.tipo, ms: ms == null ? null : Math.round(ms) });
     se.respondida = { valor, r, mudou: out && out.mudou ? { de: out.de, para: out.para } : null, avisoNs: r === "ns" && total >= 3 && se.ns / total > 0.3 && !se.avisouNs };
     if (se.respondida.avisoNs) se.avisouNs = true;
@@ -476,7 +488,7 @@
       <table class="ia-tab"><thead><tr><th>Hab.</th><th>Estado</th><th>Pontos</th><th>± (80%)</th><th>Resp.</th><th>Situação</th><th>Rápidas</th></tr></thead><tbody>
       ${H.habilidades.map(h => { const r = M.resumo(s.aluno, h.id), rp = comMs.filter(x => x.h === h.id && x.ms < 15000 && M.itens[x.id] && M.itens[x.id].longa).length;
         return `<tr><td>${esc(h.id)}</td><td>${NOME[estadoDe(h.id)]}</td><td>${r.pontos || "–"}</td><td>${r.ep != null ? Math.round(128 * r.ep) : "–"}</td><td>${r.n}</td><td>${status(h)}</td><td>${rp || ""}</td></tr>`; }).join("")}</tbody></table>
-      <p class="note">Estimativa geral: θ = ${e.th.toFixed(2)} (média das habilidades ponderada pelo peso na prova). Listas niveladas: ${Object.keys(s.nivel || {}).map(n => `aula ${n} (${s.nivel[n].f}F/${s.nivel[n].m}M/${s.nivel[n].d}D, chance média prevista ${s.nivel[n].ch}%)`).join("; ") || "nenhuma ainda"}.</p></details>`;
+      <p class="note">${adaptada() ? "<b>Área adaptada: ativa.</b> " : ""}Estimativa geral: θ = ${e.th.toFixed(2)} (média das habilidades ponderada pelo peso na prova). Listas niveladas: ${Object.keys(s.nivel || {}).map(n => `aula ${n} (${s.nivel[n].f}F/${s.nivel[n].m}M/${s.nivel[n].d}D, chance média prevista ${s.nivel[n].ch}%)`).join("; ") || "nenhuma ainda"}.</p></details>`;
     const sec = (n, t, c) => c ? `<section class="ia-sec"><h3>${n}. ${t}</h3>${c}</section>` : "";
     return `<div class="ia-relat ia-card"><h2>Meu relatório</h2><p class="note">Atualizado em ${new Date().toLocaleDateString("pt-BR")}. Estimativas na escala do ENEM, calculadas com as suas respostas.</p>
       <p class="ia-frase">${frase}</p>${meta}
@@ -490,6 +502,7 @@
       ${sec(8, "Árvore de habilidades", `<p>Veja como as habilidades se sustentam e o que cada defasagem pode complicar.</p><div class="ia-row"><button class="btn ghost" type="button" data-tab="arv">Abrir a árvore de habilidades</button></div>`)}
       ${sec(9, "Mapa das 30 habilidades", mapa)}
       ${prof}
+      ${AMB_TESTE ? `<p class="note ia-noprint">Ambiente de teste: <button class="ia-mini" type="button" data-iar="simular">${adaptada() ? "Voltar para a área padrão" : "Simular a área adaptada"}</button> (no site oficial, isso virá do grupo da escola no login Microsoft).</p>` : ""}
       <div class="ia-row ia-noprint"><button class="btn ghost" type="button" data-iar="imprimir">Baixar em PDF / imprimir</button><button class="btn ghost" type="button" data-tab="ia">Ir para Hoje</button></div></div>`;
   }
 
@@ -554,11 +567,23 @@
         <input id="ia-busca" class="ia-busca" type="search" placeholder="Buscar tópico (ex.: escala, porcentagem)" aria-label="Buscar tópico"></div>
       ${itens}<div class="ia-row"><button class="btn ghost" type="button" data-ia="hoje">Voltar para Hoje</button></div>`;
   }
+  // Apoio de leitura (área adaptada): parágrafos sem marcação viram partes numeradas e os números ficam em destaque.
+  const destaca = t => t.replace(/(\d[\d.,]*(?:\s?%)?)/g, "<b>$1</b>");
+  function segmenta(ps) {
+    const partes = []; ps.forEach(p => { if (/[<>]/.test(p)) { partes.push(p); return; } p.split(/(?<=[.!?;:])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9“"(])/).forEach(x => { if (x.trim()) partes.push(destaca(x.trim())); }); });
+    return partes.length > 1 ? `<ol class="ia-partes">${partes.map(x => `<li>${x}</li>`).join("")}</ol>` : partes.map(x => `<p>${x}</p>`).join("");
+  }
   function corpoQuestao(q, opts) { // enunciados e alternativas são conteúdo do próprio banco do app, renderizados como nas listas
+    if (adaptada() && ehTexto(q)) {
+      const tb = q.tb ? `<div class="tbl"><table><thead><tr>${q.tb[0].map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${q.tb.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
+      const fig = q.f && SR.D.figs && SR.D.figs[q.f] ? `<div class="fig"><img src="${SR.D.figs[q.f]}" alt="Figura da questão"></div>` : "";
+      return `<div class="txt">${segmenta(q.t || [])}</div>${tb}${fig}${q.c ? `<div class="ia-pede"><b>O que a questão pede:</b> ${q.c}</div>` : ""}<div class="opts">${opts}</div>`;
+    }
     const tb = q.tb ? `<div class="tbl"><table><thead><tr>${q.tb[0].map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${q.tb.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
     const fig = q.f && SR.D.figs && SR.D.figs[q.f] ? `<div class="fig"><img src="${SR.D.figs[q.f]}" alt="Figura da questão"></div>` : "";
     return `<div class="txt">${(q.t || []).map(t => `<p>${t}</p>`).join("")}</div>${tb}${fig}${q.c ? `<p class="cmd">${q.c}</p>` : ""}<div class="opts${q.pdf ? " pdfo" : ""}">${opts}</div>`;
   }
+  const ouvir = `<button class="ia-mini" type="button" data-ia="ouvir">🔊 Ouvir a questão</button>`;
   const opcoes = (q, resp) => q.o.map((o, j) => {
     let c = ""; if (resp) { if (j === q.a) c = " is-right"; else if (j === resp.valor) c = " is-wrong"; }
     return `<button class="opt${c}" type="button" data-iao="${j}" aria-pressed="${(resp ? resp.valor : marcada) === j}" ${resp ? "disabled" : ""}><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`;
@@ -586,10 +611,13 @@
       <button class="btn ghost" type="button" data-ia="trocaSerie">Estou na ${esc(s.serie)}ª série · trocar</button></div></div>`;
   }
   function telaDiag() {
-    const s = st(), d = s.diag, at = d.atual, q = M.itens[at.id].q, k = respondidas(d) + 1, n = limite();
+    const s = st(), d = s.diag, at = d.atual, q = versao(M.itens[at.id]), k = respondidas(d) + 1, n = limite();
     marcaTempo(at.id);
+    if (adaptada() && respondidas(d) === Math.floor(n / 2) && !d.pausaVista) return `<div class="ia-card"><h2>Metade feita!</h2>
+      <p>Você já respondeu ${respondidas(d)} de ${n} questões. Faça uma pausa: beba água, levante um pouco. Quando quiser, continue de onde parou.</p>
+      <div class="ia-row"><button class="btn" type="button" data-ia="pausaOk">Continuar agora</button><button class="btn ghost" type="button" data-ia="pausaDepois">Continuar depois</button></div></div>`;
     return `<div class="ia-prog"><span>Diagnose · questão <b>${Math.min(k, n)}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span></div>
-      <article class="q"><div class="q-h"><b>${esc(at.h)} · ${esc(HAB[at.h].curto)}</b></div>${corpoQuestao(q, opcoes(q, null))}</article>
+      <article class="q"><div class="q-h"><b>${esc(at.h)} · ${esc(HAB[at.h].curto)}</b>${adaptada() && ehTexto(q) ? `<span class="q-r">${ouvir}</span>` : ""}</div>${corpoQuestao(q, opcoes(q, null))}</article>
       <div class="ia-row ia-nav"><button class="btn" type="button" data-ia="confirmar" ${marcada == null ? "disabled" : ""}>Confirmar e seguir</button>
         ${s.serie !== "3" ? `<button class="btn ghost" type="button" data-ia="naoVi">Ainda não estudei este conteúdo</button>` : ""}</div>
       <p class="note">Sua resposta fica salva ao confirmar. Você pode fechar e continuar depois.</p>`;
@@ -640,7 +668,7 @@
         ${sel ? `<p class="ia-selo">Sugerida hoje</p><p class="note">${esc(sug.motivo)}</p>` : ""}
         <h4>${NOME[t]}</h4>
         ${on ? `<ul>${nomes}</ul><p class="note">${n} questões · cerca de ${TR[t].min} min${hs.length > 3 ? ` · +${hs.length - 3} ${hs.length - 3 === 1 ? "habilidade" : "habilidades"} na fila` : ""}</p>
-          <div class="ia-row"><button class="btn" type="button" data-ia-trilha="${t}">Começar</button><button class="btn ghost" type="button" data-ia-trilha="${t}" data-ia-curta="1">Tenho pouco tempo (${n / 2})</button></div>`
+          <div class="ia-row">${adaptada() ? `<button class="btn" type="button" data-ia-trilha="${t}" data-ia-curta="1">Começar (${n / 2} questões)</button><button class="btn ghost" type="button" data-ia-trilha="${t}">Sessão completa (${n})</button>` : `<button class="btn" type="button" data-ia-trilha="${t}">Começar</button><button class="btn ghost" type="button" data-ia-trilha="${t}" data-ia-curta="1">Tenho pouco tempo (${n / 2})</button>`}</div>`
           : `<p class="note">${t === "adiantar" ? "" : "Nenhuma habilidade aqui por enquanto."}</p>`}</div>`;
     };
     const temIntro = habsDaTrilha("adiantar").length > 0;
@@ -678,14 +706,14 @@
       <div class="ia-row"><button class="btn ghost" type="button" data-ia="hoje">Voltar para Hoje</button><button class="btn ghost" type="button" data-tab="aulas">Abrir Aulas e listas</button></div>`;
   }
   function telaSessao() {
-    const s = st(), se = s.sessao, at = se.atual, it = M.itens[at.id], q = it.q, k = se.i + 1, n = se.slots.length, resp = se.respondida;
+    const s = st(), se = s.sessao, at = se.atual, it = M.itens[at.id], q = versao(it), k = se.i + 1, n = se.slots.length, resp = se.respondida;
     marcaTempo(at.id);
     const tipoTxt = { guiada: "Questão guiada", pratica: "Prática", checagem: "Checagem: nível da Fixação", revisao: "Revisão espaçada", prova: "Ritmo de prova", vizinha: "Habilidade vizinha", facil: "Primeiros passos" }[at.tipo] || "";
     const aula = AULA[at.h] && SR.D.aulas.find(a => a.n === AULA[at.h]);
     const antes = k === 1 && !resp ? (se.trilha === "recuperacao" || se.trilha === "adiantar" ? `<div class="ia-antes"><b>Antes de começar:</b> se quiser, leia o resumo da teoria. ${btnTeoria(at.h)}</div>`
       : se.trilha === "fixacao" && BIB[at.h] ? `<div class="ia-antes"><b>Ficha rápida (opcional):</b> ${btnTeoria(at.h)}</div>`
       : se.trilha === "fixacao" && aula && aula.dica ? `<details class="ia-antes"><summary>Ficha rápida (opcional)</summary><p>${aula.dica}</p></details>` : "") : "";
-    const dica = at.tipo === "guiada" && !resp && aula && aula.dica ? (dicaAberta ? `<div class="ia-dica"><b>Dica:</b> ${aula.dica}</div>` : `<button class="btn ghost" type="button" data-ia="dica">Ver uma dica</button>`) : "";
+    const dica = (at.tipo === "guiada" || adaptada()) && !resp && aula && aula.dica ? (dicaAberta ? `<div class="ia-dica"><b>Dica:</b> ${aula.dica}</div>` : `<button class="btn ghost" type="button" data-ia="dica">Ver uma dica</button>`) : "";
     let fb = "";
     if (resp) {
       const certo = resp.r === 1, ns = resp.r === "ns";
@@ -695,13 +723,14 @@
         ${q.sol ? `<p class="sol"><b>Resolução:</b> ${q.sol}</p>` : ""}
         ${resp.mudou ? `<p class="ia-sobe"><b>${esc(at.h)}</b> mudou de trilha: ${pill(resp.mudou.de)} → ${pill(resp.mudou.para)}</p>` : ""}
         ${resp.avisoNs ? `<p class="note">Você usou bastante o “não sei” nesta sessão. Ele ajuda quando você realmente não sabe; quando tiver uma ideia, arrisque: errar também ensina. A partir de agora, o “não sei” pesa pela metade.</p>` : ""}
+        ${adaptada() && k < n && se.slots[se.i + 1] && se.slots[se.i + 1].h !== at.h ? `<p class="ia-aviso">Próxima questão: outra habilidade, <b>${esc(se.slots[se.i + 1].h)} · ${esc(HAB[se.slots[se.i + 1].h].curto)}</b>.</p>` : ""}
         <div class="ia-row">${!certo ? btnTeoria(at.h, "erros") : ""}<button class="btn" type="button" data-ia="proxima">${k < n ? "Próxima questão" : "Ver como foi"}</button></div></div>`;
     }
     const relogio = se.relogio ? `<span class="ia-relogio" id="ia-relogio">0:00</span>` : "";
     return `<div class="ia-prog"><span>${esc(se.rotulo || NOME[se.trilha])} · questão <b>${k}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span>${relogio}
         <button class="ia-mini" type="button" data-ia="relogio">${se.relogio ? "Desligar" : "Ligar"} cronômetro</button></div>
       ${antes}
-      <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r"><small class="ia-motivo">${esc(at.motivo || "")}</small></span></div>
+      <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r">${adaptada() && ehTexto(q) ? ouvir : ""}<small class="ia-motivo">${esc(at.motivo || "")}</small></span></div>
         ${corpoQuestao(q, opcoes(q, resp))}${dica}${fb}</article>
       ${resp ? "" : `<div class="ia-row ia-nav"><button class="btn" type="button" data-ia="responder" ${marcada == null ? "disabled" : ""}>Responder</button>
         ${TR[se.trilha].naoSei ? `<button class="btn ghost" type="button" data-ia="naoSei">Não sei</button>` : ""}
@@ -748,7 +777,8 @@
     }
     else if (s.diag && s.diag.atual && s.diag.emCurso) html = telaDiag();
     else html = telaConvite();
-    v.innerHTML = `<div class="ia-wrap">${html}</div>`;
+    v.innerHTML = `<div class="ia-wrap${adaptada() ? " ia-adapt" : ""}">${html}</div>`;
+    if (window.speechSynthesis) speechSynthesis.cancel();
     const at = resumoAberto ? (BIB[resumoAberto.h] && BIB[resumoAberto.h].exemplo) : (s.sessao && !s.sessao.fim && s.sessao.atual) || (s.diag && !s.diag.fim && s.diag.emCurso && s.diag.atual);
     if (at && M.itens[at.id]) preencherOficiais(M.itens[at.id].aula);
     if (resumoAberto && resumoAberto.foco && !resumoAberto.rolou) { resumoAberto.rolou = true; const el = document.getElementById("ia-sec-" + resumoAberto.foco); if (el) el.scrollIntoView({ block: "start" }); }
@@ -764,6 +794,7 @@
     const br = ev.target.closest("#view-id button[data-iar]");
     if (br) { const s = st();
       if (br.dataset.iar === "meta") { const v = +((document.getElementById("ia-meta") || {}).value || 0); s.meta = v >= 400 && v <= 950 ? Math.round(v) : null; salvar(); SR.renderAll(); }
+      if (br.dataset.iar === "simular" && AMB_TESTE) { if (s.adaptada) delete s.adaptada; else s.adaptada = true; salvar(); SR.renderAll(); return; }
       if (br.dataset.iar === "imprimir") { document.body.classList.add("ia-imprimir-rel"); window.print(); setTimeout(() => document.body.classList.remove("ia-imprimir-rel"), 500); }
       return; }
     const bl = ev.target.closest("button[data-ia-lista]");
@@ -795,6 +826,11 @@
     else if (a === "sair") { terminarSessao(); render(); topo(); }
     else if (a === "hoje") { verMapa = false; telaConteudos = false; telaBiblio = false; s.diag.mapaVisto = true; if (s.sessao && s.sessao.fim) s.sessao.visto = true; salvar(); render(); topo(); }
     else if (a === "mapa") { verMapa = true; telaConteudos = false; render(); topo(); }
+    else if (a === "ouvir") { const q = document.querySelector("#view-ia article.q"); if (!q || !window.speechSynthesis) return;
+      const partes = [...q.querySelectorAll(".txt, .tbl, .ia-pede, .cmd")].map(e => e.innerText).concat([...q.querySelectorAll(".opts .opt")].map((o, j) => "Alternativa " + L[j] + ": " + o.innerText.replace(/^[A-E]\s*/, "")));
+      speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(partes.join(". ")); u.lang = "pt-BR"; u.rate = 0.95; speechSynthesis.speak(u); }
+    else if (a === "pausaOk") { s.diag.pausaVista = true; salvar(); render(); topo(); }
+    else if (a === "pausaDepois") { s.diag.pausaVista = true; s.diag.emCurso = false; salvar(); SR.renderAll(); topo(); }
     else if (a === "resumoCompleto") { resumoAberto.completo = true; render(); }
     else if (a === "fecharResumo") { resumoAberto = null; render(); topo(); }
     else if (a === "biblioteca") { telaBiblio = true; telaConteudos = false; verMapa = false; render(); topo(); }
@@ -885,6 +921,11 @@
   .ia-leg,.ia-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
   .ia-chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:600}
   .ia-det{border:1px solid var(--rule);border-radius:var(--radius);padding:12px 16px;margin-top:8px}.ia-det h4{margin:12px 0 4px}.ia-det p{margin:4px 0}
+  .ia-adapt{font-size:17px;line-height:1.75}.ia-adapt .txt p,.ia-adapt .ia-partes li{font-size:17px;line-height:1.75}
+  .ia-adapt .opt{min-height:52px}.ia-adapt .ia-card,.ia-adapt .q{padding:22px}
+  .ia-partes{padding-left:26px;margin:4px 0}.ia-partes li{margin:0 0 10px}
+  .ia-pede{background:var(--pen-soft);border-left:4px solid var(--pen);border-radius:6px;padding:10px 14px;margin:12px 0}
+  .ia-aviso{background:var(--mark-soft);border-radius:6px;padding:8px 12px}
   .ia-motivo{color:var(--ink-2);font-weight:400}
   .ia-antes,.ia-dica{background:var(--pen-soft);border-radius:8px;padding:10px 14px;margin:0 0 12px}
   .ia-antes summary{cursor:pointer;font-weight:700;color:var(--pen)}
