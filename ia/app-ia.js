@@ -552,15 +552,28 @@
       return `<p>Esta habilidade se apoia em:</p><div class="ia-row">${ds.map(d => BIB[d] ? `<button class="ia-mini" type="button" data-ia-resumo="${esc(d)}">${esc(d)} · ${esc(HAB[d].curto)}</button>` : `<span class="note">${esc(d)} · ${esc(HAB[d].curto)}</span>`).join("")}</div>`; }
     return "";
   }
+  // Área adaptada: apoios visuais do resumo (esquema do caminho, figura, decisão, vocabulário, pistas e cartão de bolso).
+  function apoioAdaptado(r) {
+    const a = r.adaptado; if (!adaptada() || !a) return { antes: "", depois: "" };
+    const sec = (id, t, c) => c ? `<section class="ia-sec ia-apoio" id="ia-sec-${id}"><h3>${t}</h3>${c}</section>` : "";
+    const esquema = (a.esquema || []).length ? `<ol class="ia-fluxo">${a.esquema.map((p, i) => `<li><span class="ia-fluxo-ic" aria-hidden="true">${p.ic}</span><div><b>${i + 1}. ${p.t}</b><p>${p.txt}</p></div></li>`).join("")}</ol>` : "";
+    const figura = a.figura ? `<figure class="ia-fig"><div class="ia-fig-rola" tabindex="0" aria-label="Figura (role para o lado)">${a.figura}</div><p class="ia-fig-dica">↔ Arraste a figura para o lado para ver tudo.</p>${a.legenda ? `<figcaption>${a.legenda}</figcaption>` : ""}</figure>` : "";
+    const d = a.decisao, decisao = d ? `<div class="ia-dec"><p class="ia-dec-q">${d.pergunta}</p><div class="ia-dec-r"><div><b>${d.sim.t}</b><p>${d.sim.r}</p></div><div><b>${d.nao.t}</b><p>${d.nao.r}</p></div></div></div>` : "";
+    const palavras = (a.palavras || []).length ? `<dl class="ia-gloss">${a.palavras.map(w => `<div><dt>${w.termo}</dt><dd>${w.sig}</dd></div>`).join("")}</dl>` : "";
+    const pistas = (a.pistas || []).length ? `<ul class="ia-pistas">${a.pistas.map(x => `<li><span>${x.frase}</span><span aria-hidden="true">→</span><span>${x.indica}</span></li>`).join("")}</ul>` : "";
+    const cartao = (a.cartao || []).length ? `<div class="ia-cartao"><b>Cartão de bolso · ${esc(r.h)}</b><ul>${a.cartao.map(x => `<li>${x}</li>`).join("")}</ul></div>` : "";
+    return { antes: sec("caminho", "O caminho em 5 passos", esquema) + sec("figura", "Veja a ideia", figura) + sec("decidir", "Como decidir", decisao) + sec("palavras", "Palavras importantes", palavras),
+      depois: sec("pistas", "Pistas no enunciado", pistas) + sec("cartao", "Para levar com você", cartao) };
+  }
   function telaResumo() {
     const { h, completo, foco } = resumoAberto, r = BIB[h], e = estadoDe(h), mostra = completo ? PROF.introducao : (PROF[e] || PROF.introducao).concat(foco && !(PROF[e] || []).includes(foco) ? [foco] : []);
-    const corpo = SECOES.filter(([k]) => mostra.includes(k) && !(k === "passos" && (r.passosDetalhados || []).length && mostra.includes("detalhado"))).map(([k, t]) => { const c = secaoHTML(r, k); return c ? `<section class="ia-sec" id="ia-sec-${k}"><h3>${t}</h3>${c}</section>` : ""; }).join("");
+    const corpo = SECOES.filter(([k]) => mostra.includes(k) && !(k === "passos" && (r.passosDetalhados || []).length && mostra.includes("detalhado"))).map(([k, t]) => { const c = secaoHTML(r, k); return c ? `<section class="ia-sec" id="ia-sec-${k}"><h3>${t}</h3>${c}</section>` : ""; }).join(""), ap = apoioAdaptado(r);
     return `<div class="ia-resumo">
       ${r.aprovado ? "" : `<p class="ia-rasc">Rascunho em revisão pelo professor · só aparece no site de teste</p>`}
       <p class="note">${esc(h)} · ${esc(HAB[h].nome)} · ${esc(r.serie || "")}</p>
       <h2>${esc(r.topico)}</h2>
       <p>${pill(e)} ${completo || e === "introducao" ? "Resumo completo" : `Versão para quem está em ${NOME[e]}`}</p>
-      ${corpo}
+      ${ap.antes}${corpo}${ap.depois}
       <div class="ia-row ia-noprint">${completo || e === "introducao" ? "" : `<button class="btn ghost" type="button" data-ia="resumoCompleto">Ver o resumo completo</button>`}
         <button class="btn ghost" type="button" data-ia="imprimir">Baixar em PDF / imprimir</button>
         <button class="btn" type="button" data-ia="fecharResumo">Voltar</button></div></div>`;
@@ -840,8 +853,11 @@
     else if (a === "hoje") { verMapa = false; telaConteudos = false; telaBiblio = false; s.diag.mapaVisto = true; if (s.sessao && s.sessao.fim) s.sessao.visto = true; salvar(); render(); topo(); }
     else if (a === "mapa") { verMapa = true; telaConteudos = false; render(); topo(); }
     else if (a === "ouvir") { const q = document.querySelector("#view-ia article.q"); if (!q || !window.speechSynthesis) return;
+      const bt = ev.target.closest("[data-ia=ouvir]"), volta = () => { document.querySelectorAll("#view-ia [data-ia=ouvir]").forEach(b => { b.textContent = "🔊 Ouvir a questão"; b.setAttribute("aria-pressed", "false"); }); };
+      if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); volta(); return; }   // segundo toque: para a leitura
       const partes = [...q.querySelectorAll(".txt, .tbl, .ia-pede, .cmd")].map(e => e.innerText).concat([...q.querySelectorAll(".opts .opt")].map((o, j) => "Alternativa " + L[j] + ": " + o.innerText.replace(/^[A-E]\s*/, "")));
-      speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(partes.join(". ")); u.lang = "pt-BR"; u.rate = 0.95; speechSynthesis.speak(u); }
+      speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(partes.join(". ")); u.lang = "pt-BR"; u.rate = 0.95; u.onend = u.onerror = volta; speechSynthesis.speak(u);
+      if (bt) { bt.textContent = "⏹ Parar a leitura"; bt.setAttribute("aria-pressed", "true"); } }
     else if (a === "pausaOk") { s.diag.pausaVista = true; salvar(); render(); topo(); }
     else if (a === "pausaDepois") { s.diag.pausaVista = true; s.diag.emCurso = false; salvar(); SR.renderAll(); topo(); }
     else if (a === "resumoCompleto") { resumoAberto.completo = true; render(); }
@@ -934,6 +950,22 @@
   .ia-leg,.ia-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
   .ia-chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:600}
   .ia-det{border:1px solid var(--rule);border-radius:var(--radius);padding:12px 16px;margin-top:8px}.ia-det h4{margin:12px 0 4px}.ia-det p{margin:4px 0}
+  .ia-fluxo{list-style:none;padding:0;margin:0;display:grid;gap:0}.ia-fluxo li{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--rule);border-radius:10px;padding:10px 14px;background:var(--sheet);position:relative;margin-bottom:22px}
+  .ia-fluxo li:not(:last-child)::after{content:"↓";position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);color:var(--pen);font-size:18px;line-height:22px}
+  .ia-fluxo-ic{font-size:26px;line-height:1;flex:none;width:34px;text-align:center}.ia-fluxo p{margin:2px 0 0}
+  .ia-fig{margin:0}.ia-fig figcaption{font-size:15px;color:var(--ink-2);margin-top:6px}.ia-resumo .ia-fluxo{padding-left:0;margin-left:0}
+  .ia-fig-rola{overflow-x:auto;-webkit-overflow-scrolling:touch}.ia-fig-dica{display:none;font-size:13px;color:var(--ink-2);margin:4px 0 0}
+  @media (max-width:640px){.ia-fig-rola .ia-svg{min-width:560px}.ia-fig-dica{display:block}}
+  .ia-svg{width:100%;height:auto;display:block;font-family:var(--f-ui)}.ia-svg .sv-cx{fill:var(--pen-soft);stroke:var(--rule)}.ia-svg .sv-tt{fill:var(--pen);font-weight:700;font-size:20px}
+  .ia-svg .sv-lb{fill:var(--ink-2);font-size:15px}.ia-svg .sv-n{fill:var(--ink);font-weight:700;font-size:22px}.ia-svg .sv-op{fill:var(--ok);font-weight:700;font-size:18px}.ia-svg .sv-opd{fill:var(--bad)}
+  .ia-svg .sv-rg{fill:var(--ink);font-size:14px}.ia-svg .sv-up,.ia-svg .sv-rg-l{stroke:var(--ok);stroke-width:4;fill:none}.ia-svg .sv-upf{fill:var(--ok)}.ia-svg .sv-dn{stroke:var(--bad);stroke-width:4;fill:none}.ia-svg .sv-dnf{fill:var(--bad)}
+  .ia-svg .sv-rg-l{stroke:var(--pen)}.ia-svg .sv-esc rect{fill:var(--sheet);stroke:var(--pen);stroke-width:2}.ia-svg .sv-esc text{fill:var(--ink);font-weight:700;font-size:16px}
+  .ia-dec{border:2px solid var(--pen);border-radius:12px;padding:12px}.ia-dec-q{font-weight:700;margin:0 0 10px}.ia-dec-r{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ia-dec-r>div{border-radius:10px;padding:10px;background:var(--ok-soft)}.ia-dec-r>div+div{background:var(--mark-soft)}.ia-dec-r p{margin:4px 0 0}
+  .ia-gloss{margin:0;display:grid;gap:8px}.ia-gloss div{border-left:4px solid var(--mark);padding:2px 10px}.ia-gloss dt{font-weight:700}.ia-gloss dd{margin:0}
+  .ia-pistas{list-style:none;padding:0;margin:0;display:grid;gap:8px}.ia-pistas li{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;border:1px solid var(--rule);border-radius:8px;padding:8px 10px}.ia-pistas li span:first-child{font-weight:700}
+  .ia-cartao{border:2px dashed var(--pen);border-radius:12px;padding:12px 16px;background:var(--pen-soft)}.ia-cartao ul{margin:6px 0 0;padding-left:20px}
+  @media (max-width:520px){.ia-dec-r{grid-template-columns:1fr}.ia-pistas li{grid-template-columns:1fr}.ia-pistas li span[aria-hidden]{display:none}}
   .ia-adapt{font-size:17px;line-height:1.75}.ia-adapt .txt p,.ia-adapt .ia-partes li{font-size:17px;line-height:1.75}
   .ia-adapt .opt{min-height:52px}.ia-adapt .ia-card,.ia-adapt .q{padding:22px}
   .ia-partes{padding-left:26px;margin:4px 0}.ia-partes li{margin:0 0 10px}
