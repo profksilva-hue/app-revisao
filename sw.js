@@ -3,7 +3,7 @@
    - As listas de cada aula (enem/of/aN.json) são guardadas conforme o aluno abre a aula.
    - Sempre que você publicar uma atualização, MUDE A VERSÃO abaixo (ex.: v2, v3...).
      Assim os celulares dos alunos baixam a versão nova. */
-const VERSAO = "revisao-v16";
+const VERSAO = "revisao-v17";
 
 const CASCA = [
   "./",
@@ -39,10 +39,13 @@ self.addEventListener("fetch", ev => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
+  // Login com a conta da escola (/auth/) e dados da sessão (/api/): sempre direto da rede, nunca do cache.
+  if (url.origin === self.location.origin && /^\/(auth|api)\//.test(url.pathname)) return;
+
   // Páginas: tenta a rede primeiro (conteúdo sempre atualizado) e cai no cache se estiver offline.
   if (req.mode === "navigate") {
     ev.respondWith(
-      fetch(req).then(r => { const c = r.clone(); caches.open(VERSAO).then(x => x.put(req, c)); return r; })
+      fetch(req).then(r => { if (r && r.ok && r.type === "basic") { const c = r.clone(); caches.open(VERSAO).then(x => x.put(req, c)); } return r; })
         .catch(() => caches.match(req).then(r => r || caches.match("./index.html")))
     );
     return;

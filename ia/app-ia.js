@@ -23,7 +23,7 @@
   };
   let H = null, M = null, MD = null, HAB = {}, AULA = {}, pronto = false, erro = "";
   let AULAHABS = {}, telaConteudos = false, modoConteudos = "tema";
-  let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null, ADAPT = {};
+  let BIB = {}, resumoAberto = null, telaBiblio = false, ERROS = null, ADAPT = {}, SSO = null;
   // ---------- área adaptada (proposta de 11/11) ----------
   // Quem está no grupo da escola abre o mesmo app com apoios. Até o login Microsoft existir,
   // o site de teste simula o grupo (?area=adaptada / ?area=padrao ou o botão no relatório).
@@ -68,7 +68,13 @@
       });
       MD = Motor.criar({ itens: diag, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
       pronto = true;
-      if (AMB_TESTE && SR.logado()) { const a = new URLSearchParams(location.search).get("area"); if (a === "adaptada") st().adaptada = true; if (a === "padrao") delete st().adaptada; }
+      // Login com a conta Microsoft da escola: quando ativo, o app entra sozinho com o e-mail institucional
+      // e a área adaptada vem do papel atribuído pela escola (nunca do aparelho).
+      try {
+        const r = await fetch("/api/eu", { cache: "no-store", credentials: "same-origin" });
+        if (r.ok) { const u = await r.json(); if (u && u.sso && u.email) { SSO = u; if (SR.email() !== u.email) SR.entrarSSO(u.email); if (u.adaptada) st().adaptada = true; else delete st().adaptada; salvar(); } }
+      } catch (e) { /* sem login configurado: segue pelo e-mail digitado */ }
+      if (!SSO && AMB_TESTE && SR.logado()) { const a = new URLSearchParams(location.search).get("area"); if (a === "adaptada") st().adaptada = true; if (a === "padrao") delete st().adaptada; }
       // a tela Hoje é a porta de entrada do app: ao abrir, o aluno cai nela (etapa 5)
       if (SR.logado() && SR.S.tab !== "prof") SR.S.tab = "ia";
     } catch (e) { erro = "Não foi possível carregar a IA agora. Verifique a conexão e recarregue a página."; }
@@ -502,7 +508,8 @@
       ${sec(8, "Árvore de habilidades", `<p>Veja como as habilidades se sustentam e o que cada defasagem pode complicar.</p><div class="ia-row"><button class="btn ghost" type="button" data-tab="arv">Abrir a árvore de habilidades</button></div>`)}
       ${sec(9, "Mapa das 30 habilidades", mapa)}
       ${prof}
-      ${AMB_TESTE ? `<p class="note ia-noprint">Ambiente de teste: <button class="ia-mini" type="button" data-iar="simular">${adaptada() ? "Voltar para a área padrão" : "Simular a área adaptada"}</button> (no site oficial, isso virá do grupo da escola no login Microsoft).</p>` : ""}
+      ${SSO ? `<p class="note ia-noprint">Conectado com a conta da escola (${esc(SSO.email)}). <a href="/auth/sair">Sair da conta</a></p>` : ""}
+      ${AMB_TESTE && !SSO ? `<p class="note ia-noprint">Ambiente de teste: <button class="ia-mini" type="button" data-iar="simular">${adaptada() ? "Voltar para a área padrão" : "Simular a área adaptada"}</button> (no site oficial, isso virá do grupo da escola no login Microsoft).</p>` : ""}
       <div class="ia-row ia-noprint"><button class="btn ghost" type="button" data-iar="imprimir">Baixar em PDF / imprimir</button><button class="btn ghost" type="button" data-tab="ia">Ir para Hoje</button></div></div>`;
   }
 
@@ -794,7 +801,7 @@
     const br = ev.target.closest("#view-id button[data-iar]");
     if (br) { const s = st();
       if (br.dataset.iar === "meta") { const v = +((document.getElementById("ia-meta") || {}).value || 0); s.meta = v >= 400 && v <= 950 ? Math.round(v) : null; salvar(); SR.renderAll(); }
-      if (br.dataset.iar === "simular" && AMB_TESTE) { if (s.adaptada) delete s.adaptada; else s.adaptada = true; salvar(); SR.renderAll(); return; }
+      if (br.dataset.iar === "simular" && AMB_TESTE && !SSO) { if (s.adaptada) delete s.adaptada; else s.adaptada = true; salvar(); SR.renderAll(); return; }
       if (br.dataset.iar === "imprimir") { document.body.classList.add("ia-imprimir-rel"); window.print(); setTimeout(() => document.body.classList.remove("ia-imprimir-rel"), 500); }
       return; }
     const bl = ev.target.closest("button[data-ia-lista]");

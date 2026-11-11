@@ -2387,7 +2387,7 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
   if (window.claude && typeof window.claude.use === "function") initCloud();
   else { cloud = "off"; renderAll(); }
   // ponte para a IA adaptativa (ia/app-ia.js): só leitura do estado e funções de exibição/salvamento
-  window.SR = { get S() { return S; }, D, esc, optT, persist, renderAll, aula, pool, tentOf, nAns, logado: () => !!(perfil && perfil.email) };
+  window.SR = { get S() { return S; }, D, esc, optT, persist, renderAll, aula, pool, tentOf, nAns, logado: () => !!(perfil && perfil.email), email: () => perfil && perfil.email, entrarSSO: em => entrar(em) };
 })();
 </script>
 
