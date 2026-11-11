@@ -1495,9 +1495,9 @@ ${v.o.map((o, j) => L[j] + ") " + plain(o)).join("\n")}`).join("\n\n")}`;
     if ((prof || 0) > 8) return false;
     if (o === null || typeof o === "boolean") return true;
     if (typeof o === "number") return isFinite(o);
-    if (typeof o === "string") return o.length <= 200 && /^[A-Za-z0-9 _.:@+~\/-]*$/.test(o);
+    if (typeof o === "string") return o.length <= 200 && /^[A-Za-z0-9À-ÿ ·,()_.:@+~\/-]*$/.test(o);   // textos da IA (rótulos de sessão) têm acentos; nunca < > " ' &
     if (Array.isArray(o)) return o.length <= 2000 && o.every(x => dadosSeguros(x, (prof || 0) + 1));
-    if (typeof o === "object") { const ks = Object.keys(o); return ks.length <= 2000 && ks.every(k => /^[A-Za-z0-9_.~-]{1,40}$/.test(k) && dadosSeguros(o[k], (prof || 0) + 1)); }
+    if (typeof o === "object") { const ks = Object.keys(o); return ks.length <= 2000 && ks.every(k => /^[A-Za-z0-9_. ~-]{1,40}$/.test(k) && dadosSeguros(o[k], (prof || 0) + 1)); }
     return false;
   }
   function lerCodigo(txt) {

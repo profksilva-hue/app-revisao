@@ -1,0 +1,727 @@
+{
+ "versao": 1,
+ "fonte": "Matriz do PAS/UnB (subprograma 2026), habilidades de Matemática das etapas 1, 2 e 3, como no app do PAS. Dependências e pesos: proposta para revisão do professor.",
+ "areas": [
+  {
+   "id": "F",
+   "nome": "Funções e álgebra"
+  },
+  {
+   "id": "S",
+   "nome": "Sequências e juros"
+  },
+  {
+   "id": "T",
+   "nome": "Trigonometria e fenômenos periódicos"
+  },
+  {
+   "id": "G",
+   "nome": "Geometria e medidas"
+  },
+  {
+   "id": "E",
+   "nome": "Dados, contagem e probabilidade"
+  },
+  {
+   "id": "A",
+   "nome": "Geometria analítica, matrizes e complexos"
+  }
+ ],
+ "nivelParaB": {
+  "1": 0.47,
+  "2": 1.29,
+  "3": 1.96,
+  "4": 2.68,
+  "5": 3.71
+ },
+ "habilidades": [
+  {
+   "id": "PAS1 MAT1",
+   "sigla": "1.1",
+   "etapa": 1,
+   "nome": "Reconhecer axiomas e resultados de paralelismo, perpendicularismo e congruência; construções com régua e compasso",
+   "area": "G",
+   "peso": 1.5,
+   "depende": [],
+   "base": [
+    "PAS1 MAT2",
+    "PAS1 MAT3",
+    "PAS1 MAT4"
+   ],
+   "curto": "Paralelismo e congruência"
+  },
+  {
+   "id": "PAS1 MAT2",
+   "sigla": "1.2",
+   "etapa": 1,
+   "nome": "Interpretar números reais na reta, semelhança e trigonometria, incluindo as leis dos senos e dos cossenos",
+   "area": "T",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT1"
+   ],
+   "base": [
+    "PAS2 MAT1"
+   ],
+   "curto": "Semelhança e leis dos senos e cossenos"
+  },
+  {
+   "id": "PAS1 MAT3",
+   "sigla": "1.3",
+   "etapa": 1,
+   "nome": "Definir e calcular perímetros e áreas de regiões planas em situações reais",
+   "area": "G",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT1"
+   ],
+   "base": [
+    "PAS2 MAT4",
+    "PAS2 MAT7"
+   ],
+   "curto": "Perímetros e áreas"
+  },
+  {
+   "id": "PAS1 MAT4",
+   "sigla": "1.4",
+   "etapa": 1,
+   "nome": "Identificar polígonos que ladrilham o plano e resolver problemas de ladrilhamento",
+   "area": "G",
+   "peso": 1.0,
+   "depende": [
+    "PAS1 MAT1"
+   ],
+   "base": [],
+   "curto": "Ladrilhamentos"
+  },
+  {
+   "id": "PAS1 MAT5",
+   "sigla": "1.5",
+   "etapa": 1,
+   "nome": "Analisar fenômenos com números reais e funções, conversões de unidades e indicadores",
+   "area": "F",
+   "peso": 1.5,
+   "depende": [],
+   "base": [
+    "PAS1 MAT6",
+    "PAS1 MAT10",
+    "PAS1 MAT13",
+    "PAS2 MAT10"
+   ],
+   "curto": "Números reais e indicadores"
+  },
+  {
+   "id": "PAS1 MAT6",
+   "sigla": "1.6",
+   "etapa": 1,
+   "nome": "Identificar domínio, imagem, crescimento e decrescimento em representações algébricas e gráficas",
+   "area": "F",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT5"
+   ],
+   "base": [
+    "PAS1 MAT7",
+    "PAS1 MAT8",
+    "PAS1 MAT9",
+    "PAS1 MAT10",
+    "PAS2 MAT2"
+   ],
+   "curto": "Domínio, imagem e crescimento"
+  },
+  {
+   "id": "PAS1 MAT7",
+   "sigla": "1.7",
+   "etapa": 1,
+   "nome": "Resolver problemas com funções afins, quadráticas e outras, relacionando tabelas e gráficos",
+   "area": "F",
+   "peso": 1.5,
+   "depende": [
+    "PAS1 MAT6"
+   ],
+   "base": [],
+   "curto": "Funções em tabelas e gráficos"
+  },
+  {
+   "id": "PAS1 MAT8",
+   "sigla": "1.8",
+   "etapa": 1,
+   "nome": "Modelar situações de taxa constante com funções afins (investimentos, movimento uniforme)",
+   "area": "F",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT6"
+   ],
+   "base": [
+    "PAS1 MAT14",
+    "PAS3 MAT1"
+   ],
+   "curto": "Função afim e taxa constante"
+  },
+  {
+   "id": "PAS1 MAT9",
+   "sigla": "1.9",
+   "etapa": 1,
+   "nome": "Modelar com funções quadráticas, identificando máximos e mínimos (lançamentos, lucro de monopólio)",
+   "area": "F",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT6"
+   ],
+   "base": [
+    "PAS3 MAT10",
+    "PAS3 MAT12"
+   ],
+   "curto": "Função quadrática: máximo e mínimo"
+  },
+  {
+   "id": "PAS1 MAT10",
+   "sigla": "1.10",
+   "etapa": 1,
+   "nome": "Resolver problemas com funções exponenciais (queda com atrito, finanças, demografia)",
+   "area": "F",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT6",
+    "PAS1 MAT5"
+   ],
+   "base": [
+    "PAS1 MAT11",
+    "PAS1 MAT12",
+    "PAS1 MAT16"
+   ],
+   "curto": "Função exponencial"
+  },
+  {
+   "id": "PAS1 MAT11",
+   "sigla": "1.11",
+   "etapa": 1,
+   "nome": "Resolver problemas com funções logarítmicas (sismos, som, pH, radioatividade, datação)",
+   "area": "F",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT10"
+   ],
+   "base": [
+    "PAS1 MAT12"
+   ],
+   "curto": "Função logarítmica"
+  },
+  {
+   "id": "PAS1 MAT12",
+   "sigla": "1.12",
+   "etapa": 1,
+   "nome": "Reconhecer domínio, imagem e crescimento de exponenciais e logaritmos e a adequação dos modelos",
+   "area": "F",
+   "peso": 0.5,
+   "depende": [
+    "PAS1 MAT10",
+    "PAS1 MAT11"
+   ],
+   "base": [],
+   "curto": "Exponenciais e logaritmos: modelos"
+  },
+  {
+   "id": "PAS1 MAT13",
+   "sigla": "1.13",
+   "etapa": 1,
+   "nome": "Reconhecer padrões em progressões aritméticas e sua razão",
+   "area": "S",
+   "peso": 1.5,
+   "depende": [
+    "PAS1 MAT5"
+   ],
+   "base": [
+    "PAS1 MAT14",
+    "PAS1 MAT15"
+   ],
+   "curto": "Progressão aritmética"
+  },
+  {
+   "id": "PAS1 MAT14",
+   "sigla": "1.14",
+   "etapa": 1,
+   "nome": "Relacionar progressões aritméticas a funções afins e usar juros para analisar orçamentos",
+   "area": "S",
+   "peso": 0.5,
+   "depende": [
+    "PAS1 MAT13",
+    "PAS1 MAT8"
+   ],
+   "base": [],
+   "curto": "PA, função afim e orçamentos"
+  },
+  {
+   "id": "PAS1 MAT15",
+   "sigla": "1.15",
+   "etapa": 1,
+   "nome": "Reconhecer padrões em progressões geométricas e sua razão",
+   "area": "S",
+   "peso": 1.0,
+   "depende": [
+    "PAS1 MAT13"
+   ],
+   "base": [
+    "PAS1 MAT16"
+   ],
+   "curto": "Progressão geométrica"
+  },
+  {
+   "id": "PAS1 MAT16",
+   "sigla": "1.16",
+   "etapa": 1,
+   "nome": "Relacionar progressões geométricas a funções exponenciais e comparar juros simples e compostos",
+   "area": "S",
+   "peso": 1.0,
+   "depende": [
+    "PAS1 MAT15",
+    "PAS1 MAT10"
+   ],
+   "base": [],
+   "curto": "PG, exponencial e juros compostos"
+  },
+  {
+   "id": "PAS2 MAT1",
+   "sigla": "2.1",
+   "etapa": 2,
+   "nome": "Deduzir e aplicar as fórmulas do seno e do cosseno da soma a partir da lei dos cossenos; ciclo trigonométrico",
+   "area": "T",
+   "peso": 1.5,
+   "depende": [
+    "PAS1 MAT2"
+   ],
+   "base": [
+    "PAS2 MAT2",
+    "PAS2 MAT3",
+    "PAS3 MAT6",
+    "PAS3 MAT9"
+   ],
+   "curto": "Seno e cosseno da soma"
+  },
+  {
+   "id": "PAS2 MAT2",
+   "sigla": "2.2",
+   "etapa": 2,
+   "nome": "Modelar fenômenos periódicos (marés, ondas, som) com funções trigonométricas",
+   "area": "T",
+   "peso": 2.0,
+   "depende": [
+    "PAS2 MAT1",
+    "PAS1 MAT6"
+   ],
+   "base": [],
+   "curto": "Fenômenos periódicos"
+  },
+  {
+   "id": "PAS2 MAT3",
+   "sigla": "2.3",
+   "etapa": 2,
+   "nome": "Usar radianos em movimento circular e analisar a hélice e suas projeções",
+   "area": "T",
+   "peso": 1.5,
+   "depende": [
+    "PAS2 MAT1"
+   ],
+   "base": [
+    "PAS2 MAT8"
+   ],
+   "curto": "Radianos e movimento circular"
+  },
+  {
+   "id": "PAS2 MAT4",
+   "sigla": "2.4",
+   "etapa": 2,
+   "nome": "Reconhecer sólidos, seus elementos e planificações",
+   "area": "G",
+   "peso": 1.5,
+   "depende": [
+    "PAS1 MAT3"
+   ],
+   "base": [
+    "PAS2 MAT5",
+    "PAS2 MAT6",
+    "PAS2 MAT7"
+   ],
+   "curto": "Sólidos e planificações"
+  },
+  {
+   "id": "PAS2 MAT5",
+   "sigla": "2.5",
+   "etapa": 2,
+   "nome": "Reconhecer as cônicas como seções do cone e suas propriedades refletoras",
+   "area": "G",
+   "peso": 1.5,
+   "depende": [
+    "PAS2 MAT4"
+   ],
+   "base": [],
+   "curto": "Cônicas"
+  },
+  {
+   "id": "PAS2 MAT6",
+   "sigla": "2.6",
+   "etapa": 2,
+   "nome": "Aplicar o princípio de Cavalieri ao cálculo de volumes",
+   "area": "G",
+   "peso": 1.0,
+   "depende": [
+    "PAS2 MAT4"
+   ],
+   "base": [],
+   "curto": "Princípio de Cavalieri"
+  },
+  {
+   "id": "PAS2 MAT7",
+   "sigla": "2.7",
+   "etapa": 2,
+   "nome": "Calcular áreas de superfície e volumes de sólidos em situações reais",
+   "area": "G",
+   "peso": 2.0,
+   "depende": [
+    "PAS2 MAT4",
+    "PAS1 MAT3"
+   ],
+   "base": [
+    "PAS2 MAT8"
+   ],
+   "curto": "Áreas de superfície e volumes"
+  },
+  {
+   "id": "PAS2 MAT8",
+   "sigla": "2.8",
+   "etapa": 2,
+   "nome": "Usar a geometria da esfera para analisar paralelos, meridianos e distâncias na Terra",
+   "area": "G",
+   "peso": 1.0,
+   "depende": [
+    "PAS2 MAT7",
+    "PAS2 MAT3"
+   ],
+   "base": [
+    "PAS2 MAT9"
+   ],
+   "curto": "Esfera e coordenadas na Terra"
+  },
+  {
+   "id": "PAS2 MAT9",
+   "sigla": "2.9",
+   "etapa": 2,
+   "nome": "Compreender projeções cartográficas, suas deformações e rotas",
+   "area": "G",
+   "peso": 1.0,
+   "depende": [
+    "PAS2 MAT8"
+   ],
+   "base": [],
+   "curto": "Projeções cartográficas"
+  },
+  {
+   "id": "PAS2 MAT10",
+   "sigla": "2.10",
+   "etapa": 2,
+   "nome": "Ler e interpretar criticamente tabelas e gráficos",
+   "area": "E",
+   "peso": 1.5,
+   "depende": [
+    "PAS1 MAT5"
+   ],
+   "base": [
+    "PAS2 MAT11",
+    "PAS2 MAT12"
+   ],
+   "curto": "Leitura de tabelas e gráficos"
+  },
+  {
+   "id": "PAS2 MAT11",
+   "sigla": "2.11",
+   "etapa": 2,
+   "nome": "Escolher a representação gráfica adequada a um conjunto de dados",
+   "area": "E",
+   "peso": 1.0,
+   "depende": [
+    "PAS2 MAT10"
+   ],
+   "base": [],
+   "curto": "Escolha do gráfico adequado"
+  },
+  {
+   "id": "PAS2 MAT12",
+   "sigla": "2.12",
+   "etapa": 2,
+   "nome": "Calcular e interpretar medidas de tendência central, de dispersão e de desigualdade",
+   "area": "E",
+   "peso": 2.0,
+   "depende": [
+    "PAS2 MAT10"
+   ],
+   "base": [],
+   "curto": "Média, dispersão e desigualdade"
+  },
+  {
+   "id": "PAS2 MAT13",
+   "sigla": "2.13",
+   "etapa": 2,
+   "nome": "Resolver problemas de contagem: princípio multiplicativo, arranjos, permutações e combinações",
+   "area": "E",
+   "peso": 2.0,
+   "depende": [],
+   "base": [
+    "PAS2 MAT14",
+    "PAS2 MAT17"
+   ],
+   "curto": "Contagem"
+  },
+  {
+   "id": "PAS2 MAT14",
+   "sigla": "2.14",
+   "etapa": 2,
+   "nome": "Descrever espaços amostrais e calcular probabilidades de eventos",
+   "area": "E",
+   "peso": 1.5,
+   "depende": [
+    "PAS2 MAT13"
+   ],
+   "base": [
+    "PAS2 MAT15",
+    "PAS2 MAT16"
+   ],
+   "curto": "Espaço amostral e probabilidade"
+  },
+  {
+   "id": "PAS2 MAT15",
+   "sigla": "2.15",
+   "etapa": 2,
+   "nome": "Calcular probabilidades de uniões e de eventos complementares",
+   "area": "E",
+   "peso": 0.5,
+   "depende": [
+    "PAS2 MAT14"
+   ],
+   "base": [],
+   "curto": "União e complementar"
+  },
+  {
+   "id": "PAS2 MAT16",
+   "sigla": "2.16",
+   "etapa": 2,
+   "nome": "Distinguir experimentos com e sem reposição e eventos independentes",
+   "area": "E",
+   "peso": 1.0,
+   "depende": [
+    "PAS2 MAT14"
+   ],
+   "base": [
+    "PAS2 MAT17",
+    "PAS2 MAT18"
+   ],
+   "curto": "Com e sem reposição"
+  },
+  {
+   "id": "PAS2 MAT17",
+   "sigla": "2.17",
+   "etapa": 2,
+   "nome": "Calcular probabilidades em experimentos repetidos (binomial)",
+   "area": "E",
+   "peso": 0.5,
+   "depende": [
+    "PAS2 MAT16",
+    "PAS2 MAT13"
+   ],
+   "base": [],
+   "curto": "Probabilidade binomial"
+  },
+  {
+   "id": "PAS2 MAT18",
+   "sigla": "2.18",
+   "etapa": 2,
+   "nome": "Aplicar probabilidade condicional a eventos sucessivos, testes e genética mendeliana",
+   "area": "E",
+   "peso": 1.5,
+   "depende": [
+    "PAS2 MAT16"
+   ],
+   "base": [],
+   "curto": "Probabilidade condicional"
+  },
+  {
+   "id": "PAS3 MAT1",
+   "sigla": "3.1",
+   "etapa": 3,
+   "nome": "Descrever retas por equações lineares e caracterizar paralelismo e perpendicularismo (mapas, GPS)",
+   "area": "A",
+   "peso": 2.0,
+   "depende": [
+    "PAS1 MAT8"
+   ],
+   "base": [
+    "PAS3 MAT2",
+    "PAS3 MAT4",
+    "PAS3 MAT5",
+    "PAS3 MAT8"
+   ],
+   "curto": "Equações da reta"
+  },
+  {
+   "id": "PAS3 MAT2",
+   "sigla": "3.2",
+   "etapa": 3,
+   "nome": "Interpretar sistemas 2×2 como retas no plano e suas soluções como interseções",
+   "area": "A",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT1"
+   ],
+   "base": [
+    "PAS3 MAT3"
+   ],
+   "curto": "Sistemas 2×2 e retas"
+  },
+  {
+   "id": "PAS3 MAT3",
+   "sigla": "3.3",
+   "etapa": 3,
+   "nome": "Resolver e classificar sistemas lineares até 3×3 na forma matricial (circuitos elétricos)",
+   "area": "A",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT2",
+    "PAS3 MAT7"
+   ],
+   "base": [],
+   "curto": "Sistemas 3×3"
+  },
+  {
+   "id": "PAS3 MAT4",
+   "sigla": "3.4",
+   "etapa": 3,
+   "nome": "Calcular distâncias entre pontos, de ponto a reta e entre retas; circunferência como lugar geométrico",
+   "area": "A",
+   "peso": 2.0,
+   "depende": [
+    "PAS3 MAT1"
+   ],
+   "base": [],
+   "curto": "Distâncias e circunferência"
+  },
+  {
+   "id": "PAS3 MAT5",
+   "sigla": "3.5",
+   "etapa": 3,
+   "nome": "Interpretar matrizes 2×2 como transformações do plano e o produto como composição",
+   "area": "A",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT1"
+   ],
+   "base": [
+    "PAS3 MAT6",
+    "PAS3 MAT7"
+   ],
+   "curto": "Matrizes como transformações"
+  },
+  {
+   "id": "PAS3 MAT6",
+   "sigla": "3.6",
+   "etapa": 3,
+   "nome": "Descrever rotações por matrizes e o produto como composição, com seno e cosseno da soma",
+   "area": "A",
+   "peso": 1.0,
+   "depende": [
+    "PAS3 MAT5",
+    "PAS2 MAT1"
+   ],
+   "base": [],
+   "curto": "Rotações por matrizes"
+  },
+  {
+   "id": "PAS3 MAT7",
+   "sigla": "3.7",
+   "etapa": 3,
+   "nome": "Usar determinantes de ordem 2 e 3 em sistemas e em áreas de paralelogramos e triângulos",
+   "area": "A",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT5"
+   ],
+   "base": [
+    "PAS3 MAT3"
+   ],
+   "curto": "Determinantes e áreas"
+  },
+  {
+   "id": "PAS3 MAT8",
+   "sigla": "3.8",
+   "etapa": 3,
+   "nome": "Representar complexos no plano e operar com eles na forma algébrica, relacionando-os a vetores",
+   "area": "A",
+   "peso": 2.0,
+   "depende": [
+    "PAS3 MAT1"
+   ],
+   "base": [
+    "PAS3 MAT9",
+    "PAS3 MAT10"
+   ],
+   "curto": "Complexos: forma algébrica"
+  },
+  {
+   "id": "PAS3 MAT9",
+   "sigla": "3.9",
+   "etapa": 3,
+   "nome": "Operar com complexos nas formas algébrica e polar, relacionando-os a vetores e ao equilíbrio de forças",
+   "area": "A",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT8",
+    "PAS2 MAT1"
+   ],
+   "base": [],
+   "curto": "Complexos: forma polar"
+  },
+  {
+   "id": "PAS3 MAT10",
+   "sigla": "3.10",
+   "etapa": 3,
+   "nome": "Reconhecer polinômios, equações algébricas, raízes complexas e multiplicidade",
+   "area": "F",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT8",
+    "PAS1 MAT9"
+   ],
+   "base": [
+    "PAS3 MAT11"
+   ],
+   "curto": "Polinômios e raízes"
+  },
+  {
+   "id": "PAS3 MAT11",
+   "sigla": "3.11",
+   "etapa": 3,
+   "nome": "Dividir polinômios, relacionar com a divisão de inteiros e usar a fatoração para obter raízes",
+   "area": "F",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT10"
+   ],
+   "base": [
+    "PAS3 MAT12"
+   ],
+   "curto": "Divisão de polinômios"
+  },
+  {
+   "id": "PAS3 MAT12",
+   "sigla": "3.12",
+   "etapa": 3,
+   "nome": "Resolver equações quadráticas, cúbicas e quárticas (biquadradas) em contextos como massa-mola",
+   "area": "F",
+   "peso": 1.5,
+   "depende": [
+    "PAS3 MAT11",
+    "PAS1 MAT9"
+   ],
+   "base": [],
+   "curto": "Equações cúbicas e quárticas"
+  }
+ ]
+}

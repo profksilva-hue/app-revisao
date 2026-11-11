@@ -1,4 +1,4 @@
-/* Santa Revisão · IA adaptativa dentro do app do ENEM
+/* Santa Revisão · IA adaptativa dentro dos apps do ENEM e do PAS
    Fase 2: série, diagnose e tela de resultado (spec, etapa 3).
    Fase 3: tela "Hoje", trilhas e sessão do dia (spec, etapa 5).
    Usa o motor (ia/motor.js), o banco (ia/banco.js) e o estado do aluno do próprio app (S.ia),
@@ -8,7 +8,16 @@
   const SR = window.SR;
   if (!SR || !window.Motor || !window.Banco) return;
   const L = "ABCDE", esc = SR.esc, DIA = 864e5;
-  const NOME = { recuperacao: "Recuperação", fixacao: "Fixação", aprimoramento: "Aprimoramento", introducao: "Introdução", adiantar: "Adiantar", livre: "Conteúdo escolhido", a_diagnosticar: "A diagnosticar" };
+  // Mesmo motor e mesma tela para o ENEM e para o PAS/UnB. No PAS: 3 etapas, itens A (certo/errado), B (numérico) e C;
+  // escala do relatório em % de domínio (não há TRI oficial); diagnose da etapa do aluno (2 itens) e das anteriores (1 item).
+  const PAS = SR.exame === "pas", DIR = PAS ? "../ia/pas/" : "../ia/";
+  const PROVA = PAS ? "PAS" : "ENEM";
+  const CE = ["C", "E"];
+  const letra = (q, j) => q.tp === "A" ? CE[j] : L[j];
+  const gabTxt = q => q.tp === "B" ? String(q.a).padStart(3, "0") : q.tp === "A" ? (q.a ? "E (errado)" : "C (certo)") : L[q.a];
+  const acerto = (q, v) => q.tp === "B" ? v !== "" && v != null && +v === q.a : v === q.a;
+  const sigla = h => HAB[h] && HAB[h].sigla || h;
+  const NOME = { recuperacao: "Recuperação", fixacao: "Fixação", aprimoramento: "Aprimoramento", introducao: "Introdução", fora: "Próximas etapas", adiantar: "Adiantar", livre: "Conteúdo escolhido", a_diagnosticar: "A diagnosticar" };
   const ORD = { recuperacao: 0, fixacao: 1, aprimoramento: 2 };
   const MAXQ = 30;                 // diagnose: no máximo 30 questões (cerca de 40 minutos)
   const DIAG_DUPLAS = 15;          // decisão de 08/11: 2 questões para as 15 habilidades de maior peso
@@ -47,16 +56,17 @@
   async function carregar() {
     try {
       const [h, g] = await Promise.all([
-        fetch("../ia/habilidades.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
-        fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/adaptadas.json").then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch("../ia/apoio-aulas.json").then(r => r.ok ? r.json() : null).catch(() => null)
+        fetch(DIR + "habilidades.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+        PAS ? null : fetch("../ia/questoes-geradas.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        PAS ? null : fetch("../ia/biblioteca.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        PAS ? null : fetch("../ia/erros.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(DIR + "adaptadas.json").then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(DIR + "apoio-aulas.json").then(r => r.ok ? r.json() : null).catch(() => null)
       ]).then(x => { APOIO = {}; Object.entries((x[5] && x[5].aulas) || {}).forEach(([n, v]) => { if (v && (v.aprovado || AMB_TESTE)) APOIO[n] = v; }); (x[2] && x[2].resumos || []).forEach(r => { BIB[r.h] = r; }); ERROS = x[3]; ADAPT = {}; Object.entries((x[4] && x[4].versoes) || {}).forEach(([id, v]) => { if (v && (v.aprovado || AMB_TESTE)) ADAPT[id] = v; /* no site oficial, só versões aprovadas */ }); return x; });
       H = h; H.habilidades.forEach(x => { HAB[x.id] = x; });
-      const itens = Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
-      M = Motor.criar({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
+      const itens = PAS ? Banco.extrairPAS(SR.D) : Banco.extrair(SR.D).concat(Banco.extrairGeradas(g));
+      const CFG = PAS ? { config: { ref: { a: 1.5, b: 1.29, c: 0 } } } : {};   // PAS: chance de resolver de fato um item médio (sem chute)
+      M = Motor.criar(Object.assign({ itens, habilidades: H.habilidades, nivelParaB: H.nivelParaB }, CFG));
       // aula de referência de cada habilidade (para "rever a teoria" e a dica das questões guiadas)
       H.habilidades.forEach(hb => {
         const c = {}; (M.porHab[hb.id] || []).forEach(i => { if (i.aula != null) c[i.aula] = (c[i.aula] || 0) + 1; });
@@ -73,7 +83,7 @@
         const its = (M.porHab[hb.id] || []).filter(i => !i.gerada), cal = its.filter(i => i.ip);
         (cal.length >= 2 ? cal : its).forEach(i => diag.push(i));
       });
-      MD = Motor.criar({ itens: diag, habilidades: H.habilidades, nivelParaB: H.nivelParaB });
+      MD = Motor.criar(Object.assign({ itens: diag, habilidades: H.habilidades, nivelParaB: H.nivelParaB }, CFG));
       pronto = true;
       // Login com a conta Microsoft da escola: quando ativo, o app entra sozinho com o e-mail institucional
       // e a área adaptada vem do papel atribuído pela escola (nunca do aparelho).
@@ -89,8 +99,12 @@
   }
 
   // ---------- estado das habilidades ----------
-  const vistas = () => { const nv = new Set(st().naoVistas); return H.habilidades.filter(h => !nv.has(h.id)); };
+  // PAS: só as habilidades da etapa do aluno e das anteriores (e que têm itens no banco)
+  const ativa = h => !PAS || (HAB[h] && HAB[h].etapa <= (+st().serie || 3) && (M.porHab[h] || []).length > 0);
+  const HABS = () => H.habilidades.filter(h => ativa(h.id));
+  const vistas = () => { const nv = new Set(st().naoVistas); return HABS().filter(h => !nv.has(h.id)); };
   function estadoDe(h) {
+    if (!ativa(h)) return "fora";
     if (st().naoVistas.includes(h)) return "introducao";
     const r = M.resumo(st().aluno, h);
     return ORD[r.estado] != null ? r.estado : M.faixa(r.chance);
@@ -102,10 +116,11 @@
   const respondidas = d => d.feitas.filter(f => f.r !== "nv").length;
   function alvoDiag() { // habilidades que entram na diagnose e quantas questões cada uma recebe
     const vs = vistas();
-    if (vs.length * 2 <= MAXQ) return { hs: vs.map(h => h.id), por: 2 };
-    return { hs: vs.slice().sort((a, b) => b.peso - a.peso || prioridade(a, b)).slice(0, DIAG_DUPLAS).map(h => h.id), por: 2 };
+    if (PAS) { const e = +st().serie; return { hs: vs.map(h => h.id), q: id => HAB[id].etapa === e ? 2 : 1 }; }   // decisão de 11/11: etapa do aluno e anteriores
+    if (vs.length * 2 <= MAXQ) return { hs: vs.map(h => h.id), q: () => 2 };
+    return { hs: vs.slice().sort((a, b) => b.peso - a.peso || prioridade(a, b)).slice(0, DIAG_DUPLAS).map(h => h.id), q: () => 2 };
   }
-  function limite() { const a = alvoDiag(); return Math.min(MAXQ, a.hs.length * a.por); }
+  function limite() { const a = alvoDiag(); return Math.min(PAS ? 60 : MAXQ, a.hs.reduce((x, h) => x + a.q(h), 0)); }
   function ordemIntercalada(ids) { // uma habilidade de cada área por vez
     const porArea = {}; ids.forEach(id => { const h = HAB[id]; (porArea[h.area] = porArea[h.area] || []).push(id); });
     const filas = H.areas.map(a => porArea[a.id] || []), out = [];
@@ -117,8 +132,9 @@
     d.feitas.forEach(f => { if (f.r !== "nv") cont[f.h] = (cont[f.h] || 0) + 1; });
     for (let tent = 0; tent < 80; tent++) {
       if (respondidas(d) >= limite()) return null;
-      const ordem = ordemIntercalada(alvoDiag().hs).filter(x => !sem.includes(x));
-      const h = ordem.find(x => !cont[x]) || ordem.find(x => (cont[x] || 0) < 2);
+      const ad = alvoDiag(), et = +s.serie;
+      const ordem = (PAS ? ordemIntercalada(ad.hs.filter(x => HAB[x].etapa === et)).concat(ordemIntercalada(ad.hs.filter(x => HAB[x].etapa !== et))) : ordemIntercalada(ad.hs)).filter(x => !sem.includes(x));
+      const h = ordem.find(x => !cont[x]) || ordem.find(x => (cont[x] || 0) < ad.q(x));
       if (!h) return null;
       const cs = MD.escolher(s.aluno, h, ALVO_DIAG, adaptada() ? 30 : 1, Date.now(), usadas);
       const e = adaptada() ? (cs.find(c => ADAPT[c.id] && c.chance >= 0.25 && c.chance <= 0.8) || cs.slice(0, 8).find(c => ehTexto(M.itens[c.id].q)) || cs[0]) : cs[0];
@@ -150,7 +166,7 @@
       if (!s.naoVistas.includes(at.h)) s.naoVistas.push(at.h);
       d.feitas.push({ h: at.h, id: at.id, r: "nv" });
     } else {
-      const r = valor === versao(it).a ? 1 : 0;
+      const r = acerto(versao(it), valor) ? 1 : 0;
       M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: adaptada() ? false : it.longa, v: valor, adaptada: adaptada() && !!ADAPT[at.id] });
       d.feitas.push({ h: at.h, id: at.id, r, ms: ms == null ? null : Math.round(ms) });
     }
@@ -163,7 +179,7 @@
   // ---------- trilhas e sugestão do dia (etapa 5) ----------
   function habsDaTrilha(t) {
     const alvo = t === "adiantar" ? "introducao" : t;
-    const hs = H.habilidades.filter(h => estadoDe(h.id) === alvo && (M.porHab[h.id] || []).length);
+    const hs = HABS().filter(h => estadoDe(h.id) === alvo && (M.porHab[h.id] || []).length);
     if (t === "recuperacao") return hs.sort((a, b) => prioridade(a, b) || M.resumo(st().aluno, a.id).chance - M.resumo(st().aluno, b.id).chance);
     if (t === "fixacao") return hs.sort((a, b) => ultimaPratica(a.id) - ultimaPratica(b.id) || prioridade(a, b));
     return hs.sort(prioridade);
@@ -256,9 +272,9 @@
   function responderSessao(valor) {
     const s = st(), se = s.sessao, at = se.atual, it = M.itens[at.id];
     const ms = inicioQ ? Date.now() - inicioQ : null;
-    const r = valor === "ns" ? "ns" : (valor === versao(it).a ? 1 : 0);
+    const r = valor === "ns" ? "ns" : (acerto(versao(it), valor) ? 1 : 0);
     if (r === "ns") se.ns++;
-    if (r === 0 && typeof valor === "number") { s.errosHab = s.errosHab || {}; (s.errosHab[at.h] = s.errosHab[at.h] || []).push({ id: at.id, v: valor }); s.errosHab[at.h] = s.errosHab[at.h].slice(-6); }
+    if (r === 0 && typeof valor === "number" && versao(it).tp !== "B") { s.errosHab = s.errosHab || {}; (s.errosHab[at.h] = s.errosHab[at.h] || []).push({ id: at.id, v: valor }); s.errosHab[at.h] = s.errosHab[at.h].slice(-6); }
     const total = se.resp.length + 1;
     const out = M.registrar(s.aluno, { id: at.id, r, ms, ts: Date.now(), longa: adaptada() ? false : it.longa, sessao: { ns: se.ns, total }, v: typeof valor === "number" ? valor : undefined, adaptada: adaptada() && !!ADAPT[at.id] });
     se.resp.push({ h: at.h, id: at.id, r, tipo: at.tipo, ms: ms == null ? null : Math.round(ms) });
@@ -343,7 +359,7 @@
     vistas().forEach(h => { const r = M.resumo(st().aluno, h.id); const th = troca && troca[h.id] != null ? Math.max(troca[h.id], r.theta) : r.theta;
       sw += h.peso; st_ += h.peso * th; sv += (h.peso * r.ep) ** 2; });
     if (!sw) return null;
-    const th = st_ / sw, ep = Math.sqrt(sv) / sw, pts = v => Math.round((500 + 100 * v) / 5) * 5;
+    const th = st_ / sw, ep = Math.sqrt(sv) / sw, pts = v => PAS ? Math.round(100 * M.fRef(v)) : Math.round((500 + 100 * v) / 5) * 5;
     return { th, pts: pts(th), lo: pts(th - 1.28 * ep), hi: pts(th + 1.28 * ep) };
   }
   function caminhoMaisCurto() {
@@ -360,7 +376,7 @@
     if (pts.length < 2) return "";
     const W = 300, Hh = 70, vs = pts.map(x => x.p), mn = Math.min(...vs) - 10, mx = Math.max(...vs) + 10;
     const X = i => 10 + i * (W - 20) / (pts.length - 1), Y = v => Hh - 10 - (v - mn) * (Hh - 20) / (mx - mn || 1);
-    return `<svg class="ia-spark" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Evolução da estimativa: de ${vs[0]} para ${vs[vs.length - 1]} pontos">
+    return `<svg class="ia-spark" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Evolução da estimativa: de ${vs[0]} para ${vs[vs.length - 1]}${PAS ? "%" : " pontos"}">
       <polyline fill="none" stroke="currentColor" stroke-width="2" points="${pts.map((x, i) => X(i) + "," + Y(x.p)).join(" ")}"/>
       ${pts.map((x, i) => `<circle cx="${X(i)}" cy="${Y(x.p)}" r="3"/>`).join("")}</svg>`;
   }
@@ -372,7 +388,7 @@
     const lv = {}, nivel = id => lv[id] != null ? lv[id] : (lv[id] = (HAB[id].depende || []).length ? 1 + Math.max(...HAB[id].depende.map(nivel)) : 0);
     H.habilidades.forEach(h => nivel(h.id));
     const linhas = []; H.habilidades.forEach(h => { (linhas[lv[h.id]] = linhas[lv[h.id]] || []).push(h.id); });
-    const W = 360, DY = 74, x = {};
+    const W = Math.max(360, 62 * Math.max(...linhas.map(l => l.length)) + 20), DY = 74, x = {};
     const posiciona = () => linhas.forEach(l => l.forEach((id, i) => { x[id] = W * (i + 1) / (l.length + 1); }));
     posiciona();
     for (let pass = 0; pass < 4; pass++) { // ordena cada linha pela posição média das habilidades de base (menos cruzamentos)
@@ -393,8 +409,8 @@
     const feita = SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim;
     const nos = H.habilidades.map(h => { const p = pos[h.id], e = feita ? estadoDe(h.id) : "a_diagnosticar";
       return `<g class="ia-no ia-no-${e}${h.id === sel ? " ia-no-sel" : ""}${ativo(h.id) ? "" : " ia-no-off"}" data-ia-no="${h.id}" role="button" tabindex="0" aria-label="${esc(h.id)}, ${esc(h.curto)}, ${NOME[e]}">
-        <rect x="${p.x - 27}" y="${p.y - 15}" width="54" height="30" rx="8"/><text x="${p.x}" y="${p.y + 5}" text-anchor="middle">${esc(h.id)}</text></g>`; }).join("");
-    return `<svg class="ia-arv" viewBox="0 0 ${W} ${Ht}" role="group" aria-label="Árvore de habilidades: as de cima sustentam as de baixo">${arestas}${nos}</svg>`;
+        <rect x="${p.x - 27}" y="${p.y - 15}" width="54" height="30" rx="8"/><text x="${p.x}" y="${p.y + 5}" text-anchor="middle">${esc(sigla(h.id))}</text></g>`; }).join("");
+    return `<svg class="ia-arv" viewBox="0 0 ${W} ${Ht}"${W > 360 ? ` style="min-width:${Math.round(W * 0.95)}px"` : ""} role="group" aria-label="Árvore de habilidades: as de cima sustentam as de baixo">${arestas}${nos}</svg>`;
   }
   function arvoreDetalhe() {
     const id = arvoreSel; if (!id) return `<p class="note">Toque numa habilidade para ver os seus erros mais frequentes nela e o que uma defasagem pode complicar.</p>`;
@@ -434,7 +450,7 @@
     if (!pronto) { v.innerHTML = `<div class="ia-wrap"><div class="ia-card"><p>Carregando…</p></div></div>`; return; }
     const feita = SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim;
     v.innerHTML = `<div class="ia-wrap"><div class="ia-card"><h2>Árvore de habilidades</h2>
-      <p>As 30 habilidades de Matemática do ENEM, ligadas pelas suas consequências: cada uma sustenta as que estão abaixo dela. Toque numa habilidade para ver os seus erros mais frequentes nela e o que uma defasagem pode complicar.</p>
+      <p>${PAS ? `As ${H.habilidades.length} habilidades de Matemática do PAS (etapas 1, 2 e 3)` : "As 30 habilidades de Matemática do ENEM"}, ligadas pelas suas consequências: cada uma sustenta as que estão abaixo dela. Toque numa habilidade para ver os seus erros mais frequentes nela e o que uma defasagem pode complicar.</p>
       ${feita ? "" : `<p class="note">As cores aparecem depois da diagnose, na aba <b>Hoje</b>. Até lá, a árvore mostra só as ligações.</p>`}</div>
       <div class="ia-card">${arvoreHTML()}</div></div>`;
   }
@@ -448,17 +464,17 @@
     const t = {}; cam.slice(0, 2).forEach(h => { t[h.id] = TH_FIX_(); }); const proj = cam.length ? estimativaGeral(t) : null;
     const nome = h => `${esc(h.id)} · ${esc(h.curto)}`;
     // 1. resumo em uma frase
-    const frase = `Sua estimativa é de <b>${e.pts} pontos</b> (faixa provável de ${e.lo} a ${e.hi}).` + (s.meta ? ` Sua meta é <b>${s.meta}</b>${s.meta > e.pts ? `: faltam ${s.meta - e.pts} pontos` : ": você já está nela"}.` : "") + (cam.length ? ` As habilidades que mais fazem a sua estimativa subir agora são ${cam.map(h => `<b>${esc(h.id)}</b> (${esc(h.curto.toLowerCase())})`).join(", ").replace(/, ([^,]*)$/, " e $1")}.` : ` Nenhuma habilidade está em Recuperação: o ganho agora vem de confirmar a Fixação e subir para o Aprimoramento.`);
-    const meta = `<div class="ia-row"><label class="note" for="ia-meta">Minha meta de pontos</label><input id="ia-meta" class="ia-meta" type="number" min="400" max="950" step="10" value="${s.meta || ""}" placeholder="${alvo}"><button class="ia-mini" type="button" data-iar="meta">Salvar meta</button></div>`;
+    const frase = (PAS ? `Seu domínio estimado da Matemática do PAS (etapa ${esc(s.serie)} e anteriores) é de <b>${e.pts}%</b> (faixa provável de ${e.lo}% a ${e.hi}%).` : `Sua estimativa é de <b>${e.pts} pontos</b> (faixa provável de ${e.lo} a ${e.hi}).`) + (s.meta && !PAS ? ` Sua meta é <b>${s.meta}</b>${s.meta > e.pts ? `: faltam ${s.meta - e.pts} pontos` : ": você já está nela"}.` : "") + (cam.length ? ` As habilidades que mais fazem a sua estimativa subir agora são ${cam.map(h => `<b>${esc(h.id)}</b> (${esc(h.curto.toLowerCase())})`).join(", ").replace(/, ([^,]*)$/, " e $1")}.` : ` Nenhuma habilidade está em Recuperação: o ganho agora vem de confirmar a Fixação e subir para o Aprimoramento.`);
+    const meta = PAS ? "" : `<div class="ia-row"><label class="note" for="ia-meta">Minha meta de pontos</label><input id="ia-meta" class="ia-meta" type="number" min="400" max="950" step="10" value="${s.meta || ""}" placeholder="${alvo}"><button class="ia-mini" type="button" data-iar="meta">Salvar meta</button></div>`;
     // 2. mapa das 30 habilidades
     const status = h => { const est = (s.aluno.est || {})[h.id]; if (estadoDe(h.id) === "introducao") return "ainda não estudou"; const r = M.resumo(s.aluno, h.id);
       return r.validado ? "confirmada" : r.observacao ? "em observação" : !r.n && est && est.area ? "estimada pela área" : "provisória"; };
-    const mapa = `<div class="ia-mapa">${H.habilidades.map(h => { const r = M.resumo(s.aluno, h.id); return `<div class="ia-mh ia-mh-${estadoDe(h.id)}"><b>${esc(h.id)}</b><span>${esc(h.curto)}</span><small>${pill(estadoDe(h.id))} ${r.n} ${r.n === 1 ? "resposta" : "respostas"} · ${status(h)}</small></div>`; }).join("")}</div>`;
+    const mapa = `<div class="ia-mapa">${HABS().map(h => { const r = M.resumo(s.aluno, h.id); return `<div class="ia-mh ia-mh-${estadoDe(h.id)}"><b>${esc(h.id)}</b><span>${esc(h.curto)}</span><small>${pill(estadoDe(h.id))} ${r.n} ${r.n === 1 ? "resposta" : "respostas"} · ${status(h)}</small></div>`; }).join("")}</div>`;
     // 3. onde perde mais pontos: erros em questões com boa chance de acerto
     const resp = todasRespostas(), erradas = resp.filter(x => x.r === 0 && M.itens[x.id]);
     const faceis = erradas.filter(x => { const pr = M.params(M.itens[x.id]); return M.p3(M.resumo(s.aluno, x.h).theta, pr.a, pr.b, pr.c) >= 0.6 || (M.itens[x.id].nv || 3) <= 2; });
-    const perde = faceis.length ? `<p>Você errou <b>${faceis.length} ${faceis.length === 1 ? "questão" : "questões"}</b> que estavam ao seu alcance (chance de acerto de 60% ou mais). Na TRI, esses erros derrubam mais a nota do que errar as difíceis.</p>
-      <ul>${faceis.slice(-6).reverse().map(x => { const q = M.itens[x.id].q; return `<li><b>${esc(x.h)}</b> · ${esc(q.hab || HAB[x.h].curto)} (${dataBR(x.ts)})${Number.isInteger(x.v) && q.e && q.e[x.v] ? `: você marcou ${L[x.v]}. ${q.e[x.v]}` : ""}</li>`; }).join("")}</ul>`
+    const perde = faceis.length ? `<p>Você errou <b>${faceis.length} ${faceis.length === 1 ? "questão" : "questões"}</b> que estavam ao seu alcance (chance de acerto de 60% ou mais). ${PAS ? "No PAS, cada item de certo ou errado marcado errado anula um certo: nesses, vale mais deixar em branco quando não tiver certeza." : "Na TRI, esses erros derrubam mais a nota do que errar as difíceis."}</p>
+      <ul>${faceis.slice(-6).reverse().map(x => { const q = M.itens[x.id].q; return `<li><b>${esc(x.h)}</b> · ${esc(q.hab || HAB[x.h].curto)} (${dataBR(x.ts)})${Number.isInteger(x.v) && q.e && q.e[x.v] ? `: você marcou ${letra(q, x.v)}. ${q.e[x.v]}` : ""}</li>`; }).join("")}</ul>`
       : `<p>Nenhum erro em questão ao seu alcance até agora.</p>`;
     // 4. tipos de erro
     const tipos = {}; let comV = 0;
@@ -472,7 +488,7 @@
     const rec = vistas().filter(h => estadoDe(h.id) === "recuperacao" && (h.base || []).length).sort(prioridade).slice(0, 4);
     const impacto = rec.length ? `<ul>${rec.map(h => `<li><b>${nome(h)}</b> em Recuperação afeta ${h.base.map(b => esc(b)).join(", ")}.</li>`).join("")}</ul>` : `<p>Nenhuma habilidade de base está em Recuperação.</p>`;
     // 6. projeção
-    const projHTML = proj ? `<p>Se ${cam.slice(0, 2).map(nome).join(" e ")} ${cam.length > 1 ? "chegarem" : "chegar"} à Fixação, sua estimativa sobe para cerca de <b>${proj.pts} pontos</b> (+${proj.pts - e.pts}).</p>` : "";
+    const projHTML = proj ? `<p>Se ${cam.slice(0, 2).map(nome).join(" e ")} ${cam.length > 1 ? "chegarem" : "chegar"} à Fixação, sua estimativa sobe para cerca de <b>${proj.pts}${PAS ? "%" : " pontos"}</b> (+${proj.pts - e.pts}${PAS ? " pontos percentuais" : ""}).</p>` : "";
     // 7. hábitos
     const comMs = resp.filter(x => x.ms != null && x.r !== "ns"), media = comMs.length ? comMs.reduce((a, x) => a + x.ms, 0) / comMs.length : 0;
     const rapidas = comMs.filter(x => x.ms < 15000 && M.itens[x.id] && M.itens[x.id].longa).length, ns = resp.filter(x => x.r === "ns").length;
@@ -480,7 +496,7 @@
     const porT = {}; (s.sessoes || []).forEach(x => { porT[x.trilha] = (porT[x.trilha] || 0) + 1; });
     const evita = totS >= 5 && habsDaTrilha("recuperacao").length && (porT.recuperacao || 0) / totS < 0.2 ? `<li>Você fez ${porT.recuperacao || 0} ${(porT.recuperacao || 0) === 1 ? "sessão" : "sessões"} de Recuperação em ${totS}. É nela que estão os pontos mais fáceis de ganhar.</li>` : "";
     const habitos = `<ul>
-      ${comMs.length ? `<li>Tempo médio por questão: <b>${(media / 60000).toFixed(1).replace(".", ",")} min</b> (no ENEM, cerca de 3 min).</li>` : ""}
+      ${comMs.length ? `<li>Tempo médio por questão: <b>${(media / 60000).toFixed(1).replace(".", ",")} min</b>${PAS ? "" : " (no ENEM, cerca de 3 min)"}.</li>` : ""}
       ${rapidas ? `<li><b>${rapidas}</b> ${rapidas === 1 ? "resposta rápida demais" : "respostas rápidas demais"} em questões longas (menos de 15 s): podem ter sido chutes.</li>` : ""}
       <li>“Não sei” usado ${ns} ${ns === 1 ? "vez" : "vezes"}.</li>
       <li>Sessões nos últimos 7 dias: <b>${sem7}</b>${totS ? ` (total: ${totS})` : ""}.</li>${evita}</ul>`;
@@ -498,12 +514,12 @@
     if (ordT.length) plano.push(`Em toda questão, antes de marcar, confira: ${esc(ERROS.tipos[ordT[0]].toLowerCase())}.`);
     // versão do professor
     const prof = `<details class="ia-prof"><summary>Detalhes técnicos (para o professor)</summary>
-      <table class="ia-tab"><thead><tr><th>Hab.</th><th>Estado</th><th>Pontos</th><th>± (80%)</th><th>Resp.</th><th>Situação</th><th>Rápidas</th></tr></thead><tbody>
-      ${H.habilidades.map(h => { const r = M.resumo(s.aluno, h.id), rp = comMs.filter(x => x.h === h.id && x.ms < 15000 && M.itens[x.id] && M.itens[x.id].longa).length;
-        return `<tr><td>${esc(h.id)}</td><td>${NOME[estadoDe(h.id)]}</td><td>${r.pontos || "–"}</td><td>${r.ep != null ? Math.round(128 * r.ep) : "–"}</td><td>${r.n}</td><td>${status(h)}</td><td>${rp || ""}</td></tr>`; }).join("")}</tbody></table>
+      <table class="ia-tab"><thead><tr><th>Hab.</th><th>Estado</th><th>${PAS ? "Domínio" : "Pontos"}</th><th>± (80%)</th><th>Resp.</th><th>Situação</th><th>Rápidas</th></tr></thead><tbody>
+      ${HABS().map(h => { const r = M.resumo(s.aluno, h.id), rp = comMs.filter(x => x.h === h.id && x.ms < 15000 && M.itens[x.id] && M.itens[x.id].longa).length;
+        return `<tr><td>${esc(h.id)}</td><td>${NOME[estadoDe(h.id)]}</td><td>${PAS ? (r.n ? Math.round(100 * r.chance) + "%" : "–") : r.pontos || "–"}</td><td>${r.ep != null ? Math.round(128 * r.ep) : "–"}</td><td>${r.n}</td><td>${status(h)}</td><td>${rp || ""}</td></tr>`; }).join("")}</tbody></table>
       <p class="note">${adaptada() ? "<b>Área adaptada: ativa.</b> " : ""}Estimativa geral: θ = ${e.th.toFixed(2)} (média das habilidades ponderada pelo peso na prova). Listas niveladas: ${Object.keys(s.nivel || {}).map(n => `aula ${n} (${s.nivel[n].f}F/${s.nivel[n].m}M/${s.nivel[n].d}D, chance média prevista ${s.nivel[n].ch}%)`).join("; ") || "nenhuma ainda"}.</p></details>`;
     const sec = (n, t, c) => c ? `<section class="ia-sec"><h3>${n}. ${t}</h3>${c}</section>` : "";
-    return `<div class="ia-relat ia-card"><h2>Meu relatório</h2><p class="note">Atualizado em ${new Date().toLocaleDateString("pt-BR")}. Estimativas na escala do ENEM, calculadas com as suas respostas.</p>
+    return `<div class="ia-relat ia-card"><h2>Meu relatório</h2><p class="note">Atualizado em ${new Date().toLocaleDateString("pt-BR")}. ${PAS ? "Estimativas em % de domínio (a chance de resolver um item médio do PAS sem chute), calculadas com as suas respostas." : "Estimativas na escala do ENEM, calculadas com as suas respostas."}</p>
       <p class="ia-frase">${frase}</p>${meta}
       ${sec(1, "Plano para a próxima semana", plano.length ? `<ol>${plano.map(x => `<li>${x}</li>`).join("")}</ol>` : "")}
       ${sec(2, "Onde você perde mais pontos", perde)}
@@ -513,7 +529,7 @@
       ${sec(6, "Seus hábitos de estudo", habitos)}
       ${sec(7, "Evolução", evol)}
       ${sec(8, "Árvore de habilidades", `<p>Veja como as habilidades se sustentam e o que cada defasagem pode complicar.</p><div class="ia-row"><button class="btn ghost" type="button" data-tab="arv">Abrir a árvore de habilidades</button></div>`)}
-      ${sec(9, "Mapa das 30 habilidades", mapa)}
+      ${sec(9, `Mapa das ${HABS().length} habilidades`, mapa)}
       ${prof}
       ${SSO ? `<p class="note ia-noprint">Conectado com a conta da escola (${esc(SSO.email)}). <a href="/auth/sair">Sair da conta</a></p>` : ""}
       ${AMB_TESTE && !SSO ? `<p class="note ia-noprint">Ambiente de teste: <button class="ia-mini" type="button" data-iar="simular">${ampliado() ? "Voltar para a área padrão" : adaptada() ? "Simular o apoio ampliado" : "Simular a área adaptada"}</button> (no site oficial, isso virá do grupo da escola no login Microsoft).</p>` : ""}
@@ -523,7 +539,9 @@
   // ---------- telas ----------
   const pill = e => `<span class="ia-pill ia-${e}">${esc(NOME[e] || e)}</span>`;
   const btnTeoria = (h, foco) => BIB[h] ? `<button class="btn ghost" type="button" data-ia-resumo="${esc(h)}" data-ia-foco="${foco || ""}">Rever a teoria</button>`
-    : AULA[h] ? `<button class="btn ghost" type="button" data-calgo="${AULA[h]}" data-calmode="resumo">Rever a teoria (aula ${String(AULA[h]).padStart(2, "0")})</button>` : "";
+    : AULA[h] ? linkAula(AULA[h], `Rever a teoria (aula ${String(AULA[h]).padStart(2, "0")})`, "btn ghost") : "";
+  // ENEM: abre a aula pelo calendário do app; PAS: troca para a etapa da aula e abre o resumo
+  const linkAula = (n, txt, cls) => PAS ? `<button class="${cls}" type="button" data-ia-aula="${n}">${txt}</button>` : `<button class="${cls}" type="button" data-calgo="${n}" data-calmode="resumo">${txt}</button>`;
 
   // ---------- biblioteca teórica (etapa 6, Fase 4) ----------
   const SECOES = [["ideia", "Ideia central"], ["base", "Comece do zero"], ["formulas", "Fórmulas essenciais"], ["porque", "Por que funciona"],
@@ -550,7 +568,7 @@
       return `<ul>${es.slice(-4).reverse().map(e => { const it = M.itens[e.id], q = it && it.q; return q && q.e && q.e[e.v] ? `<li>Você marcou ${L[e.v]}: ${q.e[e.v]}</li>` : ""; }).join("")}</ul>`; }
     if (k === "exemplo") { const it = r.exemplo && M.itens[r.exemplo.id]; if (!it) return "";
       const q = it.q, op = q.o.map((o, j) => `<button class="opt${j === q.a ? " is-right" : ""}" type="button" disabled><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`).join("");
-      return `<article class="q ia-ex">${corpoQuestao(q, op)}</article><p><b>Resposta: ${L[q.a]}.</b> ${r.exemplo.comentario}</p>`; }
+      return `<article class="q ia-ex">${corpoQuestao(q, op)}</article><p><b>Resposta: ${gabTxt(q)}.</b> ${r.exemplo.comentario}</p>`; }
     if (k === "erros") return lista(r.erros);
     if (k === "enem") return `<p>${r.enem}</p>`;
     if (k === "lembrar") return lista(r.lembrar);
@@ -647,10 +665,16 @@
     return `<div class="txt">${(q.t || []).map(t => `<p>${t}</p>`).join("")}</div>${tb}${fig}${q.c ? `<p class="cmd">${q.c}</p>` : ""}<div class="opts${q.pdf ? " pdfo" : ""}">${opts}</div>`;
   }
   const ouvir = `<button class="ia-mini" type="button" data-ia="ouvir">🔊 Ouvir a questão</button>`;
-  const opcoes = (q, resp) => q.o.map((o, j) => {
+  const opcoes = (q, resp) => q.tp === "B" ? numerica(q, resp) : `${q.tp === "A" && !resp ? `<p class="note ia-ce">No PAS, item errado anula um certo: na prova, em dúvida, deixe em branco.</p>` : ""}` + q.o.map((o, j) => {
     let c = riscadas.has(j) && !resp ? " is-riscada" : ""; if (resp) { if (j === q.a) c = " is-right"; else if (j === resp.valor) c = " is-wrong"; }
-    return `<button class="opt${c}" type="button" data-iao="${j}" aria-pressed="${(resp ? resp.valor : marcada) === j}" ${resp ? "disabled" : ""}><span class="bub">${L[j]}</span><span>${SR.optT(q, j, o)}</span></button>`;
+    return `<button class="opt${c}" type="button" data-iao="${j}" aria-pressed="${(resp ? resp.valor : marcada) === j}" ${resp ? "disabled" : ""}><span class="bub">${letra(q, j)}</span><span>${SR.optT(q, j, o)}</span></button>`;
   }).join("");
+  // PAS tipo B: resposta numérica de 000 a 999
+  function numerica(q, resp) {
+    const v = resp ? (resp.valor === "ns" ? "" : String(resp.valor)) : (marcada == null ? "" : String(marcada));
+    return `<div class="ia-bnum"><label for="ia-bin">Sua resposta (de 000 a 999)</label>
+      <input id="ia-bin" class="ia-bin${resp ? (resp.r === 1 ? " is-right" : " is-wrong") : ""}" data-iab="1" inputmode="numeric" maxlength="3" autocomplete="off" value="${esc(v)}" placeholder="000" ${resp ? "disabled" : ""}></div>`;
+  }
   const marcaTempo = id => { if (qAtualId !== id) { qAtualId = id; inicioQ = Date.now(); riscadas = new Set(); modoRiscar = false; if (!st().sessao || !st().sessao.respondida) marcada = null; } };
   const riscarBtn = () => `<button class="ia-mini" type="button" data-ia="riscar" aria-pressed="${modoRiscar}">${modoRiscar ? "✂ Riscando: toque nas que descartou · terminar" : "✂ Riscar alternativas"}</button>`;
 
@@ -666,7 +690,7 @@
     return `<div class="ia-card"><h2>Diagnose</h2>
       <blockquote class="ia-quote">A plataforma se adapta melhor quando conhece você. Faça a diagnose com calma, sozinho e sem consulta: ela não vale nota, serve só para montar o seu caminho. Quanto mais fiel, mais certeiro o seu plano.</blockquote>
       <ul class="ia-list">
-        <li>${n} questões no modelo do ENEM, das sete áreas da Matemática (cerca de ${Math.round(n * 1.4)} minutos).</li>
+        ${PAS ? `<li>${n} itens no modelo do PAS (certo ou errado, múltipla escolha e resposta numérica): 2 por habilidade da etapa ${esc(s.serie)} e 1 por habilidade das etapas anteriores (cerca de ${Math.round(n * 1.2)} minutos).</li>` : `<li>${n} questões no modelo do ENEM, das sete áreas da Matemática (cerca de ${Math.round(n * 1.4)} minutos).</li>`}
         <li>Sem correção durante a diagnose, para uma resposta não influenciar a outra. O resultado aparece no fim.</li>
         <li>Se precisar parar, pode fechar: ao voltar, você continua da mesma questão.</li>
         ${s.serie !== "3" ? "<li>Se aparecer um conteúdo que você ainda não estudou, toque em <b>“Ainda não estudei este conteúdo”</b>. Ele não conta como erro.</li>" : ""}
@@ -682,7 +706,7 @@
       <p>Você já respondeu ${respondidas(d)} de ${n} questões. Faça uma pausa: beba água, levante um pouco. Quando quiser, continue de onde parou.</p>
       <div class="ia-row"><button class="btn" type="button" data-ia="pausaOk">Continuar agora</button><button class="btn ghost" type="button" data-ia="pausaDepois">Continuar depois</button></div></div>`;
     return `<div class="ia-prog"><span>Diagnose · questão <b>${Math.min(k, n)}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span></div>
-      <article class="q"><div class="q-h"><b>${esc(at.h)} · ${esc(HAB[at.h].curto)}</b>${adaptada() ? `<span class="q-r">${ehTexto(q) ? ouvir : ""}${riscarBtn()}</span>` : ""}</div>${corpoQuestao(q, opcoes(q, null))}</article>
+      <article class="q"><div class="q-h"><b>${esc(at.h)} · ${esc(HAB[at.h].curto)}</b>${adaptada() ? `<span class="q-r">${ehTexto(q) ? ouvir : ""}${q.tp !== "B" ? riscarBtn() : ""}</span>` : ""}</div>${corpoQuestao(q, opcoes(q, null))}</article>
       <div class="ia-row ia-nav"><button class="btn" type="button" data-ia="confirmar" ${marcada == null ? "disabled" : ""}>Confirmar e seguir</button>
         ${s.serie !== "3" ? `<button class="btn ghost" type="button" data-ia="naoVi">Ainda não estudei este conteúdo</button>` : ""}</div>
       <p class="note">Sua resposta fica salva ao confirmar. Você pode fechar e continuar depois.</p>`;
@@ -741,9 +765,9 @@
     return `<div class="ia-card"><h2>Hoje</h2><p>Escolha uma sessão curta. A IA sugere uma, mas quem decide é você.</p>
         ${feitas ? `<p class="note">${feitas} ${feitas === 1 ? "sessão feita" : "sessões feitas"} até agora.</p>` : ""}</div>
       <div class="ia-trilhas">${["recuperacao", "fixacao", "aprimoramento"].map(cartao).join("")}${temIntro ? cartao("adiantar") : ""}</div>
-      <div class="ia-card ia-escolher"><h4>Quero escolher outro conteúdo</h4><p class="note">Está estudando um assunto na escola? Escolha o tema e pratique com questões do ENEM no seu nível.</p>
+      <div class="ia-card ia-escolher"><h4>Quero escolher outro conteúdo</h4><p class="note">Está estudando um assunto na escola? Escolha o tema e pratique com questões ${PAS ? "no modelo do PAS" : "do ENEM"} no seu nível.</p>
         <div class="ia-row"><button class="btn" type="button" data-ia="conteudos">Escolher conteúdo</button></div></div>
-      <div class="ia-row"><button class="btn ghost" type="button" data-ia="mapa">Ver meu mapa</button><button class="btn ghost" type="button" data-ia="biblioteca">Biblioteca</button></div>`;
+      <div class="ia-row"><button class="btn ghost" type="button" data-ia="mapa">Ver meu mapa</button>${Object.keys(BIB).length ? `<button class="btn ghost" type="button" data-ia="biblioteca">Biblioteca</button>` : ""}</div>`;
   }
   function telaEscolha() {
     const pillsDe = hs => hs.map(h => `<span class="ia-hab">${esc(h)} ${pill(estadoDe(h))}</span>`).join("");
@@ -752,14 +776,14 @@
         : `<button class="btn" type="button" data-ia-livre="${v}" data-ia-rot="${r}">Praticar (8)</button><button class="btn ghost" type="button" data-ia-livre="${v}" data-ia-rot="${r}" data-ia-curta="1">4 questões</button>`; };
     let lista;
     if (modoConteudos === "tema") {
-      lista = SR.D.aulas.filter(a => (AULAHABS[a.n] || []).length).map(a => {
+      lista = SR.D.aulas.filter(a => (AULAHABS[a.n] || []).length && (!PAS || a.et <= +st().serie)).map(a => {
         const hs = AULAHABS[a.n].slice(0, 3);
         return `<div class="ia-cont"><p class="ia-cont-h"><b>Aula ${String(a.n).padStart(2, "0")} · ${esc(a.tema)}</b></p>
           ${a.cont ? `<p class="note">${esc(a.cont)}</p>` : ""}<div class="ia-habs">${pillsDe(hs)}</div>
-          <div class="ia-row">${botoes(hs, "Aula " + String(a.n).padStart(2, "0") + " · " + a.tema)}<button class="ia-mini" type="button" data-calgo="${a.n}" data-calmode="resumo">Ver a teoria</button></div></div>`;
+          <div class="ia-row">${botoes(hs, "Aula " + String(a.n).padStart(2, "0") + " · " + a.tema)}${linkAula(a.n, "Ver a teoria", "ia-mini")}</div></div>`;
       }).join("");
     } else {
-      lista = H.areas.map(ar => `<h4 class="ia-h4">${esc(ar.nome)}</h4>` + H.habilidades.filter(h => h.area === ar.id).map(h => {
+      lista = H.areas.map(ar => `<h4 class="ia-h4">${esc(ar.nome)}</h4>` + HABS().filter(h => h.area === ar.id).map(h => {
         const e = estadoDe(h.id);
         return `<div class="ia-cont"><p class="ia-cont-h"><b>${esc(h.id)} · ${esc(h.curto)}</b> ${pill(e)}</p>
           <div class="ia-row">${botoes([h.id], h.id + " · " + h.curto)}${e === "introducao" ? `<button class="ia-mini" type="button" data-ia-jaVi="${esc(h.id)}">Já estou estudando isso na escola</button>` : ""}</div></div>`;
@@ -767,7 +791,7 @@
     }
     return `<div class="ia-card"><h2>Escolher conteúdo</h2>
         <p>Pratique o que você está vendo na escola. A IA continua ajustando as questões ao seu nível em cada habilidade, e tudo conta para o seu mapa.</p>
-        <div class="mode sm ia-row" role="group" aria-label="Organizar por"><button type="button" data-ia-modo="tema" aria-pressed="${modoConteudos === "tema"}">Por tema das aulas</button><button type="button" data-ia-modo="area" aria-pressed="${modoConteudos === "area"}">Por área do ENEM</button></div></div>
+        <div class="mode sm ia-row" role="group" aria-label="Organizar por"><button type="button" data-ia-modo="tema" aria-pressed="${modoConteudos === "tema"}">Por tema das aulas</button><button type="button" data-ia-modo="area" aria-pressed="${modoConteudos === "area"}">Por área ${PAS ? "da Matemática" : "do ENEM"}</button></div></div>
       ${lista}
       <div class="ia-row"><button class="btn ghost" type="button" data-ia="hoje">Voltar para Hoje</button><button class="btn ghost" type="button" data-tab="aulas">Abrir Aulas e listas</button></div>`;
   }
@@ -785,7 +809,7 @@
     if (resp) {
       const certo = resp.r === 1, ns = resp.r === "ns";
       fb = `<div class="fbk ia-fbk ${certo ? "ok" : "no"}">
-        <p><b>${certo ? "Certo!" : ns ? "Tudo bem não saber." : "Não foi dessa vez."}</b> ${certo ? "" : `A resposta é <b>${L[q.a]}</b>.`}</p>
+        <p><b>${certo ? "Certo!" : ns ? "Tudo bem não saber." : "Não foi dessa vez."}</b> ${certo ? "" : `A resposta é <b>${gabTxt(q)}</b>.`}</p>
         ${!certo && !ns && q.e && q.e[resp.valor] ? `<p class="bad"><b>Sobre a sua marcação:</b> ${q.e[resp.valor]}</p>` : ""}
         ${q.sol ? `<p class="sol"><b>Resolução:</b> ${q.sol}</p>` : ""}
         ${resp.mudou ? `<p class="ia-sobe"><b>${esc(at.h)}</b> mudou de trilha: ${pill(resp.mudou.de)} → ${pill(resp.mudou.para)}</p>` : ""}
@@ -800,7 +824,7 @@
     return `<div class="ia-prog"><span>${esc(se.rotulo || NOME[se.trilha])} · questão <b>${k}</b> de ${n}</span><span class="ia-bar"><i style="width:${Math.round(100 * (k - 1) / n)}%"></i></span>${relogio}
         ${adaptada() ? "" : `<button class="ia-mini" type="button" data-ia="relogio">${se.relogio ? "Desligar" : "Ligar"} cronômetro</button>`}</div>
       ${antes}
-      <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r">${adaptada() && ehTexto(q) ? ouvir : ""}${adaptada() && !resp ? riscarBtn() : ""}${ampliado() ? "" : `<small class="ia-motivo">${esc(at.motivo || "")}</small>`}</span></div>
+      <article class="q"><div class="q-h"><b>${esc(tipoTxt)}</b><span class="q-r">${adaptada() && ehTexto(q) ? ouvir : ""}${adaptada() && !resp && q.tp !== "B" ? riscarBtn() : ""}${ampliado() ? "" : `<small class="ia-motivo">${esc(at.motivo || "")}</small>`}</span></div>
         ${corpoQuestao(q, opcoes(q, resp))}${dica}${fb}</article>
       ${resp ? "" : `<div class="ia-row ia-nav"><button class="btn" type="button" data-ia="responder" ${marcada == null ? "disabled" : ""}>Responder</button>
         ${TR[se.trilha].naoSei ? `<button class="btn ghost" type="button" data-ia="naoSei">Não sei</button>` : ""}
@@ -857,12 +881,20 @@
   }
   const convite = () => pronto && SR.logado() && !(SR.S.ia && SR.S.ia.diag && SR.S.ia.diag.fim);
 
+  document.addEventListener("input", ev => {   // PAS tipo B: só algarismos, até 3
+    const el = ev.target.closest && ev.target.closest("input[data-iab]"); if (!el) return;
+    const d = el.value.replace(/\D/g, "").slice(0, 3); if (el.value !== d) el.value = d;
+    marcada = d === "" ? null : +d;
+    document.querySelectorAll('#view-ia [data-ia="responder"], #view-ia [data-ia="confirmar"]').forEach(b => { b.disabled = marcada == null; });
+  });
   document.addEventListener("click", ev => {
     const no = ev.target.closest("[data-ia-no]"); if (no) { selecionarNo(no.dataset.iaNo); return; }
     const bp = ev.target.closest("button[data-ia-praticar], button[data-ia-ler]");
     if (bp) { const h = bp.dataset.iaPraticar || bp.dataset.iaLer; SR.S.tab = "ia"; telaConteudos = false; telaBiblio = false; verMapa = false;
       if (bp.dataset.iaPraticar) { resumoAberto = null; comecarSessao("livre", false, [h], h + " · " + HAB[h].curto); } else resumoAberto = { h, completo: false, foco: "" };
       SR.renderAll(); window.scrollTo({ top: 0 }); return; }
+    const la = ev.target.closest("button[data-ia-aula]");
+    if (la && SR.abrirResumo) { SR.abrirResumo(+la.dataset.iaAula); window.scrollTo({ top: 0 }); return; }
     const pa = ev.target.closest("button[data-iaap]");
     if (pa) { const k = pa.dataset.iaap;
       if (k === "ouvir") { const el = document.querySelector(".ia-parte"); if (el) falar(el.innerText.replace(/\n+/g, ". "), pa, "🔊 Ouvir esta parte"); return; }
@@ -1027,6 +1059,8 @@
   .ia-parte{border:2px solid var(--pen);border-radius:14px;padding:18px;background:var(--sheet)}.ia-parte h3{font-size:20px!important;margin:0 0 10px}.ia-parte-nav{justify-content:space-between;align-items:center}
   .ia-agenda{font-size:18px;line-height:1.9}.ia-fim{font-weight:700;margin-top:12px}
   .ia-amp *,.resumo.ia-amp *{animation:none!important;transition:none!important}.ia-amp .btn,.resumo.ia-amp .btn{min-height:52px;font-size:17px}
+  .ia-no-fora rect{opacity:.35}.ia-no-fora text{opacity:.5}.ia-bnum{display:grid;gap:6px;max-width:260px}.ia-bin{font:700 28px var(--f-mono);letter-spacing:.3em;padding:10px 14px;border:2px solid var(--rule);border-radius:10px;background:var(--sheet);color:var(--ink);width:150px}
+  .ia-bin.is-right{border-color:var(--ok)}.ia-bin.is-wrong{border-color:var(--bad)}.ia-ce{margin:0 0 6px}
   .opt.is-riscada{opacity:.5}.opt.is-riscada span:last-child{text-decoration:line-through}
   .ia-cartao{border:2px dashed var(--pen);border-radius:12px;padding:12px 16px;background:var(--pen-soft)}.ia-cartao ul{margin:6px 0 0;padding-left:20px}
   @media (max-width:520px){.ia-dec-r{grid-template-columns:1fr}.ia-pistas li{grid-template-columns:1fr}.ia-pistas li span[aria-hidden]{display:none}}

@@ -51,7 +51,7 @@
       if (it.gerada && !it.ip) return { a: cfg.naoCalibrada.a, b: nivelB[it.nv] != null ? nivelB[it.nv] : nivelB[3], c: cfg.naoCalibrada.c, peso: 0 };
       if (it.ip) return { a: it.ip[0], b: it.ip[1], c: it.ip[2], peso: 1 };
       const b = nivelB[it.nv] != null ? nivelB[it.nv] : nivelB[3];
-      return { a: cfg.naoCalibrada.a, b, c: cfg.naoCalibrada.c, peso: cfg.naoCalibrada.peso };
+      return { a: cfg.naoCalibrada.a, b, c: it.cc != null ? it.cc : cfg.naoCalibrada.c, peso: cfg.naoCalibrada.peso };   // cc: chute por tipo de item (PAS)
     }
 
     function verossimilhanca(th, pr, r) {

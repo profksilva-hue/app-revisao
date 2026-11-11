@@ -1,0 +1,193 @@
+{
+ "versao": 1,
+ "observacao": "Versões adaptadas de itens do PAS (área adaptada). aprovado=false: aparecem só no site de teste até a aprovação do professor.",
+ "criterios": [
+  "Termos técnicos explicados no enunciado.",
+  "Deduções intermediárias explícitas.",
+  "Frases curtas, uma informação por frase.",
+  "Mesma resposta e mesmas alternativas do item original."
+ ],
+ "versoes": {
+  "Pgj11ln": {
+   "t": [
+    "Um aplicativo de corridas tem dois planos de preço.",
+    "No plano A, você paga R$ 30,00 fixos e mais R$ 2,00 por quilômetro.",
+    "No plano B, você paga R$ 60,00 fixos e mais R$ 1,00 por quilômetro.",
+    "O aplicativo só cobra quilômetros inteiros."
+   ],
+   "dados": [
+    "Plano A: 30 + 2 · x",
+    "Plano B: 60 + 1 · x",
+    "x = número de quilômetros"
+   ],
+   "c": "Para quais corridas o plano B é mais barato?",
+   "dica": "Primeiro descubra em que distância os dois planos custam o mesmo valor. Depois teste uma distância maior.",
+   "o": [
+    "a partir de 31 km, o plano B",
+    "a partir de 30 km, o plano B",
+    "a partir de 31 km, o plano A",
+    "sempre o plano A"
+   ],
+   "a": 0,
+   "e": [
+    "",
+    "Em exatamente 30 km os planos custam o mesmo.",
+    "Depois do ponto de encontro, o plano com taxa maior fica mais caro.",
+    "Os planos se cruzam."
+   ],
+   "sol": "1) Valores iguais: 30 + 2x = 60 + x ⇒ x = 30 km. 2) Com 31 km: A = 30 + 62 = 92 e B = 60 + 31 = 91. B é mais barato. 3) Resposta: a partir de 31 km, o plano B.",
+   "h": "PAS1 MAT8",
+   "tb": null,
+   "lote": "PAS-A1",
+   "aprovado": false,
+   "f": null
+  },
+  "P1vwhput": {
+   "t": [
+    "Uma academia cobra uma matrícula de R$ 60,00. A matrícula é paga uma vez só.",
+    "Cada aula avulsa custa R$ 1,50.",
+    "O valor total pago é V, em reais. O número de aulas é n."
+   ],
+   "dados": [
+    "Valor fixo: 60",
+    "Valor por aula: 1,50",
+    "n = número de aulas"
+   ],
+   "c": "Julgue o item: V(n) = 1,5n + 60.",
+   "dica": "Na função afim, o valor fixo fica sozinho e o valor por unidade multiplica o n.",
+   "o": [
+    "Certo",
+    "Errado"
+   ],
+   "a": 0,
+   "sol": "1) O valor fixo é 60. 2) Cada aula soma 1,50: 1,5 · n. 3) V(n) = 1,5n + 60. O item está certo.",
+   "h": "PAS1 MAT8",
+   "tb": null,
+   "lote": "PAS-A1",
+   "aprovado": false,
+   "f": null
+  },
+  "P1iggiq3": {
+   "t": [
+    "Um conjunto de dados tem média 20.",
+    "O desvio padrão é 2. O desvio padrão mede o quanto os dados estão espalhados em torno da média.",
+    "Todos os valores do conjunto são multiplicados por 3."
+   ],
+   "dados": [
+    "Média: 20",
+    "Desvio padrão: 2",
+    "Cada valor: × 3"
+   ],
+   "c": "Como fica o novo conjunto?",
+   "dica": "Se todos os valores ficam 3 vezes maiores, as distâncias entre eles também ficam 3 vezes maiores.",
+   "o": [
+    "média 60 e desvio padrão 2",
+    "média 23 e desvio padrão 2",
+    "média 60 e desvio padrão 18",
+    "média 60 e desvio padrão 6"
+   ],
+   "a": 3,
+   "e": [
+    "Multiplicar todos os dados multiplica o desvio.",
+    "Somou em vez de multiplicar.",
+    "Quem é multiplicada por 9 é a variância.",
+    ""
+   ],
+   "sol": "1) A média também é multiplicada por 3: 20 · 3 = 60. 2) O espalhamento fica 3 vezes maior: 2 · 3 = 6. 3) Resposta: média 60 e desvio padrão 6.",
+   "h": "PAS2 MAT12",
+   "tb": null,
+   "lote": "PAS-A1",
+   "aprovado": false,
+   "f": null
+  },
+  "P1950a4m": {
+   "t": [
+    "Um anagrama é uma nova ordem para as letras de uma palavra. Por exemplo, PAPAI e APIPA.",
+    "A palavra PAPAI tem 5 letras.",
+    "A letra P aparece 2 vezes. A letra A aparece 2 vezes."
+   ],
+   "dados": [
+    "Total de letras: 5",
+    "P repete: 2 vezes",
+    "A repete: 2 vezes"
+   ],
+   "c": "Quantos anagramas tem a palavra PAPAI?",
+   "dica": "Conte as ordens como se todas as letras fossem diferentes. Depois divida pelas trocas entre letras iguais.",
+   "o": [
+    "30",
+    "60",
+    "120",
+    "25"
+   ],
+   "a": 0,
+   "e": [
+    "",
+    "Descontou apenas uma das repetições.",
+    "Não descontou as letras repetidas.",
+    "Usou n² sem justificativa."
+   ],
+   "sol": "1) Se as 5 letras fossem diferentes: 5! = 120. 2) Trocar os dois P não muda a palavra: ÷ 2. Trocar os dois A também não: ÷ 2. 3) 120 ÷ 4 = 30.",
+   "h": "PAS2 MAT13",
+   "tb": null,
+   "lote": "PAS-A1",
+   "aprovado": false,
+   "f": null
+  },
+  "Pkugylf": {
+   "t": [
+    "Um sistema cria códigos. Cada código tem 3 letras e depois 3 algarismos.",
+    "Existem 26 letras possíveis e 10 algarismos possíveis (de 0 a 9). Letras e algarismos podem se repetir."
+   ],
+   "dados": [
+    "3 posições de letra: 26 opções cada",
+    "3 posições de algarismo: 10 opções cada"
+   ],
+   "c": "Julgue o item: O total de códigos possíveis é 26 · 3 + 10 · 3.",
+   "dica": "Quando as escolhas acontecem juntas (uma E outra), multiplique as opções de cada posição.",
+   "o": [
+    "Certo",
+    "Errado"
+   ],
+   "a": 1,
+   "sol": "1) Cada posição é uma etapa. 2) Multiplique: 26 · 26 · 26 · 10 · 10 · 10 = 17 576 000. 3) A expressão do item soma e não multiplica. O item está errado.",
+   "h": "PAS2 MAT13",
+   "tb": null,
+   "lote": "PAS-A1",
+   "aprovado": false,
+   "f": null
+  },
+  "Pykb63j": {
+   "t": [
+    "Em um projeto, a reta r representa um muro. A equação de r é y = −3x + 1.",
+    "Um cabo vai ser instalado perpendicular ao muro. Perpendicular quer dizer que forma 90° com o muro.",
+    "O cabo passa pelo ponto P(4, 1)."
+   ],
+   "dados": [
+    "Inclinação do muro: m = −3",
+    "Ponto do cabo: (4, 1)",
+    "Perpendiculares: m₁ · m₂ = −1"
+   ],
+   "c": "Qual é a equação da reta do cabo?",
+   "dica": "A inclinação da perpendicular é o inverso com o sinal trocado: −1 ÷ (−3) = 1/3.",
+   "o": [
+    "y = (1/3)x + 7/3",
+    "y = −3x + 13",
+    "y = −(1/3)x + 7/3",
+    "y = (1/3)x − 1/3"
+   ],
+   "a": 3,
+   "e": [
+    "Errou o sinal ao substituir o ponto na equação.",
+    "Usou o mesmo coeficiente angular: essa é a paralela.",
+    "Inverteu o coeficiente, mas esqueceu de trocar o sinal.",
+    ""
+   ],
+   "sol": "1) Inclinação do cabo: m = 1/3. 2) Use o ponto: y − 1 = (1/3)(x − 4). 3) y = (1/3)x − 4/3 + 1 = (1/3)x − 1/3.",
+   "h": "PAS3 MAT1",
+   "tb": null,
+   "lote": "PAS-A1",
+   "aprovado": false,
+   "f": null
+  }
+ }
+}

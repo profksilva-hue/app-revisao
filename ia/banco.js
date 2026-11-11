@@ -36,6 +36,23 @@
       return { id: q.id, h: q.h, aula: null, nv: q.nv || 2, ip: null, gerada: true, longa: texto.length > 350, oficial: false, fonte: "Gerada com Claude · lote " + (q.lote || "?"), q };
     });
   }
+  // PAS: itens dos tipos A (certo/errado), B (numérico) e C (múltipla escolha) viram questões da IA.
+  // O tipo D (discursivo, autoavaliado) fica só nas listas. cc = chance de acertar no chute, por tipo.
+  const CHUTE = { A: 0.5, B: 0.02, C: 0.25 };
+  function extrairPAS(D) {
+    const vistos = new Map();
+    (D.aulas || []).forEach(aula => (aula.bank || []).forEach(q => {
+      if (!q || !q.h || !CHUTE.hasOwnProperty(q.tp) || q.a == null) return;
+      const id = "P" + hsh(JSON.stringify([q.base || null, q.t, q.c, q.o || null])); if (vistos.has(id)) return;
+      const iq = q.tp === "A"
+        ? { tp: "A", t: (q.base || []).filter(x => !/^Julgue os itens/i.test(x)), c: "Julgue o item: " + q.t.join(" "), o: ["Certo", "Errado"], a: q.a, sol: q.sol, h: q.h, hab: q.hab, nv: q.nv, tb: q.tb || q.btb || null }
+        : q.tp === "C" ? { tp: "C", t: q.t, c: q.c, o: q.o, a: q.a, e: q.e, sol: q.sol, h: q.h, hab: q.hab, nv: q.nv, tb: q.tb || null }
+        : { tp: "B", t: q.t, c: q.c, a: q.a, sol: q.sol, eb: q.eb, h: q.h, hab: q.hab, nv: q.nv, tb: q.tb || null };
+      const texto = (iq.t || []).join(" ") + " " + (iq.c || "");
+      vistos.set(id, { id, h: q.h, aula: aula.n, nv: q.nv || 3, ip: null, cc: CHUTE[q.tp], tp: q.tp, longa: texto.replace(/<[^>]*>/g, "").length > 350, oficial: false, fonte: "", q: iq });
+    }));
+    return Array.from(vistos.values());
+  }
   // No navegador: lê os dados embutidos na página do ENEM.
   async function carregarDoSite(caminho) {
     const html = await fetch(caminho || "../enem/index.html").then(r => { if (!r.ok) throw new Error(r.status); return r.text(); });
@@ -43,6 +60,6 @@
     if (!m) throw new Error("dados não encontrados");
     return JSON.parse(m[1]);
   }
-  const Banco = { extrair, extrairGeradas, carregarDoSite, qid };
+  const Banco = { extrair, extrairPAS, extrairGeradas, carregarDoSite, qid };
   if (typeof module !== "undefined" && module.exports) module.exports = Banco; else raiz.Banco = Banco;
 })(typeof window !== "undefined" ? window : globalThis);
